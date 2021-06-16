@@ -1,0 +1,375 @@
+<!-- Main row -->
+<div class="row">
+	<div class="row mt-2 col-12 col-sm-12 col-md-12 align-content-end justify-content-end align-items-center justify-items-center">
+		<div class="row col-lg-3 col-md-5 col-sm-12 col-12 ml-2 mr-1 align-content-end justify-content-end">
+			<label for="select_tiendas" class="p-0 col-lg-2 col-md-2 col-2 col-sm-2 mr-3">Tienda</label>	
+			<select id="select_tiendas" name="select_tiendas" onchange="$('#fechaf').change()"
+				class="form-control form-control-sm col-lg-8 col-md-8 col-8 col-sm-8">
+			</select>
+		</div>
+		<div class="input-group date gfechas col-md-2 col-4 ml-1">
+			<label for="fechaf">Mes</label>		
+			<input id="fechaf" name="fechaf" type="text" class="form-control form-control-sm rounded text-center ml-1" autocomplete="off" 
+					data-inputmask="'alias': 'mm-yyyy'" style="height: 31px;"
+					data-mask placeholder="mm-yyyy">
+			<span class="input-group-addon alert-secondary p-1 font-weight-bold text-center"
+				style="height: 31px;" tabindex="-1">
+				<i class="fas fa-calendar"></i>
+			</span>
+		</div>
+		<div class="custom-control custom-checkbox card-tools align-content-end justify-content-end align-items-center justify-items-center">
+			<input type="checkbox" class="custom-control-input" checked style="cursor: pointer;" onclick="$('#fechaf').change()" id="todo">
+			<label class="custom-control-label font-weight-normal" style="cursor: pointer;" for="todo">Consultar las 24 Horas</label>
+		</div>
+		<div class="align-content-end justify-content-end align-items-center justify-items-center">
+			<label for="diaini" class="font-weight-normal m-0 ml-5">Sólo del día </label>
+			<input id="diaini" name="diaini" type="text" placeholder="1" class="form-control-sm p-0 m-0 text-center border border-dark"
+					onkeydown="soloNumeros()" style="height: 25px; width: 28px;" autocomplete="off" value="" 
+					onblur="if(this.value=='') { $('#diafin').val('') }" 
+					onkeyup="
+						if(this.value!='') {
+							if(this.value>=31) { 
+								this.value=31;
+								$('#diafin').val(31)
+							} else {
+								if(this.value > $('#diafin').val()) {
+									$('#diafin').val(this.value)
+								} else {
+									if($('#diafin').val()=='') {
+										$('#diafin').val(parseInt(this.value) + 6)
+									}
+								}
+							}
+						}">
+			<label for="diafin" class="font-weight-normal m-0">al día </label>
+			<input id="diafin" name="diafin" type="text" placeholder="7" class="form-control-sm p-0 m-0 text-center border border-dark" 
+					onkeydown="soloNumeros()" style="height: 25px; width: 28px;" autocomplete="off" value="" 
+					onblur="if(this.value=='') { $('#diaini').val('') }"	
+					onkeyup="
+						if(this.value!='') {
+							if(this.value>31) {
+								this.value=31;
+								if(this.value < $('#diaini').val()) {
+									$('#diaini').val(31-7)
+								}
+							}
+							if($('#diaini').val()=='') {
+								$('#diaini').val(1)
+							}
+						}">
+			<button class="btn btn-sm btn-primary p-0 pl-2 pr-2" onclick="$('#fechaf').change()">Consultar</button>
+		</div>		
+	</div>
+	<!-- Estadisticas de Clientes -->
+	<div class="mt-1 col-md-12 col-sm-12 col-12" id="div_tbl_datos">
+		<div class="card card-warning m-0 p-0 elevation-2 border border-dark">
+			<div class="card-header p-1 pl-2">
+				<i class="fas fa-calendar-check"></i>
+				<span id="timvxtienda">Histórico Mensual de Ventas por Departamento</span>
+				<span id="ffecha"></span>
+			</div>
+			<div class="card-body p-0 m-0">
+				<table id="tbl_mes_ventas_dpto" cellpadding="0" cellspacing="0"
+						class="table table-striped table-hover w-100">
+					<thead class="bg-dark-gradient">
+						<tr>
+							<th rowspan="2" class="bg-dark-gradient text-center border border-top-0 ml-0 mr-0 pl-0 pr-0">Departamentos</th>
+							<th colspan="4" class="bg-success-gradient text-center border border-top-0 ml-0 mr-0 pl-0 pr-0" id="td_h3">Hoy -3</th>
+							<th colspan="4" class="bg-primary-gradient text-center border border-top-0 ml-0 mr-0 pl-0 pr-0" id="td_h2">Hoy -2</th>
+							<th colspan="4" class="bg-warning-gradient text-center border border-top-0 ml-0 mr-0 pl-0 pr-0" id="td_h1">Hoy -1</th>
+							<th colspan="4" class="bg-danger-gradient text-center border border-top-0 ml-0 mr-0 pl-0 pr-0"  id="td_hy">Hoy</th>
+						</tr>
+						<tr>
+							<!-- Hoy -3 -->
+							<th class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">#Fact.</th>
+							<th class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">
+								Monto<sub><span class="badge badge-danger">x1000</span></sub>
+							</th>
+							<th class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Margen</th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none">costo</th>
+							
+							<!-- Hoy -2 -->
+							<th class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">#Fact.</th>
+							<th class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">
+								Monto<sub><span class="badge badge-danger">x1000</span></sub>
+							</th>
+							<th class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Margen</th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none">costo</th>
+							
+							<!-- Hoy -1 -->
+							<th class="bg-warning-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">#Fact.</th>
+							<th class="bg-warning-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">
+								Monto<sub><span class="badge badge-danger">x1000</span></sub>
+							</th>
+							<th class="bg-warning-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Margen</th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none">costo</th>
+							
+							<!-- Hoy -->
+							<th class="bg-danger-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">#Fact.</th>
+							<th class="bg-danger-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">
+								Monto<sub><span class="badge badge-warning">x1000</span></sub>
+							</th>
+							<th class="bg-danger-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Margen</th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none">costo</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr class="bg-dark-gradient">
+							<th class="text-left">Totales</th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none"></th>
+							<th class="bg-warning-gradient text-right"></th>
+							<th class="bg-warning-gradient text-right"></th>
+							<th class="bg-warning-gradient text-right"></th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none"></th>
+							<th class="bg-dark-gradient text-right"></th>
+							<th class="bg-dark-gradient text-right"></th>
+							<th class="bg-dark-gradient text-right"></th>
+							<th class="ml-0 mr-0 pl-0 pr-0 d-none"></th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- hora para el reporte -->
+<input type="hidden" id="horah">
+
+<script>
+	$(function() {
+		$('.gfechas').datepicker({
+			changeMonth: true,
+			changeYear: true,
+			showButtonPanel: true,
+			language: "es",
+			autoclose: true,
+			format: "mm-yyyy",
+    		startView: "months", 
+    		minViewMode: "months"
+		});
+		$(".gfechas").datepicker().datepicker("setDate", new Date());
+		$('[data-mask]').inputmask();
+		$('#fechaf').on('change', function() {
+			var diaini = $('#diaini').val()!='' ? $('#diaini').val() : 0;
+			var diafin = $('#diafin').val()!='' ? $('#diafin').val() : 0;
+			var ffecha = ('01-'+$('#fechaf').val()).split('-')
+			ffecha = new Date(ffecha[2], ffecha[1] - 1, ffecha[0]);
+			listEstadisticasMesVtasDpto($('#select_tiendas').val(),
+									  	moment(ffecha).format('YYYY-MM-DD'),
+									  	$('#todo').prop('checked') ? '23:59:59' : moment().format("HH:mm:ss"),
+									  	diaini, diafin );
+		});
+
+		$.ajax({
+			data: {
+				opcion: "listaTiendas",
+				idpara: ptodas + '¬' + ptienda
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function(data) {
+				if(ptodas) {
+					$("#select_tiendas").append('<option value="localidad">Todas las Tiendas</option>');
+				}
+				for (i=0; i<data.length; i++) {
+					$("#select_tiendas").append('<option value="'+ data[i].idtienda + '">' + data[i].tienda + '</option>');
+				}
+			}
+		}).done(function() { 
+			$('#fechaf').change()
+		});
+	});
+
+	/**
+	 * lista las ventas mensulaes realizadas por departamento
+	 * @param {int} ptienda id de la tienda a consultar
+	 * @param {string} pfecha fecha a consultar
+	 * @param {string} phora hora a consultar
+	 * @param {int} pdiaini dia inicial para consultar por dias especificos
+	 * @param {int} pdiafin dia final para consultar por dias especificos
+	 */
+	function listEstadisticasMesVtasDpto(ptienda, pfecha, phora, pdiaini, pdiafin) {
+		cargando('show')
+		var ffecha = pfecha.split('-');
+		var ffecha = new Date(ffecha[0], ffecha[1] - 1, ffecha[2]);
+		var afechas = new Array(4);
+		afechas[0] = moment(ffecha).subtract(3, 'M').startOf('M').format('YYYY-MM-DD');
+		afechas[1] = moment(ffecha).subtract(2, 'M').format('YYYY-MM-DD');
+		afechas[2] = moment(ffecha).subtract(1, 'M').format('YYYY-MM-DD');
+		afechas[3] = moment(ffecha).endOf('M').format('YYYY-MM-DD');
+		pnomtienda = $("#select_tiendas option:selected").text();
+		tomar_datos = $.ajax({
+			data: {
+				opcion: "listEstadisticasMesVtasDpto",
+				hora: phora,
+				idpara: ptienda + '¬' + afechas + '¬' + pdiaini + '¬' + pdiafin + '¬' + pnomtienda
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				cargando('hide')
+				$('#ffecha').html(' a ' + capitalize(moment(afechas[3]).format('MMMM-YYYY')) + ' a las ' + to12hour(phora));
+				$('#td_h3').html(capitalize(moment(afechas[0]).format('MMMM-YYYY')));
+				$('#td_h2').html(capitalize(moment(afechas[1]).format('MMMM-YYYY')));
+				$('#td_h1').html(capitalize(moment(afechas[2]).format('MMMM-YYYY')));
+				$('#td_hy').html(capitalize(moment(afechas[3]).format('MMMM-YYYY')));
+				$('#tbl_mes_ventas_dpto').dataTable({
+					scrollY: '60vh',
+					scrollCollapse: true,
+					data: data,
+					columns: [
+						{ data: "dpto", sClass: "text-left font-weight-bold align-middle border border-top-0 border-bottom-0" },
+						{ data: "canfac1", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "total1", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "margen1", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2, "", "%") },
+						{ data: "costo1", sClass: "d-none", orderable: false, visible: false, searchable: false },
+						{ data: "canfac2", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "total2", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "margen2", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2, "", "%") },
+						{ data: "costo2", sClass: "d-none", orderable: false, visible: false, searchable: false },
+						{ data: "canfac3", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "total3", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "margen3", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2, "", "%") },
+						{ data: "costo3", sClass: "d-none", orderable: false, visible: false, searchable: false },
+						{ data: "canfach", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "totalh", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "margenh", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2, "", "%") },
+						{ data: "costoh", sClass: "d-none", orderable: false, visible: false, searchable: false },
+					],
+					footerCallback: function (row, data, start, end, display) {
+						total01 = this.api()
+							.column(1) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total02 = this.api()
+							.column(2) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total03 = this.api()
+							.column(3) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total04 = this.api()
+							.column(4) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total05 = this.api()
+							.column(5) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total06 = this.api()
+							.column(6) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total07 = this.api()
+							.column(7) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total08 = this.api()
+							.column(8) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total09 = this.api()
+							.column(9) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total10 = this.api()
+							.column(10) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total11 = this.api()
+							.column(11) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total12 = this.api()
+							.column(12) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total13 = this.api()
+							.column(13) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total14 = this.api()
+							.column(14) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total15 = this.api()
+							.column(15) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total16 = this.api()
+							.column(16) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+
+						total03 = total02 > 0 ? ((total02 - total04) * 100) / total02 : 0;
+						total07 = total06 > 0 ? ((total06 - total08) * 100) / total06 : 0;
+						total11 = total10 > 0 ? ((total10 - total12) * 100) / total10 : 0;
+						total15 = total14 > 0 ? ((total14 - total16) * 100) / total14 : 0;
+
+						$(this.api().column(1).footer()).html((isNaN(total01) ? 0 : total01).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(2).footer()).html((isNaN(total02) ? 0 : total02).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(3).footer()).html((isNaN(total03) ? 0 : total03).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '%');
+						$(this.api().column(5).footer()).html((isNaN(total05) ? 0 : total05).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(6).footer()).html((isNaN(total06) ? 0 : total06).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(7).footer()).html((isNaN(total07) ? 0 : total07).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '%');
+						$(this.api().column(9).footer()).html((isNaN(total09) ? 0 : total09).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(10).footer()).html((isNaN(total10) ? 0 : total10).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(11).footer()).html((isNaN(total11) ? 0 : total11).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '%');
+						$(this.api().column(13).footer()).html((isNaN(total13) ? 0 : total13).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(14).footer()).html((isNaN(total14) ? 0 : total14).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(15).footer()).html((isNaN(total15) ? 0 : total15).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '%');
+					},
+					initComplete: function (settings, json) {
+						arrayAuxiliar('tbl_mes_ventas_dpto');
+					}
+				});
+			}
+		});
+	}
+</script>

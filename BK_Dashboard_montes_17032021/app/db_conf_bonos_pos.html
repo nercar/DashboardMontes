@@ -1,0 +1,796 @@
+<style>
+	.dataTables_filter {
+		display: none;
+	}
+	input[type=number]::-webkit-inner-spin-button, 
+	input[type=number]::-webkit-outer-spin-button { 
+		-webkit-appearance: none; 
+		margin: 0; 
+	}
+	input[type=number] { -moz-appearance:textfield; }
+</style>
+<!-- Main row -->
+<div class="row">
+	<!-- Auditoria de Costos -->
+	<div class="col-md-12 col-sm-12 mt-2">
+		<div class="card card-primary m-0 p-0 elevation-2 border border-dark" id="div_tbl_datos">
+			<div class="card-header d-flex p-1 pl-2 mb-1 align-items-baseline">
+				<i class="fas fa-lg fa-file-alt"></i>&nbsp;
+				<span id="ttitulo">Configuración de Bonos</span>
+			</div>
+			<div class="row p-0 pl-1 pr-1 pb-1">
+				<div class="col-12">
+					<div class="d-flex w-100 align-baseline">
+						<table width="100%">
+							<tr>
+								<th width="20%">ID de la Empresa</th>
+								<td width="40%">
+									<div class="col d-flex align-items-baseline">
+										<input style="display: none;" placeholder="Código/Nombre Parcial del Cliente a Crédito">
+										<input type="text" id="fclienteb" 
+											onkeyup="if(event.keyCode=='13' && $(this).val().trim()!='')
+												{ $(this).blur() } else if($(this).val().trim()=='') { $(this).val([]) }"
+											onblur="if($(this).val().trim()!='')
+												{ listaCCBonosb(); } else if($(this).val().trim()=='') { $(this).val([]) }" 
+											placeholder="Código/Nombre Parcial del Cliente a Crédito"
+											class="form-control form-control-sm col" autocomplete="off">
+									</div>
+								</td>
+								<td rowspan="4" width="30%">&nbsp;</td>
+								<td width="10%">
+									<button class="btn btn-sm btn-info w-100 d-flex"
+										onclick="buscarEmpresa($('#fclienteb').val().trim())">
+										<div style="width: 32px"><i class="fas fa-lg fa-search"></i></div>
+										<div class="col">Saldo Pendiente</div>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<th>Nombre de la Empresa</th>
+								<td>
+									<input type="text" id="nomempresa" readonly
+										class="form-control form-control-sm bg-transparent border-0">
+								</td>
+								<td>
+									<button class="btn btn-sm btn-primary w-100 d-flex" data-toggle="modal" data-target="#verEdoCta">
+										<div style="width: 32px"><i class="fas fa-lg fa-file-invoice-dollar"></i></div>
+										<div class="col">Estado de Cuenta</div>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<th>Monto por Canjear</th>
+								<td>
+									<input type="text" id="montosaldo" readonly
+										class="form-control form-control-sm bg-transparent border-0">
+								</td>
+								<td>
+									<label for="nom_archivo" class="subir m-0 w-100">
+										<div class="btn btn-sm btn-warning w-100 d-flex">
+											<div style="width: 32px"><i class="fas fa-lg fa-file-csv"></i></div>
+											<div class="col">Importar Archivo</div>
+										</div>
+									</label>
+									<input id="nom_archivo" onchange="validarArchivoCsv(this)"
+										accept=".csv" type="file" class="d-none">
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<input type="text" style="display: none;" placeholder="Buscar Beneficiario">
+									<input type="text" class="form-control form-control-sm m-0 p-1 col"
+										id="buscarben" value="" placeholder="Buscar Beneficiario">
+								</td>
+								<td>
+									<button class="btn btn-sm btn-success w-100 d-flex" id="btnExportDet">
+										<div style="width: 32px"><i class="fas fa-lg fa-file-excel"></i></div>
+										<div class="col">Exportar Detalle</div>
+									</button>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="row p-0 pl-1 pr-1 pb-1">
+				<div class="col-12">
+					<form action="" onsubmit="return false;" class="p-0 m-0" id="frmpedidos">
+						<table id="tbl_beneficiarios" class="table table-striped table-hover table-bordered w-100">
+							<thead class="bg-dark-gradient">
+								<tr>
+									<th width="10%" class="text-center p-0 m-0">ID Beneficiario</th>
+									<th width="40%" class="text-center p-0 m-0">Nombre del Beneficiario</th>
+									<th width="25%" class="text-center p-0 m-0">Saldo Restante</th>
+									<th width="25%" class="text-center p-0 m-0">Última Modificación</th>
+								</tr>
+							</thead>
+						</table>
+					</form>
+				</div>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- Modal validar archivo -->
+<div class="modal fade" id="verCsv" style="z-index: 9888;" tabindex="-1" role="dialog" aria-labelledby="verCsvLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl modal-dialog-centered">
+		<!-- Modal content-->
+		<div class="modal-content">
+			<div class="modal-header bg-primary pt-1 pb-1">
+				<h4 class="modal-title">Archivo a Subir - Por favor Confirme</h4>
+			</div>
+			<div class="modal-body" id="divcsv" style="height: 50vh; overflow: auto;">
+			</div>
+			<div class="modal-footer pt-2 pb-2 align-items-baseline justify-content-center align-top">
+				<button class="btn btn-outline-success" data-dismiss="modal" id="btnaceptar">
+					Aceptar <i class="fas fa-lg fa-check"></i>&nbsp;
+				</button>
+				<div class="text-center col-6 rounded border border-dark bg-warning elevation-2" id="msj">
+					Está seguro que desea subir este archivo?
+				</div>
+				<button class="btn btn-outline-danger" class="close" data-dismiss="modal" id="btncerrar"
+					onclick="$('#nom_archivo').val('');">
+					Cerrar <i class="fas fa-lg fa-times-circle"></i>&nbsp;
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal validar archivo -->
+<div class="modal fade" id="verEdoCta" style="z-index: 9888;" tabindex="-1" role="dialog"
+	aria-labelledby="verEdoCtaLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl modal-dialog-centered">
+		<!-- Modal content-->
+		<div class="modal-content">
+			<div class="modal-header bg-primary pt-1 pb-1">
+				<h4 class="modal-title">Estado de Cuenta</h4>
+			</div>
+			<div class="modal-body p-0 pl-1 pr-1" id="dverEdoCta" style="overflow: auto;">
+				<div class="row m-0 align-baseline text-nowrap txtcomp">
+					<div class="col-2">
+						<input style="display: none;" placeholder="Ingrese Número Identidad">
+						<label for="idbeneficiario">ID del Beneficiario:</label>
+						<div class="d-flex">
+							<select id="cedulasid" class="form-control form-control-sm p-0 m-0" style="width: 50px;"></select>
+							<input type="text" id="idbeneficiario" class="form-control form-control-sm col"
+								placeholder="1234567890123"
+								onkeyup="if(event.keyCode==13) buscarEdoCta($(this).val())">
+						</div>
+					</div>
+					<div class="col-4">
+						<label for="nombeneficiario">Nombre del Beneficiario:</label>
+						<span id="nombeneficiario" class="form-control form-control-sm w-100 border">&nbsp;</span>
+					</div>
+					<div class="col-4">
+						<label for="fechas">Rango de Fechas a Consultar:</label>
+						<div class="input-group input-daterange date gfechas align-items-center" id="fechas">
+							<input type="text" data-id="fechai" class="form-control form-control-sm rounded m-0"
+								autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'"
+								data-mask placeholder="dd-mm-yyyy"
+								onblur="if(this.value=='')
+									$(this).datepicker('setDate',
+										moment().startOf('month').format('DD-MM-YYYY'));">
+							<div class="input-group-addon font-weight-normal ml-1 mr-1">Al</div>
+							<input type="text" data-id="fechaf" class="form-control form-control-sm rounded m-0"
+								autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+								onblur="if(this.value=='') $(this).datepicker('setDate', moment().format('DD-MM-YYYY'));">
+						</div>
+					</div>
+					<div class="col-2 justify-content-end mt-auto">
+						<button class="btn btn-sm btn-info form-control mt-auto" onclick="buscarEdoCta($('#idbeneficiario').val().trim())">
+							<i class="fas fa-lg fa-search"></i>&nbsp; Consultar
+						</button>
+					</div>
+				</div>
+				<div class="row m-0 pt-1 w-100">
+					<table class="m-0 p-0 w-100">
+						<thead class="bg-dark-gradient text-center">
+							<th width=" 5%">Nº</th>
+							<th width=" 8%">ID</th>
+							<th width="12%">Fecha</th>
+							<th width="40%">Movimiento</th>
+							<th width="10%">Debe</th>
+							<th width="10%">Haber</th>
+							<th width="10%">Saldo</th>
+							<th width=" 5%">Opc.</th>
+						</thead>
+					</table>
+					<div style="width: 100%; height: 40vh; overflow: hidden; overflow-y: scroll">
+						<table id="tblEdoCta" class="table-bordered table-striped table-hover m-0 p-0 w-100">
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer pt-2 pb-2 align-items-end justify-content-end align-top">
+				<div class="mr-auto d-flex align-items-baseline">
+					<label for="saldoAct">Saldo Disponible:&nbsp;</label>
+					<span class="bg-warning pl-1 pr-1 rounded border border-dark
+						font-weight-bold text-right" style="width: 150px;" id="saldoAct">0.00</span>
+				</div>
+				<button class="btn btn-outline-danger" class="close" data-dismiss="modal" id="btncerrar">
+					Cerrar <i class="fas fa-lg fa-times-circle"></i>&nbsp;
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal para datos 1-->
+<div class="modal fade" id="dtmodalb" style="z-index: 9889" tabindex="-1" role="dialog" aria-labelledby="dtmodalbLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold" id="ttmodalb"></h5>
+				<button type="button" onclick="$('#dtmodalb').modal('hide')" class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div class="modal-body m-0 p-0" id="cntmodalb">
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	var buscarben = '';
+
+	$('#frmpedidos').height($('#wp_ppal').height()-$('#frmpedidos').offset().top-10+'px');
+	$('#div_tbl_datos').height($('#frmpedidos').height()+$('#frmpedidos').offset().top-15+'px');
+
+	$("#idempresa").focus();
+
+	$('#fechas').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "0d",
+	});
+	
+	$('.input-daterange input').each(function() {
+		if($(this).data('id') == 'fechai')
+			$(this).datepicker("setDate", moment().startOf('month').format('DD-MM-YYYY'));
+		if($(this).data('id') == 'fechaf')
+			$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+	});
+
+	$('[data-mask]').inputmask();
+
+	var fechas = [];
+	$('.input-daterange input').each(function() {
+		fechas.push(moment($(this).datepicker().val(), 'DD-MM-YYYY').format('YYYY-MM-DD'))
+	});
+
+	$('#idbeneficiario').inputmask('999,999,999,999', { numericInput: true, autoUnmask : true });
+
+	$("#buscarben").keyup(function(e) {
+		// if(e.which == '13') {
+			$('#tbl_beneficiarios').dataTable().fnFilter(this.value);
+			buscarben = 1;
+			$('#tbl_beneficiarios').find('input').first().focus();
+		// }
+		if(this.value=='' && buscarben==1) {
+			$('#tbl_beneficiarios').dataTable().fnFilter('');
+			buscarben = 0;
+			$('#tbl_beneficiarios').find('input').first().focus();
+		}
+	});
+
+	$("input[name=verlistado]").click(function () {
+		$('#tbl_beneficiarios').dataTable().fnFilter($(this).attr('id'), 1);
+	});
+
+	$.ajax({
+		url: "app/DBProcs.php",
+		data: {
+			opcion: "cedulasid",
+			sqlcnx: 1,
+		},
+		type: "POST",
+		dataType: "json",
+		success : function(data) {
+			for (i=0; i<data.length; i++) {
+				$("#cedulasid").append('<option value="'+ data[i].id + '" title="ID: ' + '[' + data[i].id + '] ' + '">' + data[i].descripcion + '</option>');
+			}
+		}
+	}).done(function() {
+		$('#fclienteb').focus();
+	})
+
+	$('#tbl_beneficiarios').DataTable({ scrollY: $('#frmpedidos').height()+'px' }).columns.adjust().draw();
+
+	$('#fclienteb').on('change', function() {
+		$('#tbl_beneficiarios').DataTable({ scrollY: $('#frmpedidos').height()+'px', data: [] }).columns.adjust().draw();
+		$('#nomempresa').val([]);
+		$('#montosaldo').val([]);
+	})
+
+	$('.modal').modal({ backdrop: 'static', keyboard: false, show: false });
+
+	$('.modal').on('hidden.bs.modal', function() { $('.modal-backdrop').css('zIndex', 8888); });
+
+	$('#verEdoCta').on('shown.bs.modal', function() {
+		$('#idbeneficiario').val(null).focus();
+	})
+
+	$('#verCsv').on('hidden.bs.modal', function() {
+		// $('#idbeneficiario').val(null).focus();
+	})
+
+	$('#verEdoCta').on('hidden.bs.modal', function() {
+		$('.input-daterange input').each(function() {
+			if($(this).data('id') == 'fechai')
+				$(this).datepicker("setDate", moment().startOf('month').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechaf')
+				$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+		});
+		$('#nombeneficiario').html('&nbsp;');
+		$('#tblEdoCta tbody').empty();
+		$('#idbeneficiario').val(null).focus();
+	})
+
+	function validarArchivoCsv() {
+		var paqueteDeDatos = new FormData();
+		paqueteDeDatos.append('archivo', $('#nom_archivo')[0].files[0]);
+		paqueteDeDatos.append('opcion', 'validarArchivoCsv');
+		paqueteDeDatos.append('sqlcnx', 1);
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			type: 'POST',
+			contentType: false,
+			dataType: "text",
+			data: paqueteDeDatos,
+			processData: false,
+			cache: false, 
+			success: function(data){
+				data = data.split('¬');
+				if(data[0]==0) {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: 'Archivo <b>inválido</b>.<br>'+
+								'La información de este archivo ya existe, por favor verifique.'+
+								'<br>'+data[1],
+						showCancelButton: false,
+					})
+					$('#nom_archivo').val('');
+				} else {
+					$('#divcsv').html(data[1])
+					$('#verCsv').modal('show');
+				}
+			}
+		});
+	}
+
+	$('#btnaceptar').on('click', function() {
+		cargando2('show');
+		var paqueteDeDatos = new FormData();
+		paqueteDeDatos.append('archivo', $('#nom_archivo')[0].files[0]);
+		paqueteDeDatos.append('opcion', 'subirArchivoBonos');
+		paqueteDeDatos.append('usidnom', $('#uinombre').val() + ' (' + $('#uilogin').val() + ')');
+		paqueteDeDatos.append('sqlcnx', 1);
+		$('#nom_archivo').val('');
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			type: 'POST',
+			contentType: false,
+			dataType: "json",
+			data: paqueteDeDatos,
+			processData: false,
+			cache: false, 
+			success: function(data){ // En caso de que todo salga bien.
+				var datos = data.split('¬');
+				if(datos[0]==1) {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'success',
+						html: datos[1],
+						showCancelButton: false,
+					}).then((result) => {
+						if (result.value) {
+							$('#idempresa').val(datos[2]);
+							buscarEmpresa(datos[2]);
+						}
+					})
+				} else {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: datos[1],
+						showCancelButton: false,
+					})
+				};
+			},
+			error: function (jqXHR, textStatus, errorThrown){ // Si hay algún error.
+				msg.fire({
+					title: '!!! A T E N C I Ó N ¡¡¡',
+					icon: 'error',
+					html: 'Algo fallo, intente de nuevo<br>'+jqXHR.responseText,
+					showCancelButton: false,
+				}).then((result) => {
+					if (result.value) {
+						cargando2('hide');
+						cargarcontenido('conf_bonos_pos');
+					}
+				})
+			}
+		}).done(function() {
+			cargando2('hide');
+		});
+	})
+
+	function buscarEmpresa(idempresa) {
+		if(idempresa!='' && idempresa!=0) {
+			cargando('show');
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "buscarEmpresa",
+					idpara: idempresa,
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.nom_empresa!='') {
+						$('#montosaldo').val(data.monto_resta);
+						$('#tbl_beneficiarios').dataTable({
+							scrollY: $('#frmpedidos').height()+'px',
+							order: [ 1, 'asc'],
+							data: data.beneficiario,
+							searching: true,
+							columns: [
+								{ data: "id_beneficiario",  sClass: "txtcomp m-0 p-0 text-left align-middle border border-top-0 border-bottom-0" },
+								{ data: "nom_beneficiario", sClass: "txtcomp m-0 p-0 text-left align-middle border border-top-0 border-bottom-0" },
+								{ data: "saldo",            sClass: "txtcomp m-0 p-0 text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+								{ data: "fecha_mod",        sClass: "txtcomp m-0 p-0 text-center align-middle border border-top-0 border-bottom-0" },
+							],
+						});
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'La Empresa <b>[ '+idempresa+' ]</b> no Existe<br>ó no tiene bonos pendientes.<br>Verifique e intente de nuevo.',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#idempresa').val(null).focus();
+							}
+						})
+					}
+				},
+				complete: function() { 
+					cargando('hide');
+				}
+			})
+		}
+	}
+
+	function buscarEdoCta(idbeneficiario) {
+		if(idbeneficiario.trim()!='' && idbeneficiario!=0) {
+			cargando('show');
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "buscarEdoCta",
+					idpara: $("#cedulasid option:selected").text().trim()+idbeneficiario,
+					sqlcnx: 1,
+					fecha : function() { 
+								fechas = [];
+								$('.input-daterange input').each(function() {
+									fechas.push(moment($(this).datepicker().val(), 'DD-MM-YYYY').format('YYYY-MM-DD'))
+								});
+								return fechas
+							}
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					$('#tblEdoCta tbody').empty();
+					$('#nombeneficiario').html('&nbsp;');
+					if(data.nombeneficiario!='') {
+						$('#nombeneficiario').html(data.nombeneficiario);
+						var htmlTags = '';
+						data = data.datos;
+						$.each( data, function( key, valor ) {
+							$('#saldoAct').html(valor['saldo'])
+							var textcolor = valor['saldo2']<0?'text-danger':'text-dark';
+							htmlTags += '<tr class="alert-secondary txtcomp">'+
+								'<td width=" 5%" class="'+textcolor+' txtcomp p-2 text-nowrap text-right">'+
+									((valor['fila']>0) ? valor['fila'] : '') +
+								'</td>'+
+								'<td width=" 8%" class="'+textcolor+' txtcomp p-2 text-nowrap cid">'+valor['id']+'</td>'+
+								'<td width="12%" class="'+textcolor+' txtcomp p-2 text-nowrap">'+valor['fecha']+'</td>'+
+								'<td width="40%" class="'+textcolor+' txtcomp p-2 text-left"  >'+valor['movimiento']+'</td>'+
+								'<td width="10%" class="'+textcolor+' txtcomp p-2 text-right" >'+valor['debe']+'</td>'+
+								'<td width="10%" class="'+textcolor+' txtcomp p-2 text-right" >'+valor['haber']+'</td>'+
+								'<td width="10%" class="'+textcolor+' txtcomp p-2 text-right" >'+valor['saldo']+'</td>'+
+								'<td width=" 5%" class="text-center">'+
+									'<button class="btn btn-danger btnanular btn-sm '+
+										((valor['id']=='')?'d-none':'')+
+										'" title="Anular Movimiento">'+
+										'<i class="fas fa-lg fa-trash-alt"></i>'+
+									'</button>'+
+								'</td></tr>';
+						});
+						$('#tblEdoCta tbody').append(htmlTags);
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Beneficiario no Encontrado',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#idbeneficiario').focus().select();
+							}
+						})
+					}
+				}
+			}).done(function() {
+				cargando('hide');
+			});
+		}
+	}
+
+	$("#buscarbarr").keyup(function(e) {
+		if(e.which == '13') {
+			$('#tbl_beneficiarios').dataTable().fnFilter(this.value, 0);
+			buscarbarr = 1;
+			$('#tbl_beneficiarios').find('input').first().focus();
+		}
+		if(this.value=='' && buscarbarr==1) {
+			$('#tbl_beneficiarios').dataTable().fnFilter('', 0);
+			buscarbarr = 0;
+			$('#tbl_beneficiarios').find('input').first().focus();
+		}
+	});
+
+	$('#tblEdoCta tbody').on('click', '.btnanular', function() {
+		var fila = $(this).closest("tr")
+		var id = $(this).closest("tr").find(".cid").text();
+		msg.fire({
+			title: 'Anular Movimiento de Bono [' + id + ']',
+			icon: 'question',
+			html: 'Ingrese una jastificación de anulación del Bono',
+			input: 'textarea',
+			inputValue: '',
+			inputPlaceholder: 'Ingrese una jastificación de anulación del Bono...',
+			onOpen: () => {
+				Swal.getContent().querySelector('.swal2-input').select()
+			},
+			customClass: {
+				popup: 'p-2 bg-dark border border-warning',
+				title: 'text-warning bg-transparent pl-3 pr-3',
+				closeButton: 'btn btn-sm btn-danger',
+				content: 'bg-white border border-warning rounded p-1',
+				confirmButton: 'btn btn-success m-1',
+				cancelButton: 'btn btn-danger m-1',
+				input: 'border border-dark text-left',
+			},
+		}).then((result) => {
+			if(result.value.trim()!='') {
+				$.ajax({
+					url: "app/DBProcs.php",
+					data: {
+						opcion: "anularMovimientoBonos",
+						idpara: id,
+						justif: result.value,
+						userid: $('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
+						sqlcnx: 1,
+					},
+					type: "POST",
+					dataType: "text",
+					success : function(data) {
+						data = data.split('¬');
+						if(data[0]=='1') {
+							fila.remove();
+						} else {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'error',
+								html: data[1],
+								showCancelButton: false,
+							})
+						}
+					}
+				})
+			}
+		})
+	})
+
+	function listaCCBonosb() {
+		if($('#fclienteb').val().trim()!='') {
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "listaCCBonos",
+					idpara: ($('#fclienteb').val().trim()).toUpperCase(),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>1){
+						$('#ttmodalb').html('Proveedores que cumplen con la busqueda: "' + $('#fclienteb').val().trim() + '"');
+						var contenido = '';
+						contenido +=
+							'<table id="listaCCBonosb" ' +
+								'class="table table-striped table-hover w-100">' +
+								'<thead class="bg-dark-gradient">' +
+									'<tr>' +
+										'<th>ID Cliente</th>' +
+										'<th>Nombre o razón Social</th>' +
+										'<th>Monto por Canjear</th>'+
+									'</tr>' +
+								'</thead>' +
+								'<tbody>';
+						for (i = 0; i < data.length; i++) {
+							var saldo = data[i].saldo*1
+							contenido +=
+								'<tr>' +
+									'<td>' + data[i].id_empresa + '</td>' +
+									'<td>' + data[i].nom_empresa + '</td>' +
+									'<td align="right">' + (saldo.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')) + '</td>' +
+								'</tr>';
+						}
+						contenido += '</tbody></table>';
+						contenido += '<script>' +
+							'$("#listaCCBonosb").dataTable({ ' +
+								'scrollY: "40vh", ' +
+								// 'scrollCollapse: true, ' +
+								'order: [1, "asc"],' +
+							'});' +
+							'</' + 'script>';
+						$('#cntmodalb').addClass('m-1');
+						$('#cntmodalb').html(contenido);
+						$('#dtmodalb').modal('show');
+					} else if(data.length>0) {
+						seleccion(data[0]['id_empresa'],data[0]['nombre'],data[0]['saldo']*1)
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontraron proveedores para: <b>"'+$('#fclienteb').val()+ '</b>"',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#btnExport').attr('disabled', true);
+								$('#btnExport').switchClass("btn-success", "btn-secondary");
+								$('#fclienteb').val([]);
+								$('#fclienteb').focus().select();
+								$('#nomempresa').val([]);
+								$('#montosaldo').val([]);
+							}
+						})
+					}
+				}
+			}).done(function() {
+				setTimeout(function() {
+					$('#cntmodalb').css( 'display', 'block' );
+					$('#listaCCBonosb').DataTable().columns.adjust().draw();
+					cargando('hide'); 
+				}, 150);
+			})
+		} else {
+			$('#fclienteb').val([]);
+			$('#fclienteb').focus();
+			$('#nomempresa').val([]);
+			$('#montosaldo').val([]);
+		}
+	}
+
+	function seleccion(codigo, desc, monto=0) {
+		$('#btnExport').attr('disabled', false);
+		$('#btnExport').switchClass("btn-secondary", "btn-success");
+		$('#fclienteb').val(codigo);
+		$('#nomempresa').val(desc);
+		$('#montosaldo').val(monto.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+		$('#dtmodalb').modal('hide');
+	}
+
+	$('#btnExportDet').on('click', function() {
+		if($('#fclienteb').val().trim()!='' && $('#fclienteb').val()!=0) {
+			cargando('show');
+			listaCCBonosb();
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "exportDetconSaldoBonos",
+					idpara: $('#fclienteb').val().trim(),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					fetch(data['enlace'])
+						.then(resp => resp.blob())
+						.then(blob => {
+							const url = window.URL.createObjectURL(blob);
+							const a = document.createElement('a');
+							a.style.display = 'none';
+							a.href = url;
+							// the filename you want
+							a.download = data['archivo'];
+							document.body.appendChild(a);
+							a.click();
+							window.URL.revokeObjectURL(url);
+							$.ajax({
+								data: { 
+									opcion: "borrarArchivoTNS",
+									idpara: data['archivo'],
+								},
+								type: "POST",
+								dataType: "text",
+								url: "app/DBProcs.php",
+							}).done(function(){
+								$('#ModalDatos2').modal('hide');
+							})
+						}).catch(function() {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'error',
+								html: 'Se prsentó un error, no se pudo descargar '+
+										data['archivo']+' de forma automática, '+
+										'para descargar haga click en el enlace '+
+										'<i class="fas fa-hand-point-down"></i><br>'+
+								  		'[ <a id="enlacef" href="' + data['enlace'] +
+								  			'"><span class="btn-link">' + data['archivo'] +
+								  		'</span></a> ]',
+								showCancelButton: false,
+							})
+						});
+				},
+				complete: function() { 
+					cargando('hide');
+				}
+			})
+		} else {
+			msg.fire({
+				title: '!!! A T E N C I Ó N ¡¡¡',
+				icon: 'info',
+				html: 'Debe buscar una Empresa primero',
+				showCancelButton: false,
+				onAfterClose: function() {
+					$('#fclienteb').focus();
+				}
+			})
+		}
+	})
+
+	jQuery.fn.dataTableExt.oApi.fnFilterClear  = function ( oSettings ) {
+		var i, iLen;
+	 
+		/* Remove global filter */
+		oSettings.oPreviousSearch.sSearch = "";
+	 
+		/* Remove the text of the global filter in the input boxes */
+		if ( typeof oSettings.aanFeatures.f != 'undefined' )
+		{
+			var n = oSettings.aanFeatures.f;
+			for ( i=0, iLen=n.length ; i<iLen ; i++ )
+			{
+				$('input', n[i]).val( '' );
+			}
+		}
+	 
+		/* Remove the search text for the column filters - NOTE - if you have input boxes for these
+		 * filters, these will need to be reset
+		 */
+		for ( i=0, iLen=oSettings.aoPreSearchCols.length ; i<iLen ; i++ )
+		{
+			oSettings.aoPreSearchCols[i].sSearch = "";
+		}
+	 
+		/* Redraw */
+		oSettings.oApi._fnReDraw( oSettings );
+	};
+</script>

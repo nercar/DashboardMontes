@@ -1,0 +1,514 @@
+<style>
+	.dataTables_filter {
+		display: none;
+	}
+	.dropdown-toggle {
+		background-color: white !important;
+		color: #495057 !important;
+		border: 1px solid #ced4da !important;
+	}
+	.popover{
+				max-width:500px;
+		}
+</style>
+<!-- Main row -->
+<div class="row" id="contenido_pagina">
+	<div class="col-md-12 col-sm-12 mt-2">
+		<div class="row mb-1">
+			<div class="d-flex col-12">
+				<div class="btn-group-toggle mr-auto" data-toggle="buttons" id="btn_filtros">
+					<label class="btn btn-outline-primary btn-sm mr-3" id="lbl_filtros">
+						<input type="checkbox" autocomplete="off">
+						<i class="fas fa-filter"></i> Opciones de la Consulta
+					</label>
+					<span id="filtros"></span>
+				</div>
+				<button class="btn btn-success btn-outline-success btn-sm ml-auto" disabled id="btnExport">
+					<i class="fas fa-file-excel"></i> Exportar
+				</button>
+			</div>
+		</div>
+		<div class="card card-primary elevation-2 border border-dark">
+			<div class="card-header d-flex p-1 pl-2 mb-1 align-items-baseline">
+				<i class="fas fa-file-export"></i>&nbsp;
+				<span id="ttitulo">Exportar Ventas de Bi+ a Excel</span>
+			</div>
+			<div class="card-body p-0 m-0">
+				<table id="LstVtasBimas" class="table table-striped table-hover table-bordered w-100">
+					<thead class="bg-dark-gradient">
+						<tr>
+							<th class="text-center align-middle">Tienda</th>
+							<th class="text-center align-middle">Código</th>
+							<th class="text-center align-middle">Barra</th>
+							<th class="text-center align-middle">Descripcion</th>
+							<th class="text-center align-middle">Marca</th>
+							<th class="text-center align-middle">Departamento</th>
+							<th class="text-center align-middle">Grupo</th>
+							<th class="text-center align-middle">Subgrupo</th>
+							<th class="text-center align-middle">Proveedor</th>
+							<th class="text-center align-middle">Ult.Venta</th>
+							<th class="text-center align-middle">Cantidad</th>
+							<th class="text-center align-middle">Costo</th>
+							<th class="text-center align-middle">Venta</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+					<tfoot class="bg-dark-gradient">
+						<tr>
+							<th colspan="8">&nbsp;</th>
+							<th>&nbsp;</th>
+							<th>&nbsp;</th>
+							<th>&nbsp;</th>
+							<th>&nbsp;</th>
+							<th>&nbsp;</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<!-- /.card-body -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- inputs para guardar el valor del filtro y setearlos al abrir el popover -->
+<input type="hidden" value="" id="localidad">
+<input type="hidden" value="" id="proveedor">
+<input type="hidden" value="" id="nombrepro">
+<input type="hidden" value="" id="fechafinal">
+<input type="hidden" value="" id="fechainicial">
+<input type="hidden" value="" id="departamento">
+<input type="hidden" value="0" id="inp_chk_loca">
+<input type="hidden" value="0" id="inp_chk_dpto">
+<input type="hidden" value="0" id="inp_chk_grp">
+<input type="hidden" value="0" id="inp_chk_sgrp">
+<input type="hidden" value="0" id="inp_chk_prov">
+<input type="hidden" value="0" id="inp_chk_vta">
+<!--  -->
+
+<section>
+	<div id="PopoverContent" style="display: none;">
+		<div class="row">
+			<div class="col-7">
+				<label for="select_tiendas" class="m-0">Tienda: </label>
+				<select id="select_tiendas" class="selectpicker form-control form-control-sm col-12"
+						multiple data-hide-disabled="true" data-actions-box="true" data-size="5"
+						title="Seleccione una Tienda">
+				</select>
+				<label for="select_dptos" class="m-0 mt-3">Departamento: </label>
+				<select id="select_dptos" class="selectpicker form-control form-control-sm col-12"
+						data-hide-disabled="true" data-actions-box="true" data-size="5"
+						title="Todos los Departamentos">
+				</select>
+				<label for="select_dptos" class="m-0 mt-3">Proveedor: <span id="cod_prov"></span></label>
+				<form action="" class="form-inline">
+					<input style="display: none;" placeholder="Nombre Parcial">
+					<input type="text" id="fprov"
+						onkeyup="if(event.keyCode==13) { listaProvBDES(); };
+								if(this.value=='') { $('#cod_prov').html(''); }" 
+					placeholder="Nombre/Código/Rif Parcial" class="form-control form-control-sm col-12">
+				</form>
+				<label for="select_dptos" class="m-0 mt-3">Rango de Fechas: </label>
+				<div class="input-group input-daterange date gfechas d-flex align-items-baseline col-12">
+					<div class="input-group-addon font-weight-normal p-0 m-0 mr-1">Del</div>
+					<input type="text" data-id="fechai1" class="form-control form-control-sm rounded"
+						autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy">
+					<div class="input-group-addon font-weight-normal p-0 m-0 ml-1 mr-1">Al</div>
+					<input type="text" data-id="fechaf1" class="form-control form-control-sm rounded"
+						autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy">
+				</div>
+			</div>
+			<div class="col-5">
+				<label>Mostrar éstos Campos: </label>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input btn btn-sm m-0 p-0" id="chk_loca">
+					<label class="custom-control-label btn btn-sm m-0 p-0" for="chk_loca">Localidad</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input btn btn-sm m-0 p-0" id="chk_dpto">
+					<label class="custom-control-label btn btn-sm m-0 p-0" for="chk_dpto">Departamento</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input btn btn-sm m-0 p-0" id="chk_grp">
+					<label class="custom-control-label btn btn-sm m-0 p-0" for="chk_grp">Grupo</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input btn btn-sm m-0 p-0" id="chk_sgrp">
+					<label class="custom-control-label btn btn-sm m-0 p-0" for="chk_sgrp">Sub-Grupo</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input btn btn-sm m-0 p-0" id="chk_prov">
+					<label class="custom-control-label btn btn-sm m-0 p-0" for="chk_prov">Proveedor</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input btn btn-sm m-0 p-0" id="chk_vta">
+					<label class="custom-control-label btn btn-sm m-0 p-0" for="chk_vta">Fecha Última Venta</label>
+				</div>
+			</div>
+		</div>
+		<hr class="p-0 m-0 mt-2 mb-2">
+		<div class="row d-none" id="botones">
+			<div class="d-flex justify-content-start col-2">
+				<button class="btn btn-danger btn-sm" onclick="limpiarFiltros()">
+					<i class="fas fa-broom"></i> Limpiar Todo
+				</button>
+			</div>
+			<div class="d-flex justify-content-end col-10">
+				<button class="btn btn-success btn-sm" disabled id="btn_consultar" onclick="btn_consultar()">
+					<i class="fas fa-search"></i> Consultar
+				</button>
+				&nbsp;&nbsp;&nbsp;
+				<button class="btn btn-warning btn-sm" onclick=" $('#lbl_filtros').removeClass('active'); $('#btn_filtros').popover('hide');">
+					<i class="fas fa-close"></i> Cerrar
+				</button>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	var todas = '';
+	var table = $('#LstVtasBimas').DataTable( { scrollY: '64vh' } ).columns.adjust().draw();
+	table.column(0).visible(false);
+	table.column(5).visible(false);
+	table.column(6).visible(false);
+	table.column(7).visible(false);
+	table.column(8).visible(false);
+	table.column(9).visible(false);
+
+	$('#btn_filtros').popover({
+		container: $('#contenido_pagina'),
+		title: 'Opciones para la Consulta',
+		html: true,
+		placement: 'right',
+		trigger: 'click',
+		sanitize: false,
+		content: function () {
+			return $("#PopoverContent").html();
+		}
+	}).on('shown.bs.popover', function() {
+		$('.gfechas').datepicker({
+			format: "dd-mm-yyyy",
+			todayBtn: "linked",
+			language: "es",
+			autoclose: true,
+			todayHighlight: true,
+			endDate: "0d",
+		});
+
+		$('.input-daterange input').each(function() {
+			if($(this).data('id') == 'fechai1')
+				$(this).datepicker("setDate", moment().startOf('month').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechaf1')
+				$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+		});
+
+		$('.input-daterange input').on('change', function() {
+			validaropciones();
+		});
+
+		$('[data-mask]').inputmask();
+
+		// Se consultan las tiendas activas en el dashboard para seleccionar
+		$.ajax({
+			data: {
+				opcion: "listaTiendasBDES",
+				sqlcnx: 1,
+				idpara: ptodas+'¬'+ptienda,
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function(data) {
+				var options = [], _options;
+				$.each(data, function() {
+					var option = '<option value="' + this.codigo + '">' + this.nombre + '</option>';
+					options.push(option);
+					_options = options.join('');
+				});
+				$('#select_tiendas')[0].innerHTML = _options;
+				$('#select_tiendas').selectpicker();
+			}
+		}).done(function() {
+			$('#select_tiendas').on('changed.bs.select', function() {
+				validaropciones();
+			});
+		
+			$.ajax({
+				data: { opcion: "listaDepartamentos" },
+				type: "POST",
+				dataType: "json",
+				url: "app/DBProcs.php",
+				success: function(data) {
+					var options = [], _options;
+					options.push('<option value="a.departamento">Todos los Departamentos</option>');
+					$.each(data, function() {
+						var option = '<option value="' + this.codigo + '">' + this.descripcion + '</option>';
+						options.push(option);
+						_options = options.join('');
+					});
+					$('#select_dptos')[0].innerHTML = _options;
+					$('#select_dptos').selectpicker();
+				}
+			}).done(function() {
+				$('#select_dptos').val('a.departamento');
+				if($('#localidad').val()!='') {
+					$('#select_tiendas').selectpicker( 'val', ($('#localidad').val()).split(',') );
+					$('#select_dptos').selectpicker( 'val', $('#departamento').val() );
+					$('#fprov').val( $('#nombrepro').val() );
+					$('#cod_prov').html($('#proveedor').val())
+					$('.input-daterange input').each(function() {
+						if($(this).data('id') == 'fechai1')
+							$(this).datepicker("setDate", $('#fechainicial').val());
+						if($(this).data('id') == 'fechaf1')
+							$(this).datepicker("setDate", $('#fechafinal').val());
+					});
+				}
+				$('#chk_loca').prop('checked', $('#inp_chk_loca').val()==1);
+				$('#chk_dpto').prop('checked', $('#inp_chk_dpto').val()==1);
+				$('#chk_grp' ).prop('checked', $('#inp_chk_grp' ).val()==1);
+				$('#chk_sgrp').prop('checked', $('#inp_chk_sgrp').val()==1);
+				$('#chk_prov').prop('checked', $('#inp_chk_prov').val()==1);
+				$('#chk_vta' ).prop('checked', $('#inp_chk_vta' ).val()==1);
+				$('#botones').removeClass('d-none');
+			})
+		});
+	})
+
+	$('#btnExport').on('click', function (){
+		// se dispara el evento export del boton oculto del datatable
+		$('#LstVtasBimas').DataTable().button( '0' ).trigger();
+	})
+
+	function limpiarFiltros() {
+		if (confirm('Esta seguro de limpiar todo???\n\nToda la información consultada y que no se haya exportado se perderá,\nDesea Continuar???')) {
+			cargarcontenido('exportvtasbimas')
+		}
+	}
+
+	function btn_consultar() {
+		cargando('show');
+		$('#LstVtasBimas').DataTable().clear().draw();
+		
+		$('#btnExport').attr('disabled', true);
+		$('#btnExport').addClass('btn-outline-success');
+		
+		$('#lbl_filtros').removeClass('active');
+		$('#btn_filtros').popover('hide');
+		
+		var fechas = [];
+		$('.input-daterange input').each(function() {
+			fechas.push($(this).datepicker().val())
+		});
+		
+		var filtros = '';
+		filtros += 'Consultando Ventas de Bi+ [desde: ' + fechas[0] + ' hasta: ' + fechas[1] + ']';
+		if($('#select_dptos').val()!='a.departamento') {
+			filtros += ' [Departamento: ' + $("#select_dptos option:selected").text() + ']';
+		}
+		filtros += ' [Localidad: ' + $('[data-ID~="select_tiendas"]').attr('title') + ']';
+		if($('#cod_prov').html()!='') {
+			filtros += ' [Proveedor: ' + $('#nombrepro').val() + ']';
+		}
+
+		var otrosc = '';
+		otrosc += $('#chk_loca').prop('checked') ? 'loc¬' : '';
+		otrosc += $('#chk_dpto').prop('checked') ? 'dpt¬' : '';
+		otrosc += $('#chk_grp' ).prop('checked') ? 'grp¬' : '';
+		otrosc += $('#chk_sgrp').prop('checked') ? 'sgr¬' : '';
+		otrosc += $('#chk_prov').prop('checked') ? 'pro¬' : '';
+		otrosc += $('#chk_vta' ).prop('checked') ? 'vta¬' : '';
+
+		otrosc =  otrosc.slice(0, -1);
+
+		$('#localidad'   ).val( ($('#select_tiendas').val()).toString() );
+		$('#proveedor'   ).val( $('#cod_prov').html() );
+		$('#nombrepro'   ).val( $('#fprov').val() );
+		$('#fechafinal'  ).val( fechas[1] );
+		$('#fechainicial').val( fechas[0] );
+		$('#departamento').val( $('#select_dptos').val() );
+		
+		$('#inp_chk_loca').val( $('#chk_loca').prop('checked') ? 1 : 0 );
+		$('#inp_chk_dpto').val( $('#chk_dpto').prop('checked') ? 1 : 0 );
+		$('#inp_chk_grp' ).val( $('#chk_grp' ).prop('checked') ? 1 : 0 );
+		$('#inp_chk_sgrp').val( $('#chk_sgrp').prop('checked') ? 1 : 0 );
+		$('#inp_chk_prov').val( $('#chk_prov').prop('checked') ? 1 : 0 );
+		$('#inp_chk_vta' ).val( $('#chk_vta' ).prop('checked') ? 1 : 0 );
+
+		var colhide = new Array();
+		if( !$('#chk_loca').prop('checked') ) { colhide.push(0) };
+		if( !$('#chk_dpto').prop('checked') ) { colhide.push(5) };
+		if( !$('#chk_grp' ).prop('checked') ) { colhide.push(6) };
+		if( !$('#chk_sgrp').prop('checked') ) { colhide.push(7) };
+		if( !$('#chk_prov').prop('checked') ) { colhide.push(8) };
+		if( !$('#chk_vta' ).prop('checked') ) { colhide.push(9) };
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "exportVtasBimas",
+				fechai: moment(fechas[0], 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fechaf: moment(fechas[1], 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: ($('#select_tiendas').val()).toString(),
+				iddpto: $('#select_dptos').val(),
+				idprov: $('#cod_prov').html(),
+				otrosc: otrosc,
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>0) {
+					$('#LstVtasBimas').dataTable( {
+						scrollY: '64vh',
+						scrollCollapse: false,
+						order: [ 3, 'asc' ],
+						buttons: [
+							{
+								extend: 'excelHtml5',
+								autoFilter: true,
+								title: $('#ttitulo').html(),
+								messageTop: filtros,
+								filename: 'VtasBimas',
+								sheetName: 'Ventas Bi+',
+								exportOptions: { columns: ':visible' }
+							}
+						],
+						columnDefs: [ { targets: colhide, visible: false }],
+						data: data,
+						columns: [
+							{ data: 'tienda',       sClass: 'align-middle' },
+							{ data: 'codigo',       sClass: 'align-middle' },
+							{ data: 'barra',        sClass: 'align-middle' },
+							{ data: 'descripcion',  sClass: 'align-middle' },
+							{ data: 'marca',        sClass: 'align-middle' },
+							{ data: 'departamento', sClass: 'align-middle' },
+							{ data: 'grupo',        sClass: 'align-middle' },
+							{ data: 'subgrupo',     sClass: 'align-middle' },
+							{ data: 'proveedor',    sClass: 'align-middle' },
+							{ data: 'ultventa',     sClass: 'align-middle text-center' },
+							{ data: 'cantidad',     sClass: 'align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'monto',        sClass: 'align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'montov',       sClass: 'align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+						footerCallback: function (row, data, start, end, display) {
+							totalp0 = this.api().rows().count();
+							totalp10 = this.api()
+								.column(10) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+							totalp11 = this.api()
+								.column(11) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+							totalp12 = this.api()
+								.column(12) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+
+							$(this.api().column(0).footer()).html((isNaN(totalp0) ? 0 : totalp0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + ' Artículos Pedidos');
+							$(this.api().column(9).footer()).html('Totales');
+							$(this.api().column(10).footer()).html((isNaN(totalp10) ? 0 : totalp10).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(11).footer()).html((isNaN(totalp11) ? 0 : totalp11).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(12).footer()).html((isNaN(totalp12) ? 0 : totalp12).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						},
+					});	
+				}
+			}
+		}).done(function() {
+			cargando('hide');
+			$('#btnExport').attr('disabled', false);
+			$('#btnExport').removeClass('btn-outline-success');
+		})
+	};
+
+	function validaropciones() {
+		var fechas = [];
+		$('.input-daterange input').each(function() {
+			fechas.push($(this).datepicker().val())
+		});
+		if($('#select_tiendas').val().length>0 && fechas[0]!='' && fechas[1]!='') {
+			$('#btn_consultar').attr('disabled', false);
+		} else {
+			$('#btn_consultar').attr('disabled', true);
+		}
+	}
+
+	// Presenta un listado de proveedores con el filtro indicado
+	function listaProvBDES() {
+		cargando('show')
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "listaProvBDES",
+				idpara: $('#fprov').val().trim(),
+				sqlcnx: 1
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>1){
+					$('#tituloModal2').html('Proveedores que cumplen con la busqueda: "' + $('#fprov').val().trim() + '"');
+					$('#subtitulo').html('Seleccione un Proveedor');
+					var contenido = '';
+					contenido +=
+						'<table id="tlistaProvBDES" cellpadding="0" cellspacing="0" ' +
+							'class="table table-striped table-hover p-0 m-0 w-100">' +
+							'<thead class="bg-dark-gradient">' +
+								'<tr>' +
+									'<th>Código</th>' +
+									'<th>Rif</th>' +
+									'<th>Nombre o razón Social</th>' +
+								'</tr>' +
+							'</thead>' +
+							'<tbody>';
+					for (i = 0; i < data.length; i++) {
+						contenido +=
+							'<tr>' +
+								'<td>' + data[i].codigo + '</td>' +
+								'<td>' + data[i].rif + '</td>' +
+								'<td>' + data[i].descripcion + '</td>' +
+							'</tr>';
+					}
+					contenido += '</tbody></table>';
+					contenido += '<script>' +
+						'$("#tlistaProvBDES").dataTable({ ' +
+							'scrollY: "60vh", ' +
+							'scrollCollapse: true, ' +
+							'order: [2, "asc"],' +
+						'});' +
+						'</' + 'script>';
+					$('#contenidoModal2').html(contenido);
+					$('#ModalDatos2').modal('show');
+				} else if(data.length>0) {
+					seleccion('prov', data[0]['codigo'], data[0]['nombre']);
+				} else {
+					alert('No se encontraron proveedores para: "' + $('#fprov').val() + '"');
+					$('#fprov').val('');
+				}
+			}
+		}).done(function() {
+			setTimeout(function() {
+				$('#contenidoModal2').css( 'display', 'block' );
+				$('#tlistaProvBDES').DataTable().columns.adjust().draw();
+				cargando('hide'); 
+			}, 150);
+		})
+	}
+
+	function seleccion(campo, codigo, desc) {
+		$('#cod_'+campo).html(codigo);
+		$('#f'+campo).val(desc);
+		$('#f'+campo).attr('title', desc);
+		$('#f'+campo).removeClass('d-none');
+		$('#ModalDatos2').modal('hide');
+	}
+</script>

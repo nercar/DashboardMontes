@@ -1,0 +1,420 @@
+<!-- HTML para conf_puntos_articulos -->
+<div class="col-md-12 col-sm-12 mt-1">
+	<div class="card card-primary elevation-2 border border-dark">
+		<div class="card-header d-flex p-1 pl-2 align-Arts-baseline">
+			<span id="ttitulo" class="mr-auto"><i class="fas fa-network-wired"></i> Configurar Puntos por <span id="labelTipo">Artículos</span></span>
+			<button class="btn btn-sm btn-warning ml-auto p-0 pl-1 pr-1" data-toggle="modal" data-target="#agrArtArt" id="btnArt">
+				<i class="fas fa-plus-circle"></i> Agregar Artículo
+			</button>
+		</div>
+		<div class="card-body p-0 m-0">
+			<div class="d-flex align-Arts-baseline col m-1">
+				<span class="font-weight-bold">Buscar:&nbsp;</span>
+				<input type="text" class="form-control form-control-sm m-0" id="buscarLA" value=""
+					placeholder="Buscar Artículo en la Lista...">
+			</div>
+			<table id="listaArtPuntos" class="table-striped table-hover table-bordered" width="100%">
+				<thead class="bg-dark-gradient">
+					<tr>
+						<th width="35%" class="text-center">Descripción</th>
+						<th width="18%" class="text-center">Rango de Fecha</th>
+						<th width=" 5%" class="text-center">Cantidad</th>
+						<th width=" 5%" class="text-center">Puntos</th>
+						<th width=" 7%" class="text-center">Opciones</th>
+						<th width="10%" class="text-center">Si Compra</th>
+						<th width="10%" class="text-center">Obtiene Puntos</th>
+						<th width="10%" class="text-center">Valor</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+
+<!-- Modal lista de articulos -->
+<div class="modal fade" id="agrArtArt" style="z-index: 9888;" tabindex="-1" role="dialog" aria-labelledby="agrArtArtLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered">
+		<!-- Modal content-->
+		<div class="modal-content">
+			<div class="modal-header bg-primary pt-1 pb-1">
+				<h4 class="modal-title txtcomp">Seleccione un Artículo para Agregarlo a la Lista</h4>
+			</div>
+			<div class="modal-body p-0" id="contagrArtArt">
+				<form action="" onsubmit="return false;" class="form-inline col-12 p-0 m-0 mt-2">
+					<div class="d-flex w-100 align-content-center justify-content-center ml-2 mr-2">
+						<span class="col-1 font-weight-bold">Buscar: </span>
+						<input type="text" class="form-control form-control-sm m-0 ml-1 mr-l p-1 col-11" id="busAgrArtArt" value=""
+							placeholder="Buscar Artículo en la Lista..." onchange="lstArticulos();">
+					</div>
+				</form>
+				<form action="" onsubmit="return false;" class="p-0 m-0">
+					<table id="lstArticulos" class="w-100 table table-striped table-hover table-bordered" style="height: 52vh">
+						<thead>
+							<tr>
+								<th width="10%" class="txtcomp text-center bg-warning-gradient">Código</th>
+								<th width="90%" class="txtcomp text-center bg-warning-gradient">Descripción</th>
+							</tr>
+						</thead>
+					</table>
+				</form>
+			</div>
+			<div class="modal-footer pt-2 pb-2 align-Arts-end justify-content-end align-top">
+				<button class="btn btn-outline-danger col-3" class="close" data-dismiss="modal" id="btncerrar">
+					Cerrar <i class="fas fa-times-circle"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	$('#listaArtPuntos').dataTable( {
+		scrollY: '64vh',
+		scrollCollapse: false,
+		autoWidth: false,
+		searching: true,
+		processing: false,
+		order: [ [0, 'asc'] ],
+		orderFixed: [ 4, 'desc' ],
+		ajax: {
+			url: "app/controller/conf_puntos.php",
+			data: {
+				opcion: "listaArtPuntos",
+			},
+			type: "POST",
+			dataType: "json",
+		},
+		columns: [
+			{ data: 'descripcion', sClass: "txtcomp text-left   align-middle" },
+			{ data: 'fecha' },
+			{ data: null, sClass: "txtcomp text-center  align-middle",
+				render: function (data) {
+					var ret = '<span style="display: none;">'+data.cantidad+'</span>'+
+								'<input type="number" min="0" step="1" onfocus="resaltar(this, 1); $(this).select();"'+
+								' class="p-0 m-0 form-control form-control-sm text-center selectSize"'+
+								' onblur="if($(this).val()==0) { $(this).val('+data.cantidad+'); }' +
+								' else { $('+"'#inpcompra"+data.codigo+"').val(this.value) } "+
+								' 	resaltar(this, 0); calSimulador('+data.codigo+', -1); "' +
+								' onkeyup="if(event.keyCode==13) calSimulador('+data.codigo+', -1);"'+
+								' onkeydown="return tabE(this,event);"' +
+								' id="inpcantidad'+data.codigo+'" style="height: 25px;" value="'+
+									(data.cantidad)+'">';
+					if(data.activo==0)
+						return (data.cantidad);
+					else
+						return ret;
+				}
+			},
+			{ data: null, sClass: "txtcomp text-center  align-middle",
+				render: function (data) {
+					var ret = '<span style="display: none;">'+data.puntos+'</span>'+
+								'<input type="number" min="0" step="1" onfocus="resaltar(this, 1); $(this).select()" '+
+								' class="p-0 m-0 form-control form-control-sm text-center selectSize"'+
+								' onblur="if($(this).val()==0) { $(this).val('+data.puntos+'); }' +
+								' 	resaltar(this, 0); calSimulador('+data.codigo+', -1); "' +
+								' onkeyup="if(event.keyCode==13) calSimulador('+data.codigo+', -1);"'+
+								' onkeydown="return tabE(this,event);"' +
+								' id="inppuntos'+data.codigo+'" style="height: 25px;" value="'+
+									(data.puntos)+'">';
+					if(data.activo==0)
+						return (data.puntos);
+					else
+						return ret;
+				}
+			},
+			{ data: null, sClass: "txtcomp text-center align-middle",
+				render: function(data) {
+					var checked = (data.activo==1 ? 'checked' : '');
+					var visible = (data.activo==1 ? '' : 'd-none');
+					return '<span style="display: none">'+data.activo+'</span>'+
+							'<div class="custom-control custom-checkbox">' +
+								'<input type="checkbox" class="custom-control-input" ' +
+								' onclick="inactivarArt('+data.codigo+')" '+checked+
+								' id="marcar'+data.codigo+'">' +
+								'<label class="custom-control-label font-weight-normal"' +
+								' for="marcar'+data.codigo+'"></label>' +
+								'<i class="fas fa-save text-primary fa-lg mt-1 '+visible+'" '+
+								' title="Guardar" style="cursor: pointer;"'+
+								' onclick="guardarArt('+data.codigo+')"></i>&nbsp;&nbsp;&nbsp;'+
+								'<i class="fas fa-trash text-danger fa-lg mt-1 '+visible+'" '+
+								' title="Eliminar" style="cursor: pointer;"'+
+								' onclick="eliminarArt('+data.codigo+','+"'"+data.descriptxt+"'"+')"></i>'+
+							'</div>';
+				},
+			},
+			{ data: null, sClass: "txtcomp text-center align-middle",
+				render: function (data) {
+					var ret = '<input type="number" min="0" step="1" onfocus="resaltar(this, 1); $(this).select()" '+
+								' onblur = "if($(this).val()==0) { $(this).val('+data.cantidad+'); } ' +
+								' resaltar(this, 0); calSimulador('+data.codigo+', -1);"'+
+								' onkeyup="if(event.keyCode==13) { calSimulador('+data.codigo+', -1); }" '+
+								' class="p-0 m-0 form-control form-control-sm text-center selectSize"'+
+								' onkeydown="return tabE(this,event);"' +
+								' id="inpcompra'+data.codigo+'" style="height: 25px;" value="'+data.cantidad+'">';
+					if(data.activo==0)
+						return '';
+					else
+						return ret;
+				}
+			},
+			{ data: null, sClass: "txtcomp text-center align-middle",
+				render: function (data) {
+					var ret = '<span class="w-100 text-center" id="inpptocanje'+data.codigo+'"></span>';
+					if(data.activo==0)
+						return '';
+					else
+						return ret;
+				}
+			},
+			{ data: null, sClass: "txtcomp text-center align-middle",
+				render: function (data) {
+					var ret = '<span class="w-100 text-center" id="inpvalcanje'+data.codigo+'"></span>';
+					if(data.activo==0)
+						return '';
+					else
+						return ret;
+				}
+			},
+		],
+		rowCallback: function(row, data) {
+			if(data.activo==0) {
+				$(row).css({'text-decoration': 'line-through', 'font-style': 'italic', 'color': '#929292' }) 
+			}
+		},
+		drawCallback: function() {
+			$('.gfechas').datepicker({
+				format: "dd-mm-yyyy",
+				todayBtn: "linked",
+				language: "es",
+				autoclose: true,
+				todayHighlight: true,
+			});
+			puntoCanje();
+			calSimuladorTodos();
+		}
+	})
+
+	$(window).on('resize', ()=>{
+		if($('#listaArtPuntos').is(':visible')) {
+			setTimeout(()=>$('#listaArtPuntos').DataTable().columns.adjust().draw(), 150);
+		}
+	})
+
+	$("#buscarLA").keyup(function() {
+		// Buscar en la tabla
+		$('#listaArtPuntos').dataTable().fnFilter(this.value);
+	});
+
+	$('#agrArtArt').on('shown.bs.modal', function() {
+		$('#busAgrArtArt').val('').focus();
+		setTimeout(function() {
+			$('#lstArticulos').DataTable({ scrollY: "50vh" }).columns.adjust().draw();
+		}, 100);
+	})
+	
+	$('#agrArtArt').on('hidden.bs.modal', function() {
+		setTimeout(function() {
+			$('#lstArticulos').DataTable().clear().draw();
+			$('#lstArticulos').DataTable({ scrollY: "50vh" }).columns.adjust().draw();
+		}, 100);
+	})
+
+	function calSimulador(codigo, factor) {
+		if(factor>0) {
+			if(($('#inpcompra'+codigo).val()*1)>=($('#inpcantidad'+codigo).val()*1)) {
+				$('#inpptocanje'+codigo).html(Math.floor($('#inpcompra'+codigo).val()*factor))
+				$('#inpvalcanje'+codigo).html(Math.floor($('#inpcompra'+codigo).val()*factor)*$('#valorCanje').val());
+			} else {
+				$('#inpptocanje'+codigo).html(0)
+				$('#inpvalcanje'+codigo).html(0);
+			}
+		} else {
+			if(($('#inpcompra'+codigo).val()*1)>=($('#inpcantidad'+codigo).val()*1)) {
+				factor = $('#inppuntos'+codigo).val()/$('#inpcantidad'+codigo).val();
+				$('#inpptocanje'+codigo).html(Math.floor($('#inpcompra'+codigo).val()*factor))
+				$('#inpvalcanje'+codigo).html(Math.floor($('#inpcompra'+codigo).val()*factor)*$('#valorCanje').val());
+			} else {
+				$('#inpptocanje'+codigo).html(0)
+				$('#inpvalcanje'+codigo).html(0);
+			}
+		}
+	}
+
+	function calSimuladorTodos() {
+		$('#listaArtPuntos').DataTable().rows().data().each(function (datos) {
+			calSimulador(datos.codigo, datos.factor) 
+		})
+	}
+
+	function agregarArt(codigo, descripcion) {
+		if($('#marcar'+codigo).length == 0) {
+			$.ajax({
+				url: "app/controller/conf_puntos.php",
+				data: {
+					opcion: "agregarArt",
+					codigo: codigo,
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.status==1) {
+						$('#agrArtArt').modal('hide');
+						$('#listaArtPuntos').DataTable().ajax.reload( null, false );
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Hubo un error, no se pudo agregar el Artículo',
+							showCancelButton: false,
+						})
+					}
+				},
+				complete: function() {
+					setTimeout(()=>$('#inpcantidad'+codigo).focus(), 750);
+				}
+			})
+		} else {
+			$('#agrArtArt').modal('hide');
+			if(!$('#marcar'+codigo).is(':checked')) {
+				$('#marcar'+codigo).click();
+			}
+			setTimeout(()=>$('#inpcantidad'+codigo).focus(), 750);
+		}
+	}
+
+	function inactivarArt(codigo) {
+		marcar = $('#marcar'+codigo).prop('checked') ? 1 : 0;
+		$.ajax({
+			url: "app/controller/conf_puntos.php",
+			data: {
+				opcion: "inactivarArt",
+				codigo: codigo,
+				marcar: marcar,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.status==0) {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: 'Hubo un error no se pudo Modificar el Artículo<br>'+data.query+'<br>'+data.observacion,
+						showCancelButton: false,
+					})
+				} else {
+					if(marcar==0) {
+						$('#fechai'+codigo).closest('tr').addClass('inactivar');
+					} else {
+						$('#fechai'+codigo).closest('tr').addClass('activar');
+					}
+					setTimeout(function() {
+				        $('#listaArtPuntos').DataTable().ajax.reload( null, true );
+				    }, 100);
+				}		
+			}
+		});
+	}
+
+	function guardarArt(codigo) {
+		$.ajax({
+			url: "app/controller/conf_puntos.php",
+			data: {
+				opcion: "guardarArt",
+				codigo: codigo,
+				fdesde: moment($('#fechai'+codigo).val(), 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment($('#fechaf'+codigo).val(), 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				cant  : $('#inpcantidad'+codigo).val(),
+				puntos: $('#inppuntos'+codigo).val(),
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data==0) {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: 'Hubo un error no se pudo Modificar el Artículo',
+						showCancelButton: false,
+					})
+				} else {
+					$('#fechai'+codigo).closest('tr').addClass('guardar');
+					setTimeout(function() {
+				        $('#listaArtPuntos').DataTable().ajax.reload( null, false );
+				    }, 100);
+				}		
+			}
+		});
+	}
+
+	function eliminarArt(codigo, nombre) {
+		msg.fire({
+			title: '!!! A T E N C I Ó N ¡¡¡',
+			icon: 'question',
+			html: 'Desea eliminar el Art<br><b>'+
+					nombre+'</b>',
+		}).then((result) => {
+			if (result.value) {
+				$.ajax({
+					url: "app/controller/conf_puntos.php",
+					data: {
+						opcion: "eliminarArt",
+						codigo: codigo
+					},
+					type: "POST",
+					dataType: "json",
+					success : function(data) {
+						if(data==0) {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'error',
+								html: 'Hubo un error no se pudo Eliminar el Artículo',
+								showCancelButton: false,
+							})
+						} else {
+							$('#fechai'+codigo).closest('tr').addClass('inactivar');
+							setTimeout(function() {
+								$('#listaArtPuntos').DataTable().ajax.reload( null, false );
+							}, 100);
+						}
+					}
+				});
+			}
+		})
+	}
+
+	function lstArticulos() {
+		cargando('show')
+		tomar_datos = $.ajax({
+			url: "app/controller/conf_puntos.php",
+			data: {
+				opcion: "lstArticulos",
+				idpara: $('#busAgrArtArt').val().trim(),
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>0){
+					$("#lstArticulos").dataTable({
+						scrollY: "60vh",
+						scrollCollapse: false,
+						order: [1, 'asc'],
+						data: data,
+						columns: [
+							{ data: 'codigo' },
+							{ data: 'descripcion' },
+						]
+					});
+				} else {
+					msg.fire({
+						title: 'No Existe!!!',
+						icon: 'error',
+						html: 'Artículo No Existe!!!',
+						showCancelButton: false,
+					})
+				}
+			}
+		}).done(function() { cargando('hide'); })
+	}
+</script>

@@ -1,0 +1,408 @@
+<style>
+	.strokeme{
+		color: white;
+		text-shadow:
+		-1px -1px 0 #000,
+		1px -1px 0 #000,
+		-1px 1px 0 #000,
+		1px 1px 0 #000;  
+	}
+</style>
+<!-- Main row -->
+<div class="row">
+	<div class="row mt-2 col-12 col-md-12 p-0 align-content-end justify-content-end align-middle">
+		<label class="col-md-2 col-6 text-right">Seleccionar Tienda</label>	
+		<select id="select_tiendas" onchange="javascript:$('#fechaf').change()" class="form-control form-control-sm col-md-2 col-12">
+		</select>
+		<div class="input-group date gfechas ml-1 col-8 col-sm-6 col-md-3 col-lg-2">
+			<label for="fechaf">Mes</label>		
+			<input id="fechaf" name="fechaf" type="text" class="form-control form-control-sm rounded text-center ml-1" autocomplete="off" 
+					data-inputmask="'alias': 'mm-yyyy'" style="height: 31px;"
+					data-mask placeholder="mm-yyyy">
+			<span class="input-group-addon alert-secondary p-1 font-weight-bold text-center"
+				style="height: 31px;" tabindex="-1">
+				<i class="fas fa-calendar"></i>
+			</span>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<!-- Estadisticas de Clientes -->
+	<div class="col-12 mt-1" id="div_testclientes">
+		<div class="card card-primary elevation-2 border border-dark" style="height: 80vh;">
+			<div class="card-header p-1 pl-2">
+				<i class="fas fa-users"></i>
+				<span id="testclientes">Top 20 Productos por Tipos</span>
+				<span id="subtitulo"></span>
+			</div>
+			<div class="row card-body col-11 h-100 p-0 pb-3 mr-auto ml-auto">
+				<div class="h-100 col-12 col-md-7 p-0 m-0 mb-4">
+					<div id="grafico1" style="height: 90%"></div>
+					<div id="gralgrafico1" class="alert-secondary rounded border border-dark p-1 m-0 ml-2 mr-2 mb-1 pt-2" style="height: 7%">
+						<table align="center" width="100%" cellpadding="2" cellspacing="2" style="border: none;">
+							<tr>
+								<th class="text-center w-25 txtcomp">Total General</th>
+								<td class="text-center w-25 txtcomp" id="totgral"></td>
+								<th class="text-center w-25 txtcomp">Top 20</th>
+								<td class="text-center w-25 txtcomp" id="tot20"></td>
+							</tr>
+						</table>
+					</div>
+					<div class="btn-group btn-group-sm btn-group-toggle align-content-center justify-content-center w-100 font-weight-bold" id="opcionesgr1"
+						data-toggle="buttons">
+						Ver Gráfico por:&nbsp;&nbsp;
+						<label class="btn btn-sm btn-outline-primary p-0 m-0 pl-1 pr-1">
+							<input type="radio" name="options" id="subtotales1" autocomplete="off"> Subtotales
+						</label>
+						<label class="btn btn-sm btn-outline-primary active p-0 m-0 pl-1 pr-1">
+							<input type="radio" name="options" id="cantidades1" autocomplete="off"> Cantidades
+						</label>
+					</div>
+				</div>
+				<div class="h-100 col-12 col-md-5 p-0 m-0 mb-4">
+					<div id="grafico2" style="height: 98%"></div>
+					<div class="btn-group btn-group-sm btn-group-toggle align-content-center justify-content-center w-100 font-weight-bold" id="opcionesgr2"
+						data-toggle="buttons">
+						Ver Gráfico por:&nbsp;&nbsp;
+						<label class="btn btn-sm btn-outline-primary p-0 m-0 pl-1 pr-1">
+							<input type="radio" name="options" id="subtotales2" autocomplete="off"> Subtotales
+						</label>
+						<label class="btn btn-sm btn-outline-primary active p-0 m-0 pl-1 pr-1">
+							<input type="radio" name="options" id="cantidades2" autocomplete="off"> Cantidades
+						</label>
+					</div>
+				</div>
+			</div>
+		</div>
+			<!-- /.card-body -->
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<script>
+	var dpto_can = [];
+	var dpto_sub = [];
+	var data_can = [];
+	var data_sub = [];
+	var datos    = [];
+	var marg_mat = [];
+	var marg_dpt = [];
+	var grafico2 = '';
+	var grafico1 = '';
+	var suf1     = '';
+	var suf2     = '';
+	var moneda   = '';
+	var simbolo  = '';
+	var totC20   = 0;
+	var totS20   = 0;
+	var totCgral = 0;
+	var totSgral = 0;
+
+	$('.gfechas').datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showButtonPanel: true,
+		language: "es",
+		autoclose: true,
+		format: "mm-yyyy",
+		startView: "months", 
+		minViewMode: "months"
+	});
+	$(".gfechas").datepicker().datepicker("setDate", new Date());
+	$('[data-mask]').inputmask();
+	$(".gfechas").on('change', function() {
+		var ffecha = ('01-'+$('#fechaf').val()).split('-')
+		ffecha = new Date(ffecha[2], ffecha[1] - 1, ffecha[0]);
+		actualizar_grafico(moment(ffecha).format("YYYY-MM"));
+	});
+
+	$.ajax({
+		data: {
+			opcion: "listaTiendas",
+			idpara: ptodas + '¬' + ptienda
+		},
+		type: "POST",
+		dataType: "json",
+		url: "app/DBProcs.php",
+		success: function(data) {
+			if(ptodas) {
+				$("#select_tiendas").append('<option value="localidad">Todas las Tiendas</option>');
+			}
+			for (i=0; i<data.length; i++) {
+				$("#select_tiendas").append('<option value="'+ data[i].idtienda + '">' + data[i].tienda + '</option>');
+			}
+		}
+	}).done(function(){
+		$('#fechaf').change();
+	});
+
+	$("#opcionesgr1 :input").change(function() {
+		datos = [];
+		if(this.id=='cantidades1'){
+			suf1 = ' (Und)';
+			tit = 'Cantidades Vendidas';
+			for(i=0;i<data_can.length;i++){
+				datos.push({
+					y: data_can[i]['y'],
+					color: data_can[i]['color'],
+					dataLabels: data_can[i]['dataLabels']
+				})
+			}
+			$('#totgral').html(totCgral);
+			$('#tot20').html(totC20);
+		} else {
+			suf1 = ' (' + simbolo + ')';
+			tit = moneda + ' vendido';
+			for(i=0;i<data_sub.length;i++){
+				datos.push({
+					y: data_sub[i]['y'],
+					color: data_sub[i]['color'],
+					dataLabels: data_sub[i]['dataLabels']
+				})
+			}
+			$('#totgral').html(totSgral);
+			$('#tot20').html(totS20);
+		}
+		datos.sort(function(a, b) {
+			return b.y - a.y
+		});
+		grafico1.yAxis[0].setTitle({ text: tit });
+		grafico1.series[0].setData(datos);
+	});
+	
+	$("#opcionesgr2 :input").change(function() {
+		datos = [];
+		if(this.id=='cantidades2'){
+			suf2 = ' (Und)';
+			for(i=0;i<dpto_can.length;i++){
+				datos.push({
+					name: dpto_can[i]['name'],
+					y: dpto_can[i]['y'],
+					sliced: dpto_can[i]['sliced'],
+					selected: dpto_can[i]['selected'],
+					color: dpto_can[i]['color'],
+					tooltip: dpto_can[i]['tooltip']
+				})
+			}
+		} else {
+			suf2 = ' (' + simbolo + ')';
+			for(i=0;i<dpto_sub.length;i++){
+				datos.push({
+					name: dpto_sub[i]['name'],
+					y: dpto_sub[i]['y'],
+					sliced: dpto_sub[i]['sliced'],
+					selected: dpto_sub[i]['selected'],
+					color: dpto_sub[i]['color'],
+					tooltip: dpto_sub[i]['tooltip']
+				})
+			}
+		}
+		datos.sort(function(a, b) {
+			return b.y - a.y
+		});
+		grafico2.series[0].setData(datos);
+	});
+
+	function actualizar_grafico(pfecha=moment().format("YYYY-MM")) {
+		cargando('show')
+		if (tomar_datos !== '') {
+			tomar_datos.abort();
+		}
+		var ptienda = $('#select_tiendas').val();
+		tomar_datos = $.ajax({
+			data: {
+				opcion : 'graTop20Tipos',
+				fecha  : pfecha,
+				idpara : ptienda
+			},
+			type     : "POST",
+			dataType : "json",
+			url      : "app/DBProcs.php",
+			success: function (data) {
+				totCgral = data['totCgral'];
+				totSgral = data['totSgral'];
+				totC20 = data['totC20'];
+				totS20 = data['totS20'];
+				moneda = data['moneda'];
+				simbolo = data['simbolo'];
+				var dptos = data['dptos'];
+				var data  = data['data'];
+				data_can = [];
+				data_sub = [];
+				dpto_can = [];
+				dpto_sub = [];
+				var axaxis  = [];
+				var aseries = [];
+				//					p 			a 			n
+				//					0			1			2
+				//				Perecederos  Alimentos  No Alimentos
+				var colores = [ '#297927'  , '#BDBB1C', '#D56103' ];
+				
+				marg_mat = [];
+				for (var i=0; i<data.length; i++) {
+					axaxis.push( data[i]['material'] );
+					data_can.push({
+						y: (data[i]['cant_total']*1),
+						color: colores[data[i]['tipodpto']],
+						dataLabels: [{
+							formatter: function () { return Highcharts.numberFormat(this.y, 2,',','.'); }
+						}]
+					});
+					data_sub.push({
+						y: (data[i]['subt_total']*1),
+						color: colores[data[i]['tipodpto']],
+						dataLabels: [{
+							formatter: function () { return Highcharts.numberFormat(this.y, 2,',','.'); }
+						}]
+					});
+					marg_mat[ data[i]['material'] ] = data[i]['margen'];
+				}
+
+				grafico1 = Highcharts.chart('grafico1', {
+					chart: {
+						type: 'bar'
+					},
+					title: {
+						text: ($('#select_tiendas').val()=="localidad") ? "Top 20 Productos por Tipos Cadena" : "Top 20 Productos por Tipos " + $("#select_tiendas option:selected").text(),
+						style: {
+							color: 'black',
+							fontSize: '16px',
+							fontWeight: 'bold'
+						}
+					},
+					subtitle: {
+						text: capitalize(moment(pfecha).format("MMMM[(]YYYY[)]")),
+						style: {
+							color: 'black',
+							fontWeight: 'bold'
+						}
+					},
+					xAxis: {
+						min: 0,
+						categories: axaxis,
+						title: {
+							text: null
+						}
+					},
+					yAxis: {
+						min: 0,
+						title: {
+							text: '',
+							align: 'high'
+						},
+						labels: {
+							overflow: 'justify'
+						}
+					},
+					tooltip: {
+						shared: true,
+						formatter: function() {
+							var points = this.x;
+							$.each(this.points, function(i, point) {
+								points += '<br>';
+								points += '<b>Vendido ' + suf1 + ': </b>';
+								points += Highcharts.numberFormat(point.y, 2,',','.');
+							});
+							points += '<br><b>Margen: </b>';
+							points += marg_mat[this.x];
+							return points;
+						}
+					},
+					plotOptions: {
+						bar: {
+							dataLabels: {
+								enabled: true,
+							}
+						},
+						series: {
+							pointPadding: 0.1,
+							groupPadding: 0,
+							borderWidth: 1,
+							borderRadius: 2,
+							shadow: true
+						}
+					},
+					legend: {
+						enabled: false
+					},
+					credits: {
+						enabled: false
+					},
+					series: [{
+						data: null
+					}]
+				});
+
+				marg_dpt = [];
+				for (var i=0; i<dptos.length; i++) {
+					dpto_can.push({
+						name: dptos[i]['nomtipo'],
+						y: dptos[i]['cant_total']*1,
+						color: colores[dptos[i]['tipodpto']]
+					});	
+					dpto_sub.push({
+						name: dptos[i]['nomtipo'],
+						y: dptos[i]['subt_total']*1,
+						color: colores[dptos[i]['tipodpto']]
+					});
+					marg_dpt[ dptos[i]['nomtipo'] ] = dptos[i]['margen'];
+				}
+
+				grafico2 = Highcharts.chart('grafico2', {
+					chart: {
+						type: 'pie',
+						options3d: {
+							enabled: true,
+							alpha: 55,
+							beta: 0,
+						},
+					},
+					title: {
+						text: ($('#select_tiendas').val()=="localidad") ? "Top X Unidad de Negocio Cadena" : "Top X Unidad de Negocio " + $("#select_tiendas option:selected").text(),
+						style: {
+							color: 'black',
+							fontSize: '16px',
+							fontWeight: 'bold'
+						}
+					},
+					plotOptions: {
+						pie: {
+							allowPointSelect: true,
+							cursor: 'pointer',
+							depth: 45,
+							dataLabels: {
+								enabled: true,
+								distance: 2,
+								style: {
+									fontWeight: 'bold',
+									fontSize: '120%',
+								},
+								format: '{point.percentage:.1f}%',
+							},
+							showInLegend: true,
+							tooltip: {
+								pointFormatter: function () {
+									var txt = '<b>Vendió ' + suf2 + ': </b>';
+									txt += Highcharts.numberFormat(this.y, 2,',','.');
+									txt += '<br><b>Margen: </b>' + marg_dpt[this.name];
+									return txt;
+								},
+							},
+						}
+					},
+					credits: {
+						enabled: false
+					},
+					series: [{
+						data: null
+					}]
+				});
+				cargando('hide')
+			}
+		}).done(function() {
+			$('#cantidades1').click();
+			$('#cantidades2').click();
+		})
+	}
+</script>

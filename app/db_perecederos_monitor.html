@@ -1,0 +1,397 @@
+<style>
+	.dataTables_filter {
+		display: none;
+	}
+	.uno {
+		background-color: '#D5D9E2';
+	}
+	.dos {
+		background-color: '#FFFFFF';
+	}
+</style>
+<!-- Main row -->
+<div class="row">
+	<div class="col-md-12 col-sm-12 mt-2">
+		<div class="card card-primary border border-dark">
+			<div class="card-header p-1 m-0 d-flex align-items-center">
+				<i class="fas fa-boxes"></i>&nbsp;
+				<span>Monitor de Documentos de Perecederos del</span>
+				<button class="btn btn-sm btn-warning p-0 pl-1 pr-1 rounded-0 m-0 ml-1" onclick="atrasCal()" style="height: 25px;">&#x25c0;</button>
+				<div class="input-group date gfechas" style="width: 110px; height: 25px;" id="fechas">
+					<input id="fechafmonp" name="fechafmonp" type="text" autocomplete="off" 
+							class="form-control form-control-sm rounded-0 p-0 text-center"
+							data-inputmask="'alias': 'dd-mm-yyyy'"
+							data-mask placeholder="dd-mm-yyyy"
+							onblur="if(this.value=='') $(this).datepicker('setDate',
+								moment().format('DD-MM-YYYY'));">
+				</div>
+				<button class="btn btn-sm btn-warning p-0 pl-1 pr-1 rounded-0 m-0" onclick="adelanteCal()" style="height: 25px;">&#x25b6;</button>
+				<div class="ml-auto bg-warning pl-2 rounded">
+					<label class="m-0">Listar:&emsp;</label>
+					<div class="custom-control custom-radio custom-control-inline">
+						<input type="radio" checked value="1" class="custom-control-input" id="pedidos" name="tipodocs">
+						<label class="custom-control-label" for="pedidos">Pedidos</label>
+					</div>
+					<div class="custom-control custom-radio custom-control-inline">
+						<input type="radio" value="2" class="custom-control-input" id="odc" name="tipodocs">
+						<label class="custom-control-label" for="odc">Órdenes de Compra</label>
+					</div>
+				</div>
+			</div>
+			<div class="card-body row p-0 m-0" id="divDatos">
+				<div class="col-5 pl-1 pr-1">
+					<table id="listaPedidos" class="table table-bordered table-striped table-hover w-100">
+						<thead class="bg-dark-gradient">
+							<tr>
+								<th class="text-center"><span id="origen">Tienda</span></th>
+								<th class="text-center">Fecha</th>
+								<th class="text-center">Número</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="col-7 border border-dark border-right-0 border-top-0 border-bottom-0">
+					<div class="p-0 pl-1 pr-1 mt-1 d-flex align-items-baseline bg-primary rounded">
+						<i class="fas fa-boxes"></i>
+						<div class="col">
+							<span id="titulodoc">Detalle del Pedido&nbsp;</span>
+							<span class="alert-primary rounded border border-white p-0 pl-1 pr-1 txtcomp"
+								id="nropedido">&nbsp;</span>
+							<input type="hidden" id="nomtienda">
+							<input type="hidden" id="fechasoli">
+							<input type="hidden" id="nro_doc">
+						</div>
+						<button id="anularPedido" class="btn btn-danger btn-sm ml-auto mr-1" disabled id="anularPedido">
+							<i class="fas fa-trash-alt fa-lg"></i> 
+						</button>
+						<button class="btn btn-warning btn-sm ml-auto" disabled id="btnExport">
+							<i class="fas fa-file-pdf fa-lg"></i> Exportar a PDF
+						</button>
+					</div>
+					<div class="p-0 m-0" id="contVerPedido">
+						<div class="form-inline col-12 p-0 m-0 mt-1">
+							<div class="d-flex w-100 align-content-center justify-content-center ml-2 mr-2">
+								<span class="col-2 font-weight-bold">Buscar: </span>
+								<input type="text" class="form-control form-control-sm m-0 ml-1 mr-l p-1 col" id="buscarVerPedido" value=""
+									placeholder="Buscar Artículo en la Lista...">
+							</div>
+						</div>
+						<div id="frmlstart">
+							<table id="tbl_ListaArticulos" style="width: 100%" class="table-striped table-hover table-bordered">
+								<thead>
+									<tr>
+										<th width="10%" class="txtcomp text-center bg-warning-gradient">Código</th>
+										<th width="15%" class="txtcomp text-center bg-warning-gradient">Barra</th>
+										<th width="60%" class="txtcomp text-center bg-warning-gradient">Descripción</th>
+										<th width="15%" class="txtcomp text-center bg-warning-gradient">Pedido</th>
+										<th class="d-none txtcomp text-center bg-warning-gradient">Despacho</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+								<tfoot>
+									<tr>
+										<th colspan="2" class="text-center bg-dark-gradient"></th>
+										<th class="text-right bg-dark-gradient"></th>
+										<th class="text-right bg-dark-gradient"></th>
+									</tr>
+								</tfoot>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.card-body -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<script>
+	$('#fechafmonp').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "0d",
+	});
+
+	$('#fechafmonp').datepicker().datepicker("setDate", moment().format('DD-MM-YYYY'));
+
+	$('#divDatos').height($('#wp_ppal').height()-$('#pedidos').offset().top+$('#pedidos').height()+'px');
+	var altoTabla = $('#divDatos').height()-$('#pedidos').offset().top+$('#pedidos').height()+15;
+
+	$('#listaPedidos').dataTable( {
+		scrollY: altoTabla+'px',
+		scrollCollapse: false,
+		order: [ [0, 'asc'], [1, 'desc'] ],
+		ajax: {
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "monitorPerecederos",
+				idpara: ((ptodas) ? 'localidad' : ptienda),
+				fdesde: function() { 
+							return moment($('#fechafmonp').val(), 'DD-MM-YYYY').format('YYYY-MM-DD')
+						},
+				tipo  : function() {
+							return $('input:radio[name=tipodocs]:checked').val()
+						},
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+		},
+		columns: [
+			{ data: 'sucursal',   sClass: "txtcomp" },
+			{ data: 'fecha',      sClass: "txtcomp" },
+			{ data: 'numero',     sClass: "txtcomp text-right" },
+		]
+	})
+
+	$('#tbl_ListaArticulos').dataTable({ scrollY: (altoTabla-$('#btnExport').offset().top)+5+'px' });
+
+	$('#fechafmonp').on('change', function() {
+		$('#listaPedidos').DataTable().ajax.reload( null, false );
+		$('#tbl_ListaArticulos').dataTable({ scrollY: (altoTabla-$('#btnExport').offset().top)+5+'px', data: [] });
+		$('#nropedido').html('');
+		$('#btnExport').attr('disabled', true);
+		$('#anularPedido').attr('disabled', true);
+	})
+
+	$('input:radio[name=tipodocs]').on('change', function() {
+		$('#titulodoc').html('Detelle '+
+			($('input:radio[name=tipodocs]:checked').val()==1 ? 
+				'del Pedido':'de la ODC')+'&emsp;')
+		$('#origen').html(
+			($('input:radio[name=tipodocs]:checked').val()==1 ? 
+				'Tienda':'Proveedor')+'&emsp;')
+		$('#listaPedidos').DataTable().ajax.reload( null, false );
+		$('#tbl_ListaArticulos').dataTable({ scrollY: (altoTabla-$('#btnExport').offset().top)+5+'px', data: [] });
+		$('#nropedido').html('');
+		$('#btnExport').attr('disabled', true);
+		if($('input:radio[name=tipodocs]:checked').val()==1) {
+			$('#anularPedido').attr('disabled', true);
+			$('#anularPedido').removeClass('d-none');
+		} else {
+			$('#anularPedido').attr('disabled', true);			
+			if(!$('#anularPedido').hasClass('d-none')) {
+				$('#anularPedido').addClass('d-none');
+			}
+		}
+	});
+
+	$("#buscarVerPedido").keyup(function() {
+		// Buscar en la tabla
+		$('#tbl_ListaArticulos').dataTable().fnFilter( this.value );
+	});
+
+	$('#listaPedidos tbody').on('click', '.btn', function () {
+		var row = $(this).closest('tr');
+		var data = $(this).closest('table').DataTable().row(row).data();
+		mostrarPedido(data.id, data.sucursal, data.fechasoli)
+	})
+
+	$('#btnExport').on('click', function() {
+		// se dispara el evento export del boton oculto del datatable
+		$('#tbl_ListaArticulos').DataTable().button( '0' ).trigger();
+	})
+
+	$('#anularPedido').on('click', function() {
+		// Anular el pedido seleccionado
+		msg.fire({
+			title: 'Anular Documento<br>[ ' + $('#nropedido').html() + ' ]',
+			icon: 'question',
+			html: 'Ingrese una jastificación de anulación del Documento',
+			input: 'textarea',
+			inputValue: '',
+			inputPlaceholder: 'Ingrese una jastificación de anulación del Documento...',
+			onOpen: () => {
+				Swal.getContent().querySelector('.swal2-input').select()
+			},
+			onAfterClose: function() {
+				$("body").trigger("click");
+			},
+			customClass: {
+				popup: 'p-2 bg-dark border border-warning',
+				title: 'text-warning bg-transparent pl-3 pr-3',
+				closeButton: 'btn btn-sm btn-danger',
+				content: 'bg-white border border-warning rounded p-1',
+				confirmButton: 'btn btn-success m-1',
+				cancelButton: 'btn btn-danger m-1',
+				input: 'border border-dark text-left',
+			},
+		}).then((result) => {
+			if(result.value.trim()!='') {
+				$.ajax({
+					url: "app/DBProcs.php",
+					data: {
+						opcion: "anularPedidoPerecederos",
+						idpara: $('#nro_doc').val(),
+						justif: result.value,
+						userid: $('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
+						sqlcnx: 1,
+					},
+					type: "POST",
+					dataType: "text",
+					success : function(data) {
+						data = data.split('¬');
+						if(data[0]=='1') {
+							$('input:radio[name=tipodocs]').change();
+						} else {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'error',
+								html: data[1],
+								showCancelButton: false,
+							})
+						}
+					}
+				})
+			}
+		})
+	})
+
+	function mostrarPedido(id, sucursal, fecha) {
+		if($('input:radio[name=tipodocs]:checked').val()==1) {
+			$('#nropedido').html(('00000' + id).slice(-5)+' - '+sucursal);
+			$('#nomtienda').val(sucursal);
+			$('#fechasoli').val(fecha);
+			$('#nro_doc').val(id);
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "mostrarPedido",
+					idpara: id,
+					sqlcnx: 1,
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>0) {
+						$('#btnExport').attr('disabled', false);
+						$('#anularPedido').attr('disabled', data[0].anular==0);
+						if(data[0].anular==0) {
+							$('#anularPedido').attr('title', 'No se puede anular porque ya fue consolidado')
+						} else {
+							$('#anularPedido').attr('title', 'Anulra Pedido')
+						}
+						$('#tbl_ListaArticulos').DataTable({
+							scrollY: "55vh",
+							scrollCollapse: false,
+							data: data,
+							autoWidth: false,
+							searching: true,
+							order: [2 , 'asc'],
+							buttons: [
+								{
+									action: function() {
+										window.location='pedido2pdf-'+id;
+									},
+								}
+							],
+							columns: [
+								{ data: 'codigo',      sClass: "txtcomp text-left align-middle"},
+								{ data: 'barra',       sClass: "txtcomp text-left align-middle"},
+								{ data: 'descripcion', sClass: "txtcomp text-left align-middle"},
+								{ data: 'unidad',      sClass: "txtcomp text-right align-middle", render: $.fn.dataTable.render.number(",", ".", 2)},
+								{ data: null,  render: function() { return '<div class="border border-dark w-100">&nbsp;</div>' },  visible: false },
+							],
+							footerCallback: function (row, data, start, end, display) {
+								totalp0 = this.api().rows().count();
+								totalp3 = this.api()
+									.column(3) //numero de columna a sumar
+									.data() //obtenemos los datos en la columna
+									.reduce(function (a, b) {
+										return parseInt(a) + parseInt(b);
+									}, 0);
+
+								$(this.api().column(0).footer()).html((isNaN(totalp0) ? 0 : totalp0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + ' Artículos Pedidos');
+								$(this.api().column(2).footer()).html('Totales');
+								$(this.api().column(3).footer()).html((isNaN(totalp3) ? 0 : totalp3).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							},
+						});	
+					}
+				}
+			}).done(function() {
+				cargando('hide');
+				$('#tbl_ListaArticulos').dataTable().fnFilter('');
+				// $('#VerPedido').modal('show');
+			})
+		} else {
+			$('#nropedido').html(id+' - '+sucursal);
+			$('#nomtienda').val(sucursal);
+			$('#fechasoli').val(fecha);
+			$('#nro_doc').val(id);
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "mostrarODC",
+					idpara: id,
+					sqlcnx: 1,
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>0) {
+						$('#btnExport').attr('disabled', false);
+						$('#anularPedido').attr('disabled', false);
+						$('#tbl_ListaArticulos').DataTable({
+							scrollY: "55vh",
+							scrollCollapse: false,
+							data: data,
+							autoWidth: false,
+							searching: true,
+							order: [2 , 'asc'],
+							buttons: [
+								{
+									action: function() {
+										window.location='gdc2pdf-'+id;
+									},
+								}
+							],
+							columns: [
+								{ data: 'codigo',      sClass: "txtcomp text-left align-middle"},
+								{ data: 'barra',       sClass: "txtcomp text-left align-middle"},
+								{ data: 'descripcion', sClass: "txtcomp text-left align-middle"},
+								{ data: 'unidad',      sClass: "txtcomp text-right align-middle", render: $.fn.dataTable.render.number(",", ".", 2)},
+								{ data: null,  render: function() { return '' },  visible: false },
+							],
+							footerCallback: function (row, data, start, end, display) {
+								totalp0 = this.api().rows().count();
+								totalp3 = this.api()
+									.column(3) //numero de columna a sumar
+									.data() //obtenemos los datos en la columna
+									.reduce(function (a, b) {
+										return parseInt(a) + parseInt(b);
+									}, 0);
+
+								$(this.api().column(0).footer()).html((isNaN(totalp0) ? 0 : totalp0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + ' Artículos Pedidos');
+								$(this.api().column(2).footer()).html('Totales');
+								$(this.api().column(3).footer()).html((isNaN(totalp3) ? 0 : totalp3).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							},
+						});	
+					}
+				}
+			}).done(function() {
+				cargando('hide');
+				$('#tbl_ListaArticulos').dataTable().fnFilter('');
+				// $('#VerPedido').modal('show');
+			})
+		}
+	}
+
+	function atrasCal() {
+		var fechaact = moment($('#fechafmonp').val(), 'DD-MM-YYYY').subtract(1, 'd').format('DD-MM-YYYY')
+		$('#fechafmonp').datepicker().datepicker("setDate", fechaact);
+	}
+
+	function adelanteCal() {
+		var fechaact = moment($('#fechafmonp').val(), 'DD-MM-YYYY').add(1, 'd').format('DD-MM-YYYY')
+		if(moment(fechaact, 'DD-MM-YYYY').format('YYYY-MM-DD')<=moment().format('YYYY-MM-DD'))
+			$('#fechafmonp').datepicker().datepicker("setDate", fechaact);
+	}
+</script>

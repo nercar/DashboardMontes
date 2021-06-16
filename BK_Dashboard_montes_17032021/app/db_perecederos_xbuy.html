@@ -1,0 +1,280 @@
+<style>
+	.selectSize {
+		width: 60px !important;
+	}
+	.dataTables_filter {
+		display: none;
+	}
+	.blink_me {
+		animation: blinker 1s linear 2;
+	}
+	@keyframes blinker {
+		50% {
+			opacity: 0;
+		}
+	}
+</style>
+<!-- Main row -->
+<div class="row">
+	<div class="col-md-12 col-sm-12 mt-2" id="div_tbl_datos">
+		<div class="card card-primary m-0 p-0 elevation-2 border border-dark">
+			<div class="card-header d-flex p-1 pl-2 mb-1 align-items-baseline">
+				<i class="fas fa-file-alt"></i>&nbsp;
+				<span id="ttitulo" class="mr-auto col">Artículos Solicitados a Perecederos Pendientes por Comprar</span>
+				<div class="d-flex col justify-content-end" style="color: #000 !important;">
+					<button class="btn btn-danger btn-sm ml-3" onclick="limpiarFiltros()">
+						<i class="fas fa-broom"></i> Limpiar
+					</button>
+					<button class="btn btn-warning btn-sm ml-3" onclick="cerrarCompra('*', 0)">
+						<i class="fas fa-check"></i> Cerrar Todo
+					</button>
+				</div>
+			</div>
+			<div class="row p-0 pl-1 pr-1 pb-1">
+				<div class="col-12" id="divDatos">
+					<div class="d-flex w-100 align-baseline" id="divbotones">
+						<table class="w-100 table-bordered">
+							<tr class="bg-dark text-center">
+								<th width="10%" rowspan="2">Buscar por:</th>
+								<th width="30%">Artículos</th>
+								<th width="30%">Barra/PLU</th>
+								<th width="30%">Grupo</th>
+								<!-- <th width="15%">Mostrar</th> -->
+							</tr>
+							<tr>
+								<td>
+									<input type="text" style="display: none;" placeholder="Buscar Artículo">
+									<input type="text" class="form-control form-control-sm m-0 p-1"
+										id="buscararti" value="" placeholder="Buscar Artículo"
+										onfocus="$(this).select()">
+								</td>
+								<td>
+									<input type="text" style="display: none;" placeholder="Buscar Barra">
+									<input type="text" class="form-control form-control-sm m-0 p-1"
+										id="buscarbarr" value="" placeholder="Buscar Barra"
+										onfocus="$(this).select()">
+								</td>
+								<td>
+									<input type="text" style="display: none;" placeholder="Buscar Grupo">
+									<input type="text" class="form-control form-control-sm m-0 p-1"
+										id="buscargrupo" value="" placeholder="Buscar Grupo"
+										onfocus="$(this).select()">
+								</td>
+<!-- 								<td class="pl-2">
+									<div class="d-flex align-items-center custom-control custom-checkbox txtcomp">
+										<input type="checkbox" class="custom-control-input" id="vercerrados">
+										<label class="custom-control-label" for="vercerrados">Cant. No Compradas</label>
+									</div>
+								</td> -->
+							</tr>
+						</table>
+					</div>
+					<form action="" onsubmit="return false;" class="p-0 m-0" id="frmppal">
+						<table id="tbl_lstPendientes" class="table table-striped table-hover table-bordered w-100">
+							<thead>
+								<tr>
+									<th width="10%" class="text-center txtcomp p-0 m-0 bg-warning-gradient">Código</th>
+									<th width="15%" class="text-center txtcomp p-0 m-0 bg-warning-gradient">Barra</th>
+									<th width="55%" class="text-center txtcomp p-0 m-0 bg-warning-gradient">Descripción</th>
+									<th width="10%" class="text-center txtcomp p-0 m-0 bg-primary-gradient">Pendiente</th>
+									<th width="10%" class="text-center txtcomp p-0 m-0 bg-warning-gradient">Opciones</th>
+								</tr>
+							</thead>
+						</table>
+					</form>
+				</div>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<script>
+	var buscarbarr  = 0;
+	var buscararti  = 0;
+	var buscargrupo = 0;
+
+	$('#frmppal').height($('#wp_ppal').height()-$('#frmppal').offset().top-10+'px');
+	$('#divDatos').height($('#frmppal').height()+$('#frmppal').offset().top-70+'px');
+	
+	// Obtiene la información de los articulos agotados
+	$('#tbl_lstPendientes').DataTable( {
+		scrollY: ($('#frmppal').height())+'px',
+		scrollCollapse: false,
+		order: [ 3, 'desc' ],
+		searching: true,
+		autoWidth: false,
+		ajax: {
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "lstPenXBuyPerece",
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+		},
+		columns: [
+			{ data: "codigo",      sClass: "text-left   align-middle" },
+			{ data: "barra",       sClass: "text-left   align-middle" },
+			{ data: "descripcion", sClass: "text-left   align-middle" },
+			{ data: "pendiente",   sClass: "text-right  align-middle", render: $.fn.dataTable.render.number(",", ".", 2) },
+			{ data: "opcion",      sClass: "text-center align-middle" },
+		],
+		initComplete: function() {
+			$('#tbl_lstPendientes').DataTable().columns.adjust().draw();
+		}
+	});
+
+	jQuery.fn.dataTableExt.oApi.fnFilterClear  = function ( oSettings ) {
+		var i, iLen;
+	 
+		/* Remove global filter */
+		oSettings.oPreviousSearch.sSearch = "";
+	 
+		/* Remove the text of the global filter in the input boxes */
+		if ( typeof oSettings.aanFeatures.f != 'undefined' )
+		{
+			var n = oSettings.aanFeatures.f;
+			for ( i=0, iLen=n.length ; i<iLen ; i++ )
+			{
+				$('input', n[i]).val( '' );
+			}
+		}
+	 
+		/* Remove the search text for the column filters - NOTE - if you have input boxes for these
+		 * filters, these will need to be reset
+		 */
+		for ( i=0, iLen=oSettings.aoPreSearchCols.length ; i<iLen ; i++ )
+		{
+			oSettings.aoPreSearchCols[i].sSearch = "";
+		}
+	 
+		/* Redraw */
+		oSettings.oApi._fnReDraw( oSettings );
+	};
+
+	// Funcion para cambiar el foco entre los inputs de la lista
+	function tabE(obj,e) {
+		var e=(typeof event!='undefined')?window.event:e; // IE : Moz 
+		var key = e.keyCode || e.which;
+		if(key == 13 || key == 40) {
+			var index = $('.selectSize').index(obj) + 1;
+			$('.selectSize').eq(index).focus();
+			return false;
+		} else if(key == 38) {
+			var index = $('.selectSize').index(obj) - 1;
+			if(index>=0) $('.selectSize').eq(index).focus();
+			return false;
+		} else if(key==35 || key==36) { // 35->fin 36->inicio
+			if(e.ctrlKey) {
+				if(key==36) {
+					$('.selectSize').eq(0).focus();
+				} else {
+					$('.selectSize').eq(-1).focus();
+				}
+			}
+			return false;
+		} else if(key==33 || key==34) {
+			if(key==33) {
+				var index = $('.selectSize').index(obj) - 5;
+				if(index>0) $('.selectSize').eq(index).focus();
+				else $('.selectSize').eq(0).focus();
+			} else {
+				var index = $('.selectSize').index(obj) + 5;
+				if($('.selectSize').eq(index).is(':visible')) $('.selectSize').eq(index).focus();
+				else $('.selectSize').eq(-1).focus();
+			}
+			return false
+		} else if(key==45) {
+			var valor = $('#sug'+$(obj).data('material')).html()*1;
+			if(valor>0) {
+				var valor = (parseInt(valor / 10)+1) * 10;
+				$(obj).val(valor);
+			}
+			var index = $('.selectSize').index(obj) + 1;
+			$('.selectSize').eq(index).focus();
+			return false;
+		}
+	}
+
+	// Para limpiar los campos de filtros
+	function limpiarFiltros() {
+		// Se recarga la pagina para inicializar todo
+		cargarcontenido('perecederos_xbuy');
+	}
+
+	$("#buscarbarr").keyup(function(e) {
+		if(e.which == '13') {
+			$('#tbl_lstPendientes').dataTable().fnFilter((this.value).toString(), 0);
+			buscarbarr = 1;
+			$('#tbl_lstPendientes').find('input').first().focus();
+		}
+		if(this.value=='' && buscarbarr==1) {
+			$('#tbl_lstPendientes').dataTable().fnFilter('', 0);
+			buscarbarr = 0;
+			$('#tbl_lstPendientes').find('input').first().focus();
+		}
+	});
+
+	$("#buscargrupo").keyup(function(e) {
+		if(e.which == '13') {
+			$('#tbl_lstPendientes').dataTable().fnFilter(this.value, 1);
+			buscargrupo = 1;
+			$('#tbl_lstPendientes').find('input').first().focus();
+		}
+		if(this.value=='' && buscargrupo==1) {
+			$('#tbl_lstPendientes').dataTable().fnFilter('', 1);
+			buscargrupo = 0;
+			$('#tbl_lstPendientes').find('input').first().focus();
+		}
+	});
+
+	$("#buscararti").keyup(function(e) {
+		if(e.which == '13') {
+			$('#tbl_lstPendientes').dataTable().fnFilter(this.value, 2);
+			buscararti = 1;
+			$('#tbl_lstPendientes').find('input').first().focus();
+		}
+		if(this.value=='' && buscararti==1) {
+			$('#tbl_lstPendientes').dataTable().fnFilter('', 2);
+			buscararti = 0;
+			$('#tbl_lstPendientes').find('input').first().focus();
+		}
+	});
+
+	$('#tbl_lstPendientes tbody').on('click', 'button', function () {
+		var row = $(this).closest('tr');
+		var data = $(this).closest('table').DataTable().row(row).data();
+		row.addClass('blink_me')
+		cerrarCompra(data.codigo, data.pendiente);
+		setTimeout("$('.blink_me').removeClass('blink_me')", 250);
+	})
+
+	function cerrarCompra(codigo, pendiente) {
+		$.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "cerrarCompra",
+				idpara: codigo+'¬'+pendiente,
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "text",
+			success : function(data) {
+				data = data.split('¬');
+				if(data[0]=='1') {
+					 $('#tbl_lstPendientes').DataTable().ajax.reload(null, false);
+				} else {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: data[1],
+						showCancelButton: false,
+					});
+				}
+			}
+		})
+	}
+</script>

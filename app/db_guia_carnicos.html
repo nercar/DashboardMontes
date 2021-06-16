@@ -1,0 +1,380 @@
+<!-- Main row -->
+<div class="row">
+	<!-- Auditoria de Costos -->
+	<div class="col-md-12 col-sm-12 mt-2" id="div_tbl_datos">
+		<div class="card card-primary m-0 p-0 elevation-2 border border-dark">
+			<div class="card-header p-1 pl-2 mb-1">
+				<i class="fas fa-bacon"></i>
+				<span id="ttitulo">Generación Guía de Transferencias de Cárnicos -> Sucursales</span>
+			</div>
+			<div class="col-12">
+				<div class="d-flex align-items-baseline">
+					<label for="select_tiendas" class="m-0 mr-2">Localidad</label>
+					<select id="select_tiendas" class="form-control form-control-sm p-0"></select>
+				</div>
+			</div>
+			<div class="col-12">
+				<table id="transCarnes" class="table table-hover w-100 nowrap">
+					<thead class="bg-warning-gradient">
+						<tr>
+							<th width="10%">Documento</th>
+							<th width="15%">Fecha</th>
+							<th width="15%">Estación</th>
+							<th            >Realizado por</th>
+							<th width="10%">Acción</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- Modal datos guia-->
+<div class="modal fade" id="ModalGuia" style="z-index: 9888" tabindex="-1" role="dialog" aria-labelledby="ModalGuiaLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold">Datos de la Guía <span id="nrodoc"></span> del <span id="fecexp"></span></h5>
+				<button type="button" data-dismiss="modal" aria-label="Close" class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+				<span id="kar_id" class="d-none"></span>
+			</div>
+			<div class="modal-body p-1 m-1" id="contenidoModalGuia">
+				<div class="d-flex col-12">
+					<div class="d-flex col-4 p-0 m-0 align-items-baseline">
+						<label for="temperatura">Temperatura °C&nbsp;</label>
+						<form action="" onsubmit="return false" class="p-0 m-0 col">
+							<input style="display: none;" placeholder="Temperatura °C">
+							<input type="text" id="temperatura" placeholder="Temperatura °C"
+								class="form-control form-control-sm">
+						</form>
+					</div>
+					<div class="d-flex col-8 p-0 m-0 ml-1 align-items-baseline">
+						<label for="observaciones">Observaciones&nbsp;</label>
+						<form action="" onsubmit="return false" class="p-0 m-0 col">
+							<input style="display: none;" placeholder="Observaciones">
+							<input type="text" id="observaciones" placeholder="Observaciones"
+								class="form-control form-control-sm">
+						</form>
+					</div>
+				</div>
+				<table class="table table-hover table-striped w-100" id="tblArticulos">
+					<thead>
+						<tr class="bg-dark">
+							<th>Especie</th>
+							<th>Código</th>
+							<th>Descripción</th>
+							<th>Unidad</th>
+							<th>Peso Kg.</th>
+							<th>Lote</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
+			<div class="modal-footer p-1 m-1">
+				<button class="btn btn-sm btn-primary" id="procesar">
+					<i class="fas fa-check"></i> Procesar
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- hora para el reporte -->
+<input type="hidden" id="horah">
+
+<script>
+	$(function() {
+		// Se consultan las tiendas activas en el dashboard para seleccionar
+		$.ajax({
+			data: {
+				opcion: "listaTiendasBDES",
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/controller/guia_carnicos.php",
+			success: function(data) {
+				$("#select_tiendas").append('<option value="0">Seleccione una Tienda</option>');
+				for (i=0; i<data.length; i++) {
+					$("#select_tiendas").append('<option value="'+ data[i].codigo + '">' + data[i].nombre + '</option>');
+				}
+			}
+		})
+
+		$('#ModalGuia').modal({backdrop: 'static', keyboard: false, show: false})
+
+		// // Se consultan los departamentos para seleccionar
+		// $.ajax({
+		// 	data: { opcion: "listaTransporte", sqlcnx: 1 },
+		// 	type: "POST",
+		// 	dataType: "json",
+		// 	url: "app/DBProcs.php",
+		// 	success: function(data) {
+		// 		var camiones = data['camiones'];
+		// 		var choferes = data['choferes'];
+		// 		$("#select_camion").append('<option value="0">Seleccione un Camión</option>');
+		// 		$("#select_chofer").append('<option value="0">Seleccione un Chofer</option>');
+		// 		for (i=0; i<camiones.length; i++) {
+		// 			$("#select_camion").append('<option value="'+ camiones[i].codigo + '">' + camiones[i].descripcion + ' [' + camiones[i].placa + ']' + '</option>');
+		// 		}
+		// 		for (i=0; i<choferes.length; i++) {
+		// 			$("#select_chofer").append('<option value="'+ choferes[i].codigo + '">' + choferes[i].descripcion + ' [' + choferes[i].cedula + ']' + '</option>');
+		// 		}
+		// 	}
+		// })
+		act_transCarnes();
+	});
+
+	function act_transCarnes() {
+		$('#transCarnes .dataTables_empty').css('display', 'none')
+		$('#transCarnes_processing').css('display', 'block')
+		$.ajax({
+			data: {
+				opcion: "listaTransCarnes",
+				tienda: function() { return $("#select_tiendas").val() },
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/controller/guia_carnicos.php",
+			success: function(data) {
+				datos = data;
+				$('#transCarnes').dataTable({
+					scrollY: "70vh",
+					data: datos,
+					columns: [
+						{ data: "documento", sClass: "txtcomp text-center" },
+						{ data: "fecha",     sClass: "txtcomp text-center" },
+						{ data: "estacion",  sClass: "txtcomp" },
+						{ data: "usuario",   sClass: "txtcomp" },
+						{ data: null,
+							render: function(data) {
+								let txt = '<button class="btn btn-link btn-sm" ';
+									txt+= 'onclick="datosTrans('+data.documento+", '"+data.fecexp+"', "+data.id+')">';
+									txt+= 'Seleccionar';
+									txt+= '</button>';
+								return txt;
+							},
+							sClass: "txtcomp"
+						},
+					],
+				});
+			}
+		});
+
+	}
+
+	$('#ModalGuia').on('shown.bs.modal', function() {
+		$('#tblArticulos').DataTable({scrollY: "40vh",})
+	})
+
+	function datosTrans(documento, fecexp, kar_id) {
+		cargando('show');
+		if(documento!=$('#nrodoc').html()) {
+			$('#temperatura'  ).val([])
+			$('#observaciones').val([])
+		}
+		tomar_datos = $.ajax({
+			data: {
+				opcion: "transfXDoc",
+				tienda: $("#select_tiendas").val(),
+				nrodoc: documento,
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/controller/guia_carnicos.php",
+			success: function(data) {
+				datos = data;
+				$('#tblArticulos').DataTable({
+					data: datos,
+					scrollCollapse: false,
+					order: [ [2, 'asc'] ],
+					columns: [
+						{ data: "especie",  sClass: "txtcomp text-center" },
+						{ data: "codigo",   sClass: "txtcomp text-center" },
+						{ data: "articulo", sClass: "txtcomp" },
+						{ data: "unidad",   sClass: "txtcomp text-right", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "peso",     sClass: "txtcomp text-right", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: null,
+							render: function(data) {
+								let txt = '<input class="form-control form-control-sm p-0" ';
+									txt+= 'id="inplote'+data.codigo+'">';
+								return txt;
+							},
+							sClass: "txtcomp"
+						},
+					],
+				});
+			},
+			complete: function() {
+				$('#nrodoc').html(documento)
+				$('#fecexp').html(moment(fecexp, 'YYYY-MM-DD').format('DD-MM-YYYY'));
+				$('#kar_id').html(kar_id);
+				$('#ModalGuia').modal('show');
+				cargando('hide');
+			}
+		});
+	};
+
+	$('#procesar').click( function () {
+		var mensaje = '', nerror = 0;
+		if($('#temperatura').val().trim()=='' && nerror==0) {
+			msg.fire({
+				title: '!!! E R R O R !!!',
+				icon: 'error',
+				html: 'Debe ingresar la temperatura. Por favor corrija',
+				showCancelButton: false,
+				onAfterClose: function() { $('#temperatura').focus() }
+			})
+		} else {
+			$('#tblArticulos').DataTable().rows().data().each(function (datos1) {
+				if($('#inplote'+datos1[1]).val()=='') {
+					mensaje = '* Algunos productos no tienen lote.<br>';
+					nerror = 1;
+				};
+			});
+			if($('#observaciones').val().trim()=='') {
+				mensaje += '* Continuar sin agregar una observación.<br>';
+				nerror = 1;
+			}
+			if(nerror==1) {
+				msg.fire({
+					title: '!!! A T E N C I Ó N !!!',
+					icon: 'warning',
+					html: mensaje+'<br>¿Desea continuar?',
+				}).then((result) => {
+					if (result.value) {
+						guardar();
+					}
+				})
+			} else {
+				guardar();
+			}
+		}
+	});
+
+	function guardar() {
+		cargando2('show')
+		var especieg = '';
+		$('#tblArticulos').DataTable({ scrollY: "40vh", order: [ [0, 'asc'] ], });
+		var regactual = 0;
+		var registros = $('#tblArticulos').DataTable().rows().count();
+		$('#tblArticulos').DataTable().rows().data().each(function (datos1) {
+			if(especieg!=datos1[0]) {
+				especieg = datos1[0];
+				var detalle = [];
+				$('#tblArticulos').DataTable().rows().data().each(function (datos) {
+					if(datos[0]==especieg) {
+						detalle.push({
+							especie : datos[0],
+							articulo: datos[2],
+							unidad  : datos[3]*1,
+							peso    : datos[4]*1,
+							lote    : $('#inplote'+datos[1]).val(),
+						})
+						regactual++;
+					}
+				})
+				$.ajax({
+					data: {
+						opcion: 'correlativoGuia',
+					},
+					type: "POST",
+					dataType: "text",
+					url: "app/controller/guia_carnicos.php",
+					async: false,
+					success: function(data) {
+						if(data!=0) {
+							correlativo = data;
+							$.ajax({
+								data: {
+									opcion: 'generarPdf',
+									fecexp: $('#fecexp').html(),
+									noguia: correlativo,
+									detail: detalle,
+									tienda: $("#select_tiendas").val(),
+									temper: $('#temperatura').val().trim(),
+									observ: $('#observaciones').val().trim(),
+								},
+								type: "POST",
+								xhrFields: { responseType: 'blob' },
+								url: "app/controller/guia_carnicos.php",
+								success: function(blob, status, xhr) {
+									// check for a filename
+									var filename = "";
+									var disposition = xhr.getResponseHeader('Content-Disposition');
+									if (disposition && disposition.indexOf('attachment') !== -1) {
+										var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+										var matches = filenameRegex.exec(disposition);
+										if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+									}
+
+									if (typeof window.navigator.msSaveBlob !== 'undefined') {
+										// IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they were created. These URLs will no longer resolve as the data backing the URL has been freed."
+										window.navigator.msSaveBlob(blob, filename);
+									} else {
+										var URL = window.URL || window.webkitURL;
+										var downloadUrl = URL.createObjectURL(blob);
+
+										if (filename) {
+											// use HTML5 a[download] attribute to specify filename
+											correlativo = filename;
+											var a = document.createElement("a");
+											// safari doesn't support this yet
+											if (typeof a.download === 'undefined') {
+												window.location.href = downloadUrl;
+											} else {
+												a.href = downloadUrl;
+												a.download = filename;
+												document.body.appendChild(a);
+												a.click();
+											}
+										} else {
+											window.location.href = downloadUrl;
+										}
+										setTimeout(function () {
+											URL.revokeObjectURL(downloadUrl);
+											if(regactual>=registros) {
+												$.ajax({
+													data: {
+														opcion: "guardarRealizadas",
+														kar_id: $('#kar_id').html(),
+													},
+													type: "POST",
+													dataType: "text",
+													url: "app/controller/guia_carnicos.php",
+													success: function(data) {
+														if(data==1) {
+															// msg.fire({
+															// 	icon: 'success',
+															// 	html: 'Guía(s) generadas correctamente',
+															// 	showCancelButton: false,
+															// 	onAfterClose: function() { $('#ModalGuia').modal('hide'); act_transCarnes(); }
+															// })
+															$('#ModalGuia').modal('hide');
+															act_transCarnes();
+															cargando2('hide');
+														}
+													}
+												});
+											}
+										}, 100); // cleanup
+									}
+								}
+							});
+						}
+					}
+				});
+			}
+		});
+	}
+
+	$('#select_tiendas').on('change', function() {
+		act_transCarnes();
+	})
+</script>

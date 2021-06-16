@@ -1,0 +1,302 @@
+<!-- Ventana emergente para reportes pma -->
+<div>
+	<hr>
+	<div class="col">
+		<div class="col d-flex align-items-baseline">
+			<label for="fclienter">Cliente a Crédito:&nbsp;</label>
+			<input style="display: none;" placeholder="Código/Nombre Parcial del Cliente a Crédito">
+			<input type="text" id="fclienter" 
+				onkeyup="if(event.keyCode=='13' && $(this).val().trim()!='')
+					{ $(this).blur() } else if($(this).val().trim()=='') { $(this).val([]) }"
+				onblur="if($(this).val().trim()!='')
+					{ listaCCBonosr(); } else if($(this).val().trim()=='') { $(this).val([]) }" 
+				placeholder="Código/Nombre Parcial del Cliente a Crédito"
+				class="form-control form-control-sm col" autocomplete="off">
+			<span id="codclienter" class="bg-warning rounded border border-dark pl-1 pr-1 d-none">&nbsp;
+			</span>
+		</div>
+	</div>
+	<hr>
+	<div class="col">
+		<div class="input-group input-daterange date gfechas col" id="fechas">
+			<div class="input-group-addon font-weight-bold mr-1">Movimientos Del</div>
+			<input type="text" data-id="fechai" class="form-control form-control-sm rounded p-1"
+				autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+				onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(3, 'day').format('DD-MM-YYYY'));">
+			<div class="input-group-addon font-weight-bold m-0 mr-1 ml-1">Al</div>
+			<input type="text" data-id="fechaf" class="form-control form-control-sm rounded p-1"
+				autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+				onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(1, 'day').format('DD-MM-YYYY'));">						
+		</div>
+	</div>
+	<hr>
+	<div class="col">
+		<select id="select_tiendaspma" class="selectpicker form-control form-control-sm"
+			data-style="btn-light" data-size="8">
+			<option value="0">Seleccione una Tienda</option>;
+		</select>
+	</div>
+	<hr>
+	<div class="col d-flex align-items-baseline justify-content-center">
+		<div class="custom-control custom-radio custom-control-inline">
+			<input type="radio" value="reportePMACab" id="cabeceras" name="tipoinforme" checked class="custom-control-input">
+			<label class="custom-control-label" for="cabeceras">Cabeceras</label>
+		</div>
+		<div class="custom-control custom-radio custom-control-inline">
+			<input type="radio" value="reportePMADet" id="detalles" name="tipoinforme" class="custom-control-input">
+			<label class="custom-control-label" for="detalles">Detalles</label>
+		</div>
+	</div>
+	<hr>
+	<div class="col d-flex align-content-center justify-content-center">
+		<button class="btn btn-secondary" disabled onclick="btn_consultar()" id="btnExportr">
+			<i class="fas fa-file-excel"></i> Generar Archivo
+		</button>
+		&emsp;
+		<button class="btn btn-danger" onclick="limpiarr(); $('#fclienter').focus();">
+			<i class="fas fa-broom"></i> Limpiar
+		</button>
+		<br>
+		<span id="enlacereporte"></span>
+	</div>
+	<br>
+</div>
+
+<!-- Modal para datos 1-->
+<div class="modal fade" id="dtmodalr" style="z-index: 9889" tabindex="-1" role="dialog" aria-labelledby="dtmodalrLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold" id="ttmodalr"></h5>
+				<button type="button" onclick="$('#dtmodalr').modal('hide')" class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div class="modal-body m-0 p-0" id="cntmodalr">
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	// Se consultan las tiendas activas en el dashboard para seleccionar
+	$.ajax({
+		data: {
+			opcion: "listaTiendasBDES",
+			sqlcnx: 1,
+			idpara: ptodas + '¬' + ptienda,
+		},
+		type: "POST",
+		dataType: "json",
+		url: "app/DBProcs.php",
+		success: function(data) {
+			for (i=0; i<data.length; i++) {
+				$('#select_tiendaspma').append(
+					'<option value="'+data[i].servidor+'¬'+data[i].servidorpos+'">'+
+						data[i].nombre+
+					'</option>');
+			}
+			$('#select_tiendaspma').selectpicker();
+			setTimeout("$('#fclienter').focus().val('')", 250);
+		},
+	})
+
+	$('.gfechas').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "0d",
+	});
+	
+	$('.input-daterange input').each(function() {
+		if($(this).data('id') == 'fechai')
+			$(this).datepicker("setDate", moment().subtract(3, 'day').format('DD-MM-YYYY'));
+		if($(this).data('id') == 'fechaf')
+			$(this).datepicker("setDate", moment().subtract(1, 'day').format('DD-MM-YYYY'));
+	});
+
+	$('[data-mask]').inputmask();
+
+	var fechas = [];
+	$('.input-daterange input').each(function() {
+		// inicializacion de fechas
+		fechas.push(moment($(this).datepicker().val(), 'DD-MM-YYYY').format('YYYY-MM-DD'))
+	});
+
+	function btn_consultar() {
+		if($('#select_tiendaspma').val()==0) {
+			msg.fire({
+				title: '!!! A T E N C I Ó N ¡¡¡',
+				icon: 'info',
+				html: 'Debe Seleccionar una tienda',
+				showCancelButton: false,
+				onAfterClose: function() { $('#select_tiendaspma').focus(); }
+			})
+		} else {
+			cargando('show');
+			$('#btnExportr, #fclienter').attr('disabled', true);
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: $('input:radio[name=tipoinforme]:checked').val(),
+					fdesde: moment($('#fechas').data('datepicker').inputs[0].value, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+					fhasta: moment($('#fechas').data('datepicker').inputs[1].value, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+					server: $('#select_tiendaspma').val(),
+					clteid: $('#codclienter').html(),
+					sqlcnx: 1,
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data['enlace']!='') {
+						fetch(data['enlace'])
+							.then(resp => resp.blob())
+							.then(blob => {
+								const url = window.URL.createObjectURL(blob);
+								const a = document.createElement('a');
+								a.style.display = 'none';
+								a.href = url;
+								// the filename you want
+								a.download = data['archivo'];
+								document.body.appendChild(a);
+								a.click();
+								window.URL.revokeObjectURL(url);
+								$.ajax({
+									data: { 
+										opcion: "borrarArchivoTNS",
+										idpara: data['archivo'],
+									},
+									type: "POST",
+									dataType: "text",
+									url: "app/DBProcs.php",
+								}).done(function(){
+									$('#ModalDatos2').modal('hide');
+								})
+							}).catch(function() {
+								alert('Se prsentó un error, no se pudo descargar\n'+data['archivo']+'\nforma automática');
+								var enlace = '<a id="enlacef" href="' + data['enlace'] + '">' + data['archivo'] + '</a>';
+								$('#enlacereporte').html(enlace);
+							});
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'info',
+							html: 'No se encontró información disponible para exportar',
+							showCancelButton: false,
+						})
+					}
+				}
+			}).done(function() {
+				cargando('hide');
+				limpiarr();
+			})
+		}
+	};
+
+	// Presenta un listado de proveedores con el filtro indicado
+	function listaCCBonosr() {
+		if($('#fclienter').val().trim()!='') {
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "listaCCBonos",
+					idpara: ($('#fclienter').val().trim()).toUpperCase(),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>1){
+						$('#ttmodalr').html('Proveedores que cumplen con la busqueda: "' + $('#fclienter').val().trim() + '"');
+						var contenido = '';
+						contenido +=
+							'<table id="listaCCBonosr" ' +
+								'class="table table-striped table-hover p-0 m-1 w-100">' +
+								'<thead class="bg-dark-gradient">' +
+									'<tr>' +
+										'<th>ID Cliente</th>' +
+										'<th>Nombre o razón Social</th>' +
+									'</tr>' +
+								'</thead>' +
+								'<tbody>';
+						for (i = 0; i < data.length; i++) {
+							contenido +=
+								'<tr>' +
+									'<td>' + data[i].id_empresa + '</td>' +
+									'<td>' + data[i].nom_empresa + '</td>' +
+								'</tr>';
+						}
+						contenido += '</tbody></table>';
+						contenido += '<script>' +
+							'$("#listaCCBonosr").dataTable({ ' +
+								'scrollY: "60vh", ' +
+								'scrollCollapse: true, ' +
+								'order: [1, "asc"],' +
+							'});' +
+							'</' + 'script>';
+						$('#cntmodalr').html(contenido);
+						$('#dtmodalr').modal('show');
+					} else if(data.length>0) {
+						seleccion(data[0]['id_empresa'], data[0]['nombre'])
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontraron proveedores para: <b>"'+$('#fclienter').val()+ '</b>"',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#btnExportr').attr('disabled', true);
+								$('#btnExportr').switchClass("btn-success", "btn-secondary");
+								$('#codclienter').addClass('d-none');
+								$('#codclienter').html('');
+								$('#fclienter').val([]);
+								$('#fclienter').focus().select();
+							}
+						})
+					}
+				}
+			}).done(function() {
+				setTimeout(function() {
+					$('#cntmodalr').css( 'display', 'block' );
+					$('#listaCCBonosr').DataTable().columns.adjust().draw();
+					cargando('hide'); 
+				}, 150);
+			})
+		} else {
+			$('#fclienter').val();
+			$('#fclienter').focus();
+		}
+	}
+
+	function seleccion(codigo, desc) {
+		$('#btnExportr').attr('disabled', false);
+		$('#btnExportr').switchClass("btn-secondary", "btn-success");
+		$('#codclienter').removeClass('d-none');
+		$('#codclienter').html(codigo);
+		$('#fclienter').val(desc);
+		$('#fclienter').attr('disabled', true);
+		$('#dtmodalr').modal('hide');
+	}
+
+	function limpiarr() {
+		$('#fclienter').val('').focus();
+		$('#cabeceras').click()
+		$('#codclienter').html('')
+		$('#select_tiendaspma').val(0);
+		$('#codclienter').addClass('d-none');
+		$('#select_tiendaspma').selectpicker('refresh')
+		$('#btnExportr').switchClass("btn-success", "btn-secondary");
+		$('#btnExportr').attr('disabled', true);
+		$('#fclienter').attr('disabled', false);
+		$('.input-daterange input').each(function() {
+			if($(this).data('id') == 'fechai')
+				$(this).datepicker("setDate", moment().subtract(3, 'day').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechaf')
+				$(this).datepicker("setDate", moment().subtract(1, 'day').format('DD-MM-YYYY'));
+		});
+	}
+</script>

@@ -1,0 +1,154 @@
+<div class="align-middle align-items-center align-content-center justify-content-center p-2 m-2">
+	<div class="col-12 m-1 p-1 d-flex align-items-baseline">
+		<label for="fecha" class="p-0 mr-1">Fecha</label>
+		<input id="fecha" type="text" class="form-control text-center" 
+				autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'"
+				data-mask placeholder="dd-mm-yyyy">
+		<label for="select_tiendasatns" class="p-0 mr-1 ml-1">Tienda</label>
+		<select id="select_tiendasatns" class="form-control"></select>
+	</div>
+	<div class="col-12 m-2 p-2 d-flex align-content-center justify-content-center">
+		<button class="btn btn-success" onclick="exportBiplus2TNS()" disabled id="generar">
+			<i class="fas fa-file-excel"></i> Generar Archivo
+		</button>
+	</div>
+	<span id="enlacevtas"></span>
+	<span id="enlacecost"></span>
+</div>
+
+<script>
+	$('#fecha').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+	});
+	$("#fecha").datepicker().datepicker("setDate", new Date());
+	$('[data-mask]').inputmask();
+
+	$.ajax({
+		data: {
+			opcion: "listaTiendas",
+			idpara: ptodas + '¬' + ptienda
+		},
+		type: "POST",
+		dataType: "json",
+		url: "app/DBProcs.php",
+		success: function(data) {
+			$("#select_tiendasatns").append('<option value="*">Todas las Tiendas</option>');
+			for (i=0; i<data.length; i++) {
+				if(data[i].idtienda!=3) {
+					$("#select_tiendasatns").append('<option value="'+data[i].idtienda+'">'+data[i].tienda+'</option>');
+				}
+			}
+			$('#generar').attr('disabled', false)
+		}
+	})
+
+	function exportBiplus2TNS() {
+		cargando('show');
+		$('#generar').attr('disabled', true)
+		tomar_datos = $.ajax({
+			data: { 
+				opcion: "exportVtasBiplus2TNS",
+				idpara: $('#select_tiendasatns').val(),
+				fecha : moment($('#fecha').val(), 'DD-MM-YYYY').format("YYYY-MM-DD"),
+				sqlcnx: 1
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function(data) {
+				fetch(data['enlace'])
+					.then(resp => resp.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = data['archivo'];
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						$.ajax({
+							data: { 
+								opcion: "borrarArchivoTNS",
+								idpara: data['archivo'],
+							},
+							type: "POST",
+							dataType: "text",
+							url: "app/DBProcs.php",
+						})
+					}).catch(function() {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Se prsentó un error, no se pudo descargar '+
+									data['archivo']+' de forma automática, '+
+									'para descargar haga click en el enlace '+
+									'<i class="fas fa-hand-point-down"></i><br>'+
+							  		'[ <a id="enlacef" href="' + data['enlace'] +
+							  			'"><span class="btn-link">' + data['archivo'] +
+							  		'</span></a> ]',
+							showCancelButton: false,
+						})
+					});
+			}
+		}).done(function() {
+			tomar_datos = $.ajax({
+				data: { 
+					opcion: "exportCostBiplus2TNS",
+					idpara: $('#select_tiendasatns').val(),
+					fecha : moment($('#fecha').val(), 'DD-MM-YYYY').format("YYYY-MM-DD"),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				url: "app/DBProcs.php",
+				success: function(data) {
+					fetch(data['enlace'])
+						.then(resp => resp.blob())
+						.then(blob => {
+							const url = window.URL.createObjectURL(blob);
+							const a = document.createElement('a');
+							a.style.display = 'none';
+							a.href = url;
+							// the filename you want
+							a.download = data['archivo'];
+							document.body.appendChild(a);
+							a.click();
+							window.URL.revokeObjectURL(url);
+							$.ajax({
+								data: { 
+									opcion: "borrarArchivoTNS",
+									idpara: data['archivo'],
+								},
+								type: "POST",
+								dataType: "text",
+								url: "app/DBProcs.php",
+							}).done(function(){
+								$('#ModalDatos2').modal('hide');
+							})
+						}).catch(function() {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'error',
+								html: 'Se prsentó un error, no se pudo descargar '+
+										data['archivo']+' de forma automática, '+
+										'para descargar haga click en el enlace '+
+										'<i class="fas fa-hand-point-down"></i><br>'+
+								  		'[ <a id="enlacef" href="' + data['enlace'] +
+								  			'"><span class="btn-link">' + data['archivo'] +
+								  		'</span></a> ]',
+								showCancelButton: false,
+							})
+						});
+				}
+			}).done(function(){
+				cargando('hide');
+			})
+		});
+	}
+</script>

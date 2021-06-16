@@ -1,0 +1,9 @@
+Options -Indexes
+Options +FollowSymLinks
+RewriteEngine On
+
+# REPORTES
+Rewriterule ^ordendespacho-(.*)$ app/reportepdfprepara.php?nrorden=$1 [L]
+Rewriterule ^fct2pdf-(.*)-(.*)-(.*)-(.*)$ app/factura2pdf.php?idp=$1&idl=$2&nc=$3&nf=$4 [L]
+Rewriterule ^gdc2pdf-(.*)$ app/odc2pdf.php?ngdc=$1 [L]
+Rewriterule ^pedido2pdf-(.*)$ app/pedido2pdf.php?np=$1 [L]

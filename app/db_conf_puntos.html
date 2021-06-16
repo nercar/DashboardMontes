@@ -1,0 +1,174 @@
+<style>
+	.conf_puntos table.dataTable {
+		margin-top: 0px !important;
+		margin-bottom: 0px !important;
+		font-size: 90%;
+		letter-spacing: -0.5px;
+	}
+	.conf_puntos .selectSize {
+		width: 80% !important;
+		margin: auto !important;
+	}
+	.conf_puntos .dataTables_filter {
+		display: none;
+	}
+	.conf_puntos .guardar {
+		background-color: green !important;
+		color: white !important;
+		transition: background-color 0.5s !important;
+	}
+	.conf_puntos .inactivar {
+		background-color: red !important;
+		color: white !important;
+		transition: background-color 0.5s !important;
+	}
+	.conf_puntos .activar {
+		background-color: orange !important;
+		color: white !important;
+		transition: background-color 0.5s !important;
+	}
+</style>
+<!-- Main row -->
+<div class="row conf_puntos">
+	<div class="d-flex mt-2 col-12 align-items-baseline">
+		<div class="col-md-5 col-sm-12 d-flex align-items-baseline">
+			<label class="text-nowrap mr-1" for="select_tipo">Configurar Puntos Por</label>
+			<select id="select_tipo" class="form-control form-control-sm col" onchange="cambiarTipo(this.value)">
+				<option value="articulos">Artículos</option>
+				<option value="departamentos">Departamentos</option>
+			</select>
+		</div>
+		<div class="col-md-3 col-sm-6 d-flex align-items-baseline">
+			<label class="text-nowrap mr-1" for="select_tipo">Valor por Punto</label>
+			<input type="number" id="valorCanje" placeholder="Valor" value="" onfocus="$(this).select()"
+				class="form-control form-control-sm text-center">
+		</div>
+		<button class="btn btn-sm btn-success" onclick="guardarPuntoCanje()">
+			<i class="fas fa-save"></i> Guardar Info Canje
+		</button>
+	</div>
+	<div class="col-md-12 col-sm-12 m-0" id="cargarModulo">		
+	</div>
+	<!-- /.col -->
+</div>
+
+<script>
+	$(function() { cambiarTipo('articulos') })
+
+	function puntoCanje() {
+		$.ajax({
+			url: "app/controller/conf_puntos.php",
+			data: {
+				opcion: "puntoCanje",
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				$('#puntoCanje').val(parseInt(data.puntos));
+				$('#valorCanje').val(parseInt(data.valor));
+			}
+		})
+	};
+
+	function guardarPuntoCanje() {
+		$.ajax({
+			url: "app/controller/conf_puntos.php",
+			data: {
+				opcion: "guardarPuntoCanje",
+				punto : $('#puntoCanje').val(),
+				valor : $('#valorCanje').val(),
+			},
+			type: "POST",
+			dataType: "text",
+			success : function(data) {
+				if(data==1) {
+					$('#listaArtPuntos').DataTable().ajax.reload(null, false)
+				} else {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: 'No se actualizó la información, Intente más tarde.',
+						showCancelButton: false,
+					}).then((result) => {
+						if (result.value) {
+							puntoCanje();
+						}
+					})
+				}
+			}
+		})
+	}
+
+	function cambiarTipo(valor) {
+		$('#cargarModulo').load('app/db_conf_puntos_'+valor+'.html?t=' + moment().format("HH:mm:ss"))
+	}
+
+	// Funcion para cambiar el foco entre los inputs de la lista
+	function tabE(obj,e) {
+		var e=(typeof event!='undefined')?window.event:e; // IE : Moz 
+		var key = e.keyCode || e.which;
+		var num = [8, 9, 13, 27, 33, 34, 35, 36, 37, 38, 39, 40, 46, 48, 49, 50, 51, 52, 53,
+					54, 55, 56, 57, 67, 86, 88, 96, 97, 98, 99, 100, 101, 102, 103, 104,
+					105, 109, 110, 116, 189, 190]
+		if(num.includes(key)==false) {
+			return false;
+		} else {
+			var x = 1
+			if(key == 13 || key == 40) { // 13 -> enter  40 -> abajo
+				while(!$('.selectSize').eq($('.selectSize').index(obj) + x).is(':focusable') && x <= $('.selectSize').length) { x++ };
+				$('.selectSize').eq($('.selectSize').index(obj) + x).focus();
+				return false;
+			} else if(key == 38) { // 38 -> arriba
+				while(!$('.selectSize').eq($('.selectSize').index(obj) - x).is(':focusable') && x <= $('.selectSize').length) { x++ };
+				$('.selectSize').eq(($('.selectSize').index(obj) - x)<0?0:($('.selectSize').index(obj) - x)).focus();
+				return false;
+			} else if(key==35 || key==36) { // 35->fin 36->inicio
+				if(e.ctrlKey) {
+					if(key==36) {
+						$('.selectSize').eq(0).focus();
+					} else {
+						$('.selectSize').eq(-1).focus();
+					}
+				}
+				return false;
+			} else if(key==33 || key==34) { // 33 -> pagina arriba  34 -> pagina abajo
+				x = 6;
+				if(key==33) {
+					while(!$('.selectSize').eq($('.selectSize').index(obj) - x).is(':focusable') && x <= $('.selectSize').length) { x=x+6 };
+					$('.selectSize').eq(($('.selectSize').index(obj) - x)<0?0:($('.selectSize').index(obj) - x)).focus();
+					return false;
+				} else {
+					while(!$('.selectSize').eq($('.selectSize').index(obj) + x).is(':focusable') && x <= $('.selectSize').length) { x=x+6 };
+					if(!$('.selectSize').eq($('.selectSize').index(obj) + x).is(':focusable')) { 
+						while(!$('.selectSize').eq($('.selectSize').index(obj) + x).is(':focusable')) { x-- };
+					}
+					$('.selectSize').eq((x>$('.selectSize').length?$('.selectSize').length:$('.selectSize').index(obj) + x)).focus();
+					return false;
+				}
+				return false
+			} else if(key==45) { // 45 -> insert
+				var valor = $('#sug'+$(obj).data('material')).html()*1;
+				if(valor>0) {
+					var valor = (parseInt(valor / 10)+1) * 10;
+					$(obj).val(valor);
+				}
+				var index = $('.selectSize').index(obj) + 1;
+				$('.selectSize').eq(index).focus();
+				return false;
+			} else if(key==67 || key==86 || key==88 || key==116) { // 35->fin 36->inicio
+				if(!e.ctrlKey) {
+					return false;
+				}
+			}
+		}
+	}
+
+	// Funcion para resaltar la fila en la cual esta el foco en la lista
+	function resaltar(elem, valor) {
+		if(valor==1) {
+			$(elem).parent().parent().addClass('current-row text-white');
+		} else {
+			$(elem).parent().parent().removeClass('current-row text-white');
+		}
+	}
+</script>

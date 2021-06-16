@@ -1,0 +1,264 @@
+<style>
+table.dataTable tbody td {
+	padding: 0.75rem;
+}
+</style>
+<!-- Main row -->
+<div class="row">
+	<!-- Auditoria de Costos -->
+	<div class="col-md-12 col-sm-12 mt-2" id="div_tbl_datos">
+		<div class="card card-primary m-0 p-0 elevation-2 border border-dark">
+			<div class="card-header p-1 pl-2 mb-1">
+				<i class="fas fa-shipping-fast"></i>
+				<span id="ttitulo">Transporte de Transferencias CDEIM -> Sucursales</span>
+			</div>
+			<div class="row p-2">
+				<div class="col-4">
+					<div>
+						<label for="select_tiendas" class="m-0">Localidad</label>
+						<select id="select_tiendas" class="form-control p-0"></select>
+					</div>
+					<div>
+						<label for="select_chofer" class="pt-3 m-0">Transportado por Conductor</label>
+						<select id="select_chofer" class="form-control p-0"></select>
+						<form action="" onsubmit="return false" class="pt-1 d-none" id="frm_select_chofer">
+							<input style="display: none;" placeholder="Nombre del Conductor Particular">
+							<input type="text" id="inp_select_chofer" class="form-control form-control-sm border border-warning"
+								value="" placeholder="Nombre y Cédula del Conductor Particular" onkeyup="validar();">
+						</form>
+					</div>
+					<div>
+						<label for="select_camion" class="pt-3 m-0">Camión o Transporte</label>
+						<select id="select_camion" class="form-control p-0"></select>
+						<form action="" onsubmit="return false" class="pt-1 d-none" id="frm_select_camion">
+							<input style="display: none;" placeholder="Nombre del Transporte Particular">
+							<input type="text" id="inp_select_camion" class="form-control form-control-sm border border-warning"
+								value="" placeholder="Tipo y Placa Transporte Particular" onkeyup="validar();">
+						</form>
+					</div>
+					<div>
+						<label for="prescinto" class="pt-3 m-0">Precinto de seguridad</label>
+						<form action="" onsubmit="return false">
+							<input style="display: none;" placeholder="Precinto de Seguridad">
+							<input type="text" id="prescinto" placeholder="Precinto de Seguridad"
+								class="form-control" onkeyup="validar();">
+						</form>
+					</div>
+					<div class="pt-3 align-items-center justify-content-center d-flex">
+						<button class="btn btn-danger" onclick="cargarcontenido('transp_transf');" id="limpiar">
+							<i class="fas fa-broom"></i> Limpiar
+						</button>
+					</div>
+					<div class="pt-3 align-items-center justify-content-center d-flex">
+						<button class="btn btn-secondary" disabled id="procesar">
+							<i class="fas fa-search"></i> Procesar
+						</button>
+					</div>
+				</div>
+				<div class="col-8">
+					<div class="card card-warning m-0 p-0 border border-dark">
+						<div class="card-header p-1 pl-2">
+							<i class="fas fa-map-marker-alt"></i>
+							<span>Transferencias Pendintes</span>
+						</div>
+						<div class="card-body p-0 m-0">
+							<table id="transpen" class="table table-hover w-100 nowrap">
+								<thead class="bg-warning-gradient">
+									<tr>
+										<th width=" 5%">Tipo</th>
+										<th width="15%">Documento</th>
+										<th width="15%">Fecha</th>
+										<th width="65%">Realizado por</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+						<!-- /.card-body -->
+					</div>
+					<!-- /.col -->
+				</div>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- hora para el reporte -->
+<input type="hidden" id="horah">
+
+<script>
+	$(function() {
+		// Se consultan las tiendas activas en el dashboard para seleccionar
+		$.ajax({
+			data: {
+				opcion: "listaTiendasBDES",
+				sqlcnx: 1,
+				idpara: ptodas + '¬' + ptienda,
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function(data) {
+				$("#select_tiendas").append('<option value="0">Seleccione una Tienda</option>');
+				for (i=0; i<data.length; i++) {
+					if(data[i].codigo==99) continue;
+					$("#select_tiendas").append('<option value="'+ data[i].codigo + '">' + data[i].nombre + '</option>');
+				}
+			}
+		})
+		
+		// Se consultan los departamentos para seleccionar
+		$.ajax({
+			data: { opcion: "listaTransporte", sqlcnx: 1 },
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function(data) {
+				var camiones = data['camiones'];
+				var choferes = data['choferes'];
+				$("#select_camion").append('<option value="0">Seleccione un Camión</option>');
+				$("#select_chofer").append('<option value="0">Seleccione un Chofer</option>');
+				for (i=0; i<camiones.length; i++) {
+					$("#select_camion").append('<option value="'+ camiones[i].codigo + '">' + camiones[i].descripcion + ' [' + camiones[i].placa + ']' + '</option>');
+				}
+				for (i=0; i<choferes.length; i++) {
+					$("#select_chofer").append('<option value="'+ choferes[i].codigo + '">' + choferes[i].descripcion + ' [' + choferes[i].cedula + ']' + '</option>');
+				}
+			}
+		})
+	});
+
+	$('#transpen').dataTable({
+		scrollY: "65vh",
+		serverSide: true,
+		ajax: {
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "listaTransPen",
+				sqlcnx: 1,
+				idpara: function() { return $("#select_tiendas").val() },
+			},
+			type: "POST",
+			dataType: "json",
+		},
+		columns: [
+			{ data: "tipo" },
+			{ data: "documento", sClass: "txtcomp text-center" },
+			{ data: "fecha",     sClass: "txtcomp text-center" },
+			{ data: "usuario",   sClass: "txtcomp" },
+		],
+	});
+
+	$('#transpen tbody').on( 'click', 'tr', function () {
+		$(this).toggleClass('selected');
+		validar();
+	});
+
+	$("#transpen tr").css("cursor","pointer");
+
+	$('#procesar').click( function () {
+		var table = $('#transpen').DataTable();
+		var documentos = new Array();
+		for (var i = 0; i < table.rows('.selected').data().length; i++) {
+			documentos.push(table.rows('.selected').data()[i]['documento'])
+		}
+		var msj = '<div class="text-left">Desea procesar la información para:<br>';
+			msj+= '----> Localidad: ' + $("#select_tiendas option:selected").text() + '<br>';
+			msj+= '----> Conductor: ';
+			if($("#select_chofer").val()==-1) {
+				msj+= $("#inp_select_chofer").val().trim() + '<br>';
+			} else {
+				msj+= $("#select_chofer option:selected").text() + '<br>';
+			}
+			msj+= '----> Camion   : ';
+			if($("#select_chofer").val()==-1) {
+				msj+= $("#inp_select_camion").val().trim() + '<br>';
+			} else {
+				msj+= $("#select_camion option:selected").text() + '<br>';
+			}
+			msj+= '----> Precinto : ' + $("#prescinto").val().trim() + '<br><br>';
+			msj+= 'Para las transferencias con los números:<br>';
+			msj+= '[' + documentos.toString().replace(/,/g, " - ") + ']</div>';
+		
+		msg.fire({
+			title: '!!! A T E N C I Ó N ¡¡¡',
+			icon: 'question',
+			html: msj,
+		}).then((result) => {
+			if (result.value) {
+				$.ajax({
+					data: {
+						opcion: 'guardarTranpTransf',
+						idpara: JSON.stringify(documentos),
+						codtra: $('#select_camion').val(),
+						codcon: $('#select_chofer').val(),
+						presci: $('#prescinto').val(),
+						locdes: $('#select_tiendas').val(),
+						chopar: $("#inp_select_chofer").val(),
+						trapar: $("#inp_select_chofer").val(),
+						sqlcnx: 1,
+					},
+					type: "POST",
+					dataType: "text",
+					url: "app/DBProcs.php",
+					success: function(data) {
+						if(data==0) {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'error',
+								html: 'No se pudo guardar la información, por favor inténte de nuevo.',
+								showCancelButton: false,
+							})
+						} else {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'success',
+								html: 'Proceso realizado con éxito.',
+								showCancelButton: false,
+							}).then((result) => {
+								if (result.value) {
+									$('#limpiar').click();
+								}
+							});
+						}
+					}
+				});
+			}
+		})
+	});
+
+	$('#select_tiendas, #select_chofer, #select_camion').on('change', function() {
+		validar();
+		if( $(this).val() == -1 ) {
+			$( '#frm_' + $(this).attr('id') ).removeClass('d-none');
+			$( '#inp_' + $(this).attr('id') ).focus();
+		} else {
+			$( '#frm_' + $(this).attr('id') ).addClass('d-none');
+			$( '#inp_' + $(this).attr('id') ).focus();
+		}
+
+		if($(this).attr('id')=='select_tiendas') {
+			$('#transpen').DataTable().ajax.reload( null, false );
+		}
+	})
+
+	function validar() {
+		if ($('#select_tiendas').val()   == '0' ||
+			$('#select_chofer' ).val()   == '0' ||
+			$('#select_camion' ).val()   == '0' ||
+			$('#prescinto').val().trim() == ''  ||
+			$('#transpen').DataTable().rows('.selected').data().length == 0 ||
+			($('#select_camion').val()==-1 && $('#inp_select_camion').val()=='') ||
+			($('#select_chofer').val()==-1 && $('#inp_select_chofer').val()=='') ) {
+			$('#procesar').removeClass('btn-success');
+			$('#procesar').addClass('btn-secondary');
+			$('#procesar').attr('disabled', 'disabled');			
+		} else {
+			$('#procesar').removeClass('btn-secondary');
+			$('#procesar').addClass('btn-success');
+			$('#procesar').removeAttr('disabled');			
+		}
+	}
+</script>

@@ -1,0 +1,334 @@
+<!-- Main row -->
+<div class="row">
+	<div class="row mt-2 col-12 col-md-12 align-content-end justify-content-end">
+		<div class="input-group date gfechas ml-1 col-8 col-sm-6 col-md-3 col-lg-2">
+			<label for="fechaf">Mes</label>		
+			<input id="fechaf" name="fechaf" type="text" class="form-control form-control-sm rounded text-center ml-1" autocomplete="off" 
+					data-inputmask="'alias': 'mm-yyyy'" style="height: 31px;"
+					data-mask placeholder="mm-yyyy">
+			<span class="input-group-addon alert-secondary p-1 font-weight-bold text-center"
+				style="height: 31px;" tabindex="-1">
+				<i class="fas fa-calendar"></i>
+			</span>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<!-- Estadisticas de Clientes -->
+	<div class="col-12 mt-1" id="div_testclientes">
+		<div class="card card-primary elevation-2 border border-dark">
+			<div class="card-header p-1 pl-2">
+				<i class="fas fa-users"></i>
+				<span id="testclientes">Estasdísto de Clientes</span>
+				<span id="ffecha"></span>
+			</div>
+			<div class="row mt-1">
+				<div class="card-body col-2 p-0 text-center ml-auto mr-auto elevation-2" style="height: 65vh; width: 90%">
+					<span class="font-weight-bold">#Clientes Hoy</span>
+					<span class="badge badge-primary" id="hoy"></span>
+					<table id="tabCantClientesBdes" cellpadding="0" cellspacing="0" 
+							class="table table-striped table-hover w-100">
+						<thead class="bg-dark-gradient">
+							<tr>
+								<th class="text-center border border-top-0 border-bottom-0">Tienda</th>
+								<th class="text-center border border-top-0 border-bottom-0">#Clientes</th>
+							</tr>
+						</thead>
+						<tfoot>
+							<tr class="bg-dark-gradient" >
+								<th class="text-left border border-top-0 border-bottom-0 pl-3">Totales</th>
+								<th class="text-right border border-top-0 border-bottom-0 pr-3"></th>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+				<div class="card-body col-9 p-0 ml-auto mr-auto" id="grafico" style="height: 65vh; width: 90%"></div>
+			</div>
+			<div class="row mt-3 ml-1 mr-1">
+				<div class="col-10 m-0" id="divResClientesBdes">
+				</div>
+				<div class="col-2 m-0">
+					<table class="w-100 table elevation-2 table-bordered">
+						<tr class="font-weight-bold">
+							<td class="bg-primary-gradient">Total Clientes</td>
+							<td class="bg-warning-gradient text-right"><span id="totCltes"></span></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<script>
+	$('.gfechas').datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showButtonPanel: true,
+		language: "es",
+		autoclose: true,
+		format: "mm-yyyy",
+		startView: "months", 
+		minViewMode: "months"
+	});
+	$('[data-mask]').inputmask();
+	$(".gfechas").on('change', function() {
+		var ffecha = ('01-'+$('#fechaf').val()).split('-')
+		ffecha = new Date(ffecha[2], ffecha[1] - 1, ffecha[0]);
+		actualizar_grafico(moment(ffecha).format("YYYY-MM"));
+	});
+
+	$(".gfechas").datepicker().datepicker("setDate", new Date());
+	
+	function actualizar_grafico(pfecha=moment().format("YYYY-MM")) {
+		if (tomar_datos !== '') {
+			tomar_datos.abort();
+		}
+		cargando('show')
+		var afechas = new Array(2);
+		afechasi = moment().subtract(12, 'M').startOf('M').format('YYYY-MM-DD');
+		afechasf = moment().endOf('M').format('YYYY-MM-DD');
+		tomar_datos = $.ajax({
+			data: {
+				opcion: 'tabContClientesBdes',
+				sqlcnx: 1,
+				fecha : moment().format("YYYY-MM-DD")
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				$('#hoy').html(data["fecha"]);
+				data = data["data"];
+				$('#tabCantClientesBdes').dataTable({
+					scrollY: '60vh',
+					scrollCollapse: true,
+					sScrollX: "100%",
+					scrollX: true,
+					data: data,
+					order: [],
+					columns: [
+						{ data: "localidad", sClass: "text-left font-weight-bold align-middle border border-top-0 border-bottom-0" },
+						{ data: "clientes", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+					],
+					drawCallback: function (row, data, start, end, display) {
+						total01 = this.api()
+							.column(1) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						$(this.api().column(1).footer()).html(total01.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+					},
+				});
+			}
+		});
+		tomar_datos = $.ajax({
+			data: {
+				opcion: 'tabResClientesBdes',
+				sqlcnx: 1,
+				fecha : moment().format("YYYY-MM-DD"),
+				idpara: afechasi + '¬' + afechasf
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				var tabla = '<table class="w-100 table-striped elevation-2 table-bordered">' +
+								'<tr class="bg-dark-gradient">' +
+									'<th class="text-center border border-top-0 border-bottom-0">Por Mes</th>';
+				var fechaini = afechasi;
+				var fechafin = afechasf;
+				while(fechaini <= fechafin) {
+					tabla += '<th class="text-center">' + moment(fechaini).format('MMM YYYY') + '</th>'
+					fechaini = moment(fechaini).add(1, 'M').format("YYYY-MM-DD");
+				}
+				tabla += '</tr><tr>' +
+							'<th class="text-center border border-top-0 border-bottom-0 bg-dark-gradient">Totales</th>';
+				var fechaini = afechasi;
+				var fechafin = afechasf;
+				while(fechaini <= fechafin) {
+					var fila = '<th class="text-center"></th>'
+					for(i=0; i<data.length; i++) {
+						anio_mes = data[i]['anio_mes'];
+						if( anio_mes == moment(fechaini).format("YYYY-MM") ) {
+							fila = '<th class="text-center">' + data[i]['clientes'] + '</th>'
+							break;
+						}
+					}
+					tabla += fila
+					fechaini = moment(fechaini).add(1, 'M').format("YYYY-MM-DD");
+				}
+				tabla += '</tr></table>';
+				$('#divResClientesBdes').html(tabla);
+			}
+		});
+		tomar_datos = $.ajax({
+			data: {
+				opcion: 'graContClientesBdes',
+				sqlcnx: 1,
+				fecha : pfecha,
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				var totctes = data['totctes'];
+				$('#totCltes').html(data['totctes']);
+				var data = data['data'];
+				var series = [];
+				var xaxis = [];
+				var ffecha = pfecha.split('-')
+				ffecha = new Date(ffecha[0], ffecha[1]-1, '01');
+				var dfin = moment(ffecha).endOf('M').format('D')*1;
+				for (var i=1; i<=dfin; i++) {
+					xaxis.push( i );
+				}
+				var max = 0;
+				for (var i=1; i<=dfin; i++) {
+					var valor = '';
+					for (var j = 0; j < data.length; j++) {
+						if( (data[j]['dia']*1) == i ) {
+							valor = (data[j]['clientes']*1);
+							max = valor > max ? valor : max;
+							break;
+						}
+					}
+					series.push( valor )
+				}
+				series = max > 0 ? series : [];
+				Highcharts.chart('grafico', {
+					chart: {
+						type: 'column',
+						events: {
+							// Attach to beforeInitialize
+							load: function () {
+								setTimeout("cargando('hide')", 500)
+							}
+						}
+					},
+					legend: {
+						enabled: false
+					},
+					title: {text: 'Cantidad de Clientes diarios en las Sucursales (' + capitalize(moment(ffecha).format('MMMM [de] YYYY')) +')' },
+					xAxis: [{
+						min: 0,
+						title: { text: "Días del Mes" },
+						categories: xaxis,
+						tickWidth: 1,
+						tickLength: 20,
+					}],
+					yAxis: [{
+						title: { text: 'Cantidad de Clientes'},
+						dataLabels: {
+							enabled: true,
+						},
+						tickInterval: 100,
+						breaks: [{
+							from: 5000,
+							to: 120000
+						}],
+						events: {
+							pointBreak: pointBreakColumn
+						}
+					}],
+					credits: {
+						enabled: false
+					},
+					plotOptions: {
+						column: {
+							dataLabels: {
+								enabled: true,
+								formatter: function() { return dividirValor(this.y, 6) }
+							}
+						},
+						series: {
+							pointPadding: 0.1,
+							groupPadding: 0.1,
+							borderWidth: 1,
+							borderRadius: 2,
+							shadow: true,
+							colorByPoint: true,
+						}
+					},
+					series : [{
+						name: 'Cantidad de Visitantes',
+						data: series
+					}]
+				})
+			}
+		});
+	}
+
+	function dividirValor(valor, i, d=2){
+		var numericSymbols = ['k', 'M', 'B', 'T', 'C', 'Q'];
+		var ret;
+		if(valor >=1000) {
+			while (i-- && ret === undefined) {
+				multi = Math.pow(1000, i + 1);
+				if (valor >= multi && numericSymbols[i] !== null) {
+					ret = Highcharts.numberFormat((valor / multi), d,',','.') + ' ' + numericSymbols[i];
+				}
+			}
+		}	
+		return (ret ? ret : valor);
+	}
+
+	Highcharts.wrap(Highcharts.Axis.prototype, 'getLinePath', function (proceed, lineWidth) {
+		var axis = this,
+			path = proceed.call(this, lineWidth),
+			x = path[1],
+			y = path[2];
+
+		Highcharts.each(this.breakArray || [], function (brk) {
+			if (axis.horiz) {
+				x = axis.toPixels(brk.from);
+				path.splice(3, 0,
+					'L', x - 4, y, // stop
+					'M', x - 9, y + 5, 'L', x + 1, y - 5, // left slanted line
+					'M', x - 1, y + 5, 'L', x + 9, y - 5, // higher slanted line
+					'M', x + 4, y
+				);
+			} else {
+				y = axis.toPixels(brk.from);
+				path.splice(3, 0,
+					'L', x, y - 4, // stop
+					'M', x + 5, y - 9, 'L', x - 5, y + 1, // lower slanted line
+					'M', x + 5, y - 1, 'L', x - 5, y + 9, // higher slanted line
+					'M', x, y + 4
+				);
+			}
+		});
+		return path;
+	});
+
+	/**
+	 * On top of each column, draw a zigzag line where the axis break is.
+	 */
+	function pointBreakColumn(e) {
+		var point = e.point,
+			brk = e.brk,
+			shapeArgs = point.shapeArgs,
+			x = shapeArgs.x,
+			y = this.translate(brk.from, 0, 1, 0, 1),
+			w = shapeArgs.width,
+			key = ['brk', brk.from, brk.to],
+			path = ['M', x, y, 'L', x + w * 0.25, y + 4, 'L', x + w * 0.75, y - 4, 'L', x + w, y];
+
+		if (!point[key]) {
+			point[key] = this.chart.renderer.path(path)
+				.attr({
+					'stroke-width': 2,
+					stroke: point.series.options.borderColor
+				})
+				.add(point.graphic.parentGroup);
+		} else {
+			point[key].attr({
+				d: path
+			});
+		}
+	}
+</script>

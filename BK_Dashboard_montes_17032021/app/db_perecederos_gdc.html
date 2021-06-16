@@ -1,0 +1,959 @@
+<style>
+	.minibadge {
+		color:#004085;
+		padding-top: .05em;
+		padding-bottom: .05em;
+		font-size:90%;
+		letter-spacing: -0.8px;
+		line-height: 0.7em;
+		margin: 0px;
+		display: inline-block;
+		font-weight: 600;
+		white-space: nowrap;
+		vertical-align: baseline;
+	}
+	.bdge {
+		color:#000000;
+		background-color: #F2CB43;
+		border-radius: 5px;
+		border: 1px solid #575555;
+		padding: 0.25em;
+		letter-spacing: -0.5px;
+		line-height: 0.9em;
+		font-size: 90%;
+		margin: 0px;
+		font-weight: 400;
+		word-wrap: break-all;
+		position: relative;
+	}
+	.selectSize {
+		width: 100% !important;
+	}
+	.dataTables_filter {
+		display: none;
+	}
+	table.dataTable tbody td {
+		padding: 0.5rem;
+	}
+	.blink_me {
+		animation: blinker 1s linear 5;
+	}
+	@keyframes blinker {
+		50% {
+			opacity: 0;
+		}
+	}
+</style>
+
+<!-- Main row -->
+<div class="row">
+	<input type="hidden" id="insall" value="1">
+	<!-- Solicitud de Pedidos -->
+	<div class="col-md-12 col-sm-12 mt-2" id="div_tbl_datos">
+		<div class="card card-primary elevation-2 border border-dark pb-1">
+			<div class="card-header p-1 pl-2 mb-1">
+				<i class="fas fa-file-alt"></i>
+				<span id="ttitulo">Gestión de Compras Perecederos</span>
+			</div>
+			<div class="p-0 m-0 pl-1 pr-1">
+				<div class="form-inline col-12 p-0 m-0">
+					<div class="form-inline col-6 align-items-baseline">
+						<label for="fprov">Proveedor:&nbsp;</label>
+						<input style="display: none;" placeholder="Código/Nombre Parcial del Proveedor">
+						<input type="text" id="fprov" 
+							onkeyup="if(event.keyCode=='13' && $(this).val().trim()!='')
+								{ $(this).blur() } else if($(this).val().trim()=='') { $(this).val([]) }"
+							onblur="if($(this).val().trim()!='')
+								{ listaProvBDES(); } else if($(this).val().trim()=='') { $(this).val([]) }" 
+							placeholder="Código/Nombre Parcial del Proveedor"
+							class="form-control form-control-sm col-md-9 col">
+						<span id="codprov" class="bg-warning rounded border border-dark pl-1 pr-1 d-none">
+						</span>
+					</div>
+					<div class="d-flex col-6 align-items-top">
+						<label for="fecha">Fecha de Entrega:&nbsp;</label>
+						<input id="fecha" type="text" class="form-control form-control-sm text-center col-4" 
+								autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'"
+								data-mask placeholder="dd-mm-yyyy">
+						<div class="bdge blink_me text-center col">RECUERDE MODIFICAR LA FECHA DE ENTREGA ANTES DE GENERAR LA ORDEN</div>
+					</div>
+				</div>
+				<div class="d-flex align-items-baseline col m-0 mt-1">
+					<span class="font-weight-bold">Buscar:&nbsp;</span>
+					<input type="text" class="form-control form-control-sm m-0" id="buscar" value=""
+						placeholder="Buscar Artículo en la Lista...">
+				</div>
+				<form action="" onsubmit="return false;" class="m-1 mt-0" id="frmlista">
+					<table class="table table-striped table-hover table-bordered w-100"
+						id="tbl_LstArticulos">
+						<thead>
+							<tr class="bg-warning-gradient">
+								<th class="text-center text-nowrap">Descripción Artículo</th>
+								<th class="text-center">Exist.</th>
+								<th class="text-center">Pedido</th>
+								<th class="text-center">Comprar</th>
+								<th class="text-center">Costo</th>
+								<th class="text-center">Margen</th>
+								<th class="text-center">Precio</th>
+								<th class="text-center">Precio+Iva</th>
+							</tr>
+						</thead>
+					</table>
+				</form>
+				<div class="p-1 d-inline-flex justify-content-center alert-secondary
+							border border-dark w-100" id="divbotones">
+					<button class="btn btn-secondary" disabled="true"
+						data-toggle="modal" data-target="#TblArt" id="btnAgregar">
+						<i class="fas fa-plus-circle"></i> Artículo
+					</button>
+					&nbsp;
+					<div class="btn-group dropup">
+						<button type="button" disabled="true"
+							class="btn btn-secondary dropdown-toggle w-100"
+							data-toggle="dropdown" id="btnProcesar">
+							<i class="fas fa-question-circle"></i> Procesar <span class="caret"></span>
+						</button>
+						<div class="dropdown-menu p-1">
+							<button class="col btn btn-secondary" disabled="true" id="btnEspera"
+								onclick="cargarcontenido('perecederos_gdc');">
+								<i class="fas fa-save"></i> Colocar en Espera
+							</button>
+							<div class="dropdown-divider"></div>
+							<button class="col btn btn-secondary" disabled="true" id="btnGuardar">
+								<i class="fas fa-check"></i> Generar Orden
+							</button>
+						</div>
+					</div>
+					&nbsp;
+					<button class="btn btn-danger" id="btnLimpiar">
+						<i class="fas fa-broom"></i> Limpiar
+					</button>
+				</div>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- Modal lista de articulos -->
+<div class="modal fade" id="TblArt" style="z-index: 9888;" tabindex="-1" role="dialog"
+	aria-labelledby="TblArtLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered">
+		<!-- Modal content-->
+		<div class="modal-content">
+			<div class="modal-header bg-primary pt-1 pb-1">
+				<h4 class="modal-title">Seleccione un Artículo para Agregarlo a la Lista</h4>
+			</div>
+			<div class="modal-body p-1" id="contTblArt">
+				<form action="" onsubmit="return false;" class="form-inline col-12 p-0 m-0 mt-2">
+					<div class="d-flex w-100 align-content-center justify-content-center ml-2 mr-2">
+						<label for="buscarTblArt">Buscar: </label>
+						<input type="text" class="form-control form-control-sm m-0 ml-1 mr-l p-1 col"
+							id="buscarTblArt" autocomplete="off" 
+							placeholder="Buscar Artículo en la Lista...">
+					</div>
+				</form>
+				<form action="" onsubmit="return false;" class="p-0 m-0" id="frmlstart">
+					<table id="tbl_ListaArticulos" class="table-striped table-hover table-bordered w-100">
+						<thead>
+							<tr>
+								<td width="10%" class="text-center bg-warning-gradient"
+									style="font-weight: bold !important; height: 30px !important;">
+									Código
+								</td>
+								<td width="20%" class="text-center bg-warning-gradient"
+									style="font-weight: bold !important; height: 30px !important;">
+									Barra
+								</td>
+								<td width="70%" class="text-center bg-warning-gradient"
+									style="font-weight: bold !important; height: 30px !important;">
+									Descripción
+								</td>
+							</tr>
+						</thead>
+					</table>
+				</form>
+			</div>
+			<div class="modal-footer pt-2 pb-2 align-items-end justify-content-end align-top">
+				<button class="btn btn-outline-danger col-3" class="close" data-dismiss="modal" id="btncerrar">
+					Cerrar <i class="fas fa-times-circle"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	var regact = null;
+	var rowact = null;
+
+	$('#fecha').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+	});
+	$("#fecha").datepicker().datepicker("setDate", new Date());
+	$('[data-mask]').inputmask();
+
+	$('#frmlista').height($('#wp_ppal').height()-$('#frmlista').offset().top-18+'px');
+
+	setTimeout("$('#fprov').focus()", 100);
+	$('#tbl_LstArticulos').DataTable({
+		scrollY: ($('#frmlista').height()-$('#divbotones').height())+'px',
+		order: [ 0, 'asc' ],
+		responsive: true,
+	}).draw();
+
+	$('#buscarTblArt').keyup(function() {
+		if($(this).val().trim()!='') {
+			$('#tbl_ListaArticulos').dataTable().fnFilter(this.value);
+		}
+	})
+
+	$('#TblArt').on('hidden.bs.modal', function () {
+		// Se limpia la tabla al cerrar la ventana modal
+		$('#tbl_ListaArticulos').empty();
+		$('#buscarTblArt').val('');
+	});
+
+	$('#TblArt').on('shown.bs.modal', function () {
+		cargando('show');
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "artDispoPerecederos",
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>0) {
+					$('#tbl_ListaArticulos').DataTable({
+						scrollY: "50vh",
+						scrollCollapse: false,
+						data: data,
+						searching: true,
+						order: [ 2, 'asc' ],
+						autoWidth: false,
+						columns: [
+							{ data: 'codigo',      sClass: "text-left align-middle" },
+							{ data: 'barra',       sClass: "text-left align-middle" },
+							{ data: 'descripcion', sClass: "text-left align-middle" },
+						]
+					});
+				}
+			}
+		}).done(function() {
+			cargando('hide');
+			$('#buscarTblArt').val('').focus();
+		});
+	});
+
+	// Agrega un articulo nuevo al listado del pedido
+	function agregararticulo(codigo) {
+		$.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "addArtTMPCmp",
+				idpara: codigo,
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				data = data[0];
+				var table = $('#tbl_LstArticulos').DataTable();
+				var encontrado = 0;
+				table.rows().data().each(function (value) {
+					if(value['codigo']==data.codigo) encontrado=1;
+				});
+				if(encontrado == 1) {
+					$('#btn'+codigo).click();
+				} else {
+					var rowNode = 
+					table.row.add(data).draw( false ).node();
+					if($('#insall').val()==0) {
+						$.ajax({
+							url: "app/DBProcs.php",
+							type: "POST",		
+							data: {
+								opcion: 'saveTMPCmp',
+								idpara: 1,
+								sqlcnx: 1,
+								idprov: $('#codprov').html(),
+								userid: $('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
+								dato  : data,
+							},
+						}).done(function() {
+							$('#btn'+codigo).click();
+						});
+					} else {
+						$('#btn'+codigo).click();
+					}
+				}
+				$('#btn'+codigo).focus();
+			}
+		})
+		
+
+		$('#TblArt').modal('hide');
+		setTimeout(function() { $('#inp'+codigo).focus() }, 500);
+	}
+
+	function consultar() {
+		cargando('show');
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "lstArtxProv",
+				idpara: $('#codprov').html(),
+				userid: $('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				$('#tbl_LstArticulos').dataTable({
+					scrollY: ($('#frmlista').height()-$('#divbotones').height())+'px',
+					order: [ 0, 'asc' ],
+					searching: true,
+					autoWidth: false,
+					data: data,
+					columns: [
+						{ data: "descripcion", sClass: "txtcomp" },
+						{ data: "exiver", sClass: "txtcomp text-right" },
+						{ data: "cntver", sClass: "txtcomp text-right" },
+						{ data: "boton",  sClass: "txtcomp text-center", orderable: false },
+						{ data: "cstver", sClass: "txtcomp text-right" },
+						{ data: "marver", sClass: "txtcomp text-right" },
+						{ data: "prever", sClass: "txtcomp text-right" },
+						{ data: "pvpver", sClass: "txtcomp text-right" },
+					],
+					responsive: {
+						details: {
+							display: $.fn.dataTable.Responsive.display.childRowImmediate,
+							type: 'none',
+							target: '',
+							renderer: function ( api, rowIdx, columns ) {
+								var data = $.map( columns, function ( col, i ) {
+									return col.hidden ?
+										'<span style="line-height: 0.5em;" data-dt-row="'+
+											col.rowIndex+'" data-dt-column="'+col.columnIndex+'">'+
+											'<span class="text-nowrap"><b>'+col.title+': </b>'+
+											col.data+'</span>&emsp;'+
+										'</span>' :
+										'';
+								} ).join('');
+								return data ?
+									$('<table/>').append( data ) :
+									false;
+							}
+						}
+					},
+					rowCallback: function( row, data ) {
+						if (data.cntori == 0) {
+							$('td', row).addClass('alert-primary ');
+						}
+					}
+				});
+			}
+		}).done(function() {
+			var table = $('#tbl_LstArticulos').DataTable();
+			var activaprocesar = 0;
+			table.rows().data().each(function (value) {
+				if(value['cntnva']>0) activaprocesar=1;
+			});
+			if (activaprocesar==1) {
+				$('#btnProcesar').switchClass('btn-secondary', 'btn-info');
+				$('#btnGuardar').switchClass('btn-secondary', 'btn-success');
+				$('#btnEspera').switchClass('btn-secondary', 'btn-warning');
+				$('#btnProcesar').attr('disabled', false);
+				$('#btnGuardar').attr('disabled', false);
+				$('#btnEspera').attr('disabled', false);
+				$('#insall').val(1);
+			} else {
+				$('#btnProcesar').switchClass('btn-info', 'btn-secondary');
+				$('#btnGuardar').switchClass('btn-success', 'btn-secondary');
+				$('#btnEspera').switchClass('btn-warning', 'btn-secondary');
+				$('#btnProcesar').attr('disabled', true);
+				$('#btnGuardar').attr('disabled', true);
+				$('#btnEspera').attr('disabled', true);
+			}
+			cargando('hide');
+		});
+	};
+
+	function tabE(obj,e,pform='frmdatosCosto') {
+		var e=(typeof event!='undefined')?window.event:e; // IE : Moz 
+		var key = e.keyCode || e.which;
+		var ele = document.forms.namedItem(pform).elements;
+		if(e.key=='+' || e.key=='-' || e.key=='.') { return false; }
+		if(key==13 || key==40) {
+			for(var i=0;i<ele.length;i++) {
+				var q=(i==ele.length-1)?i:i+1; // if last element : if any other 
+				if(obj==ele[i]) {
+					ele[q].focus();
+					break;
+				} else {
+					if(i>=ele.length-1) {
+						ele[q].blur()
+						ele[q].focus();
+						break;
+					}
+				}
+			}
+			return false;
+		}
+		if(key==38) {
+			for(var i=0;i<ele.length;i++) {
+				var q=(i==0)?i:i-1; // if last element : if any other
+				if(obj==ele[i]) {
+					ele[q].focus();
+					break;
+				}
+			}
+			return false;
+		}
+		if(key==35 || key==36) { // 35->fin 36->inicio
+			if(e.ctrlKey) {
+				if(key==36) {
+					ele[1].focus();
+				} else {
+					ele[ele.length-1].focus();
+				}
+			}
+			return false;
+		}
+		if(key==34) {
+			for(var i=0;i<ele.length;i++) {
+				var q=(i==0)?i:i-1; // if last element : if any other
+				if(obj==ele[i]) {
+					if(ele[i+9]) {
+						ele[i+9].focus();
+					} else {
+						ele[ele.length-1].focus();
+					}
+					break;
+				}
+			}
+			return false;
+		}
+		if(key==33) {
+			for(var i=0;i<ele.length;i++) {
+				var q=(i==0)?i:i-1; // if last element : if any other
+				if(obj==ele[i]) {
+					if(i-9>0) {
+						ele[i-9].focus();
+					} else {
+						ele[1].focus();
+					}
+					break;
+				}
+			}
+			return false;
+		}
+	}
+
+	$("#buscar").keyup(function() {
+		// Buscar en la tabla
+		$('#tbl_LstArticulos').dataTable().fnFilter(this.value);
+	});
+
+	// Presenta un listado de proveedores con el filtro indicado
+	function listaProvBDES() {
+		if($('#fprov').val().trim()!='') {
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "listaProvBDES",
+					idpara: $('#fprov').val().trim(),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>1){
+						$('#tituloModal').html('Proveedores que cumplen con la busqueda: "' + $('#fprov').val().trim() + '"');
+						var contenido = '';
+						contenido +=
+							'<table id="tlistaProvBDES" ' +
+								'class="table table-striped table-hover p-0 m-1 w-100">' +
+								'<thead class="bg-dark-gradient">' +
+									'<tr>' +
+										'<th>Código</th>' +
+										'<th>Rif</th>' +
+										'<th>Nombre o razón Social</th>' +
+									'</tr>' +
+								'</thead>' +
+								'<tbody>';
+						for (i = 0; i < data.length; i++) {
+							contenido +=
+								'<tr>' +
+									'<td>' + data[i].codigo + '</td>' +
+									'<td>' + data[i].rif + '</td>' +
+									'<td>' + data[i].descripcion + '</td>' +
+								'</tr>';
+						}
+						contenido += '</tbody></table>';
+						contenido += '<script>' +
+							'$("#tlistaProvBDES").dataTable({ ' +
+								'scrollY: "60vh", ' +
+								'scrollCollapse: true, ' +
+								'order: [2, "asc"],' +
+							'});' +
+							'</' + 'script>';
+						$('#contenidoModal').html(contenido);
+						$('#ModalDatos').modal('show');
+					} else if(data.length>0) {
+						$('#btnAgregar').attr('disabled', false);
+						$('#btnAgregar').switchClass("btn-secondary", "btn-primary");
+						$('#codprov').removeClass('d-none');
+						$('#codprov').html(data[0]['codigo']);
+						$('#fprov').val(data[0]['nombre']);
+						$('#fprov').attr('disabled', true);
+						setTimeout("consultar()", 500);
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontraron proveedores para: <b>"'+$('#fprov').val()+ '</b>"',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#btnAgregar').attr('disabled', true);
+								$('#btnAgregar').switchClass("btn-primary", "btn-secondary");
+								$('#codprov').addClass('d-none');
+								$('#codprov').html('');
+								$('#fprov').val([]);
+								$('#fprov').focus().select();
+							}
+						})
+					}
+				}
+			}).done(function() {
+				setTimeout(function() {
+					$('#contenidoModal').css( 'display', 'block' );
+					$('#tlistaProvBDES').DataTable().columns.adjust().draw();
+					cargando('hide'); 
+				}, 150);
+			})
+		} else {
+			$('#frpov').val();
+			$('#frpov').focus();
+		}
+	}
+
+	function seleccion(campo, codigo, desc) {
+		$('#btnAgregar').attr('disabled', false);
+		$('#btnAgregar').switchClass("btn-secondary", "btn-primary");
+		$('#codprov').removeClass('d-none');
+		$('#codprov').html(codigo);
+		$('#fprov').val(desc);
+		$('#fprov').attr('disabled', true);
+		$('#ModalDatos').modal('hide');
+		setTimeout("consultar()", 500);
+	}
+
+	function modificaCant(datos) {
+		var codigo   = datos['codigo'];
+		var impuesto = datos['impuesto'];
+
+		var margen = (datos['marnva']==0 ? datos['marori'] : datos['marnva'])*1;
+		var costo  = (datos['cstnva']==0 ? datos['cstori'] : datos['cstnva'])*1;
+		
+		var cntori = datos['cntori'];
+		var cntnva = datos['cntnva'];
+		var cntver = datos['cntver'];
+		var cstori = datos['cstori'];
+		var cstnva = datos['cstnva'];
+		var cstver = datos['cstver'];
+		var marori = datos['marori'];
+		var marnva = datos['marnva'];
+		var marver = datos['marver'];
+		var preori = datos['preori'];
+		var prenva = datos['prenva'];
+		var prever = datos['prever'];
+		var pvpori = datos['pvpori'];
+		var pvpnva = datos['pvpnva'];
+		var pvpver = datos['pvpver'];
+		var exiver = datos['exiver'];
+		var cstliq = datos['cstliq'];
+		var marliq = datos['marliq'];
+		var preliq = datos['preliq'];
+		var pvpliq = datos['pvpliq'];
+		var fecdbc = datos['fecdbc'];
+		var fecliq = datos['fecliq'];
+
+		var okp = 'onkeypress="return event.charCode >= 48 && event.charCode <= 57"';
+
+		$('#tituloModal').html(datos.desctxt);
+		var contenido = '<form action="" onsubmit="return false;" id="frmdatosCosto">'+
+			'<table align="center" id="datosCosto" style="width: 98%" '+
+				'class="table-sm table-striped table-hover m-0 p-0">'+
+				'<tr>'+
+					'<td class="font-weight-bold" colspan="2">Comprar (<small><em>Existencia: <span id="exiori">'+exiver+'</span></em></small>)</td>'+
+					'<td class="text-right" id="cantidadant">'+cntori.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")+'</td>'+
+					'<td class="text-center">'+
+						'<input type="numeric" autocomplete="off" class="form-control form-control-sm text-right w-75 m-auto" '+
+							'onfocus="$(this).select()" '+
+							'onkeypress="return event.charCode >= 48 && event.charCode <= 57" '+
+							'onchange="valCantidad(this.value);"'+
+							'id="cantidadnvo" onkeyup="return tabE(this, event, \'frmdatosCosto\');"'+
+							'placeholder="'+cntver+' ">'+
+					'</td>'+
+				'</tr>'+
+				'<tr class="bg-warning-gradient text-center">'+
+					'<th>Dato</th>'+
+					'<th>Liquidación</th>'+
+					'<th>Compra</th>'+
+					'<th>Nuevo</th>'+
+				'</tr>'+
+				'<tr>'+
+					'<td class="font-weight-bold">Costo</td>'+
+					'<td class="text-right" id="costoliq">'+cstliq+'</td>'+
+					'<td class="text-right" id="costoant">'+cstori.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")+'</td>'+
+					'<td class="text-center">'+
+						'<input type="numeric" autocomplete="off" class="form-control form-control-sm text-right w-75 m-auto" '+
+							'onfocus="$(this).select()" '+
+							'onchange="calcMontos(\'costo\', this.value, '+impuesto+', '+margen+');"'+
+							'id="costonvo" onkeyup="return tabE(this, event, \'frmdatosCosto\');"'+
+							'placeholder="'+cstver+' ">'+
+					'</td>'+
+				'</tr>'+
+				'<tr>'+
+					'<td class="font-weight-bold">Margen%</td>'+
+					'<td class="text-right" id="margenliq">'+marliq+'</td>'+
+					'<td class="text-right" id="margenant">'+marori.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")+'</td>'+
+					'<td class="text-center">'+
+						'<input type="numeric" max="50" autocomplete="off" class="form-control form-control-sm text-right w-75 m-auto" '+
+							'onfocus="$(this).select()" '+
+							'onchange="calcMontos(\'margen\', this.value, '+impuesto+', '+costo+');"'+
+							'id="margennvo" onkeyup="return tabE(this, event, \'frmdatosCosto\');"'+
+							'placeholder="'+marver+' ">'+
+					'</td>'+
+				'</tr>'+
+				'<tr>'+
+					'<td class="font-weight-bold">Precio</td>'+
+					'<td class="text-right" id="precioliq">'+preliq+'</td>'+
+					'<td class="text-right" id="precio1ant">'+preori.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")+'</td>'+
+					'<td class="text-center">'+
+						'<input type="numeric" autocomplete="off" class="form-control form-control-sm text-right w-75 m-auto" '+
+							'onfocus="$(this).select()" '+
+							'onchange="calcMontos(\'precio1\', this.value, '+impuesto+', '+costo+');"'+
+							'id="precio1nvo" onkeyup="return tabE(this, event, \'frmdatosCosto\');"'+
+							'placeholder="'+prever+' ">'+
+					'</td>'+
+				'</tr>'+
+				'<tr>'+
+					'<td class="font-weight-bold">Precio+Iva ('+impuesto+'%)</td>'+
+					'<td class="text-right" id="pvpliq">'+pvpliq+'</td>'+
+					'<td class="text-right" id="pvpivaant">'+pvpori.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")+'</td>'+
+					'<td class="text-center">'+
+						'<input type="numeric" autocomplete="off" class="form-control form-control-sm text-right w-75 m-auto" '+
+							'onfocus="$(this).select()" '+
+							'onchange="calcMontos(\'pvpiva\', this.value, '+impuesto+', '+costo+');"'+
+							'id="pvpivanvo" onkeyup="return tabE(this, event, \'frmdatosCosto\');"'+
+							'placeholder="'+pvpver+' ">'+
+					'</td>'+
+				'</tr>'+
+				'<tr>'+
+					'<td class="font-weight-bold">Fecha Ult.Mov.</td>'+
+					'<td class="text-right" id="fecliq">'+fecliq+'</td>'+
+					'<td class="text-right" id="pvpivaant">'+fecdbc+'</td>'+
+					'<td class="text-center">&nbsp;</td>'+
+				'</tr>'+
+			'</table></form>'+
+			'<div class="btn-group p-1 m-0 w-100 alert-secondary border border-dark">'+
+				'<button class="btn btn-success ml-auto" onclick="savDatosCosto('+codigo+')">'+
+					'<i class="fas fa-check"></i> Guardar'+
+				'</button>'+
+				'<button class="btn btn-danger mr-auto" data-dismiss="modal">'+
+					'<i class="fas fa-times"></i> Cancelar'+
+				'</button>'+
+			'</div>';
+		$('#contenidoModal').addClass('m-1');
+		$('#contenidoModal').html(contenido);
+		// $('#subtitulo').html([])
+		$('#ModalDatos').modal('show');
+		setTimeout(function() {
+			if(cntnva>0) { $('#cantidadnvo').val(cntnva.toFixed(0)) }
+			if(cstnva>0) { $('#costonvo'   ).val(cstnva.toFixed(2)) }
+			if(marnva>0) { $('#margennvo'  ).val(marnva.toFixed(2)) }
+			if(prenva>0) { $('#precio1nvo' ).val(prenva.toFixed(2)) }
+			if(pvpnva>0) { $('#pvpivanvo'  ).val(pvpnva.toFixed(2)) }
+			$('#cantidadnvo').focus();
+		}, 500);
+	}
+
+	$('#ModalDatos').on('hide.bs.modal', function() { $('#contenidoModal').removeClass('m-1'); });
+
+	function calcMontos(opc, valor, pimpuesto, valant) {
+		var vcosto, vmargen, vprecio1, vpvpiva
+		var maxmargen = 99.99;
+		valor = valor * 1;
+		pimpuesto = pimpuesto * 1;
+		if(valor>0) {
+			switch (opc) {
+				case 'costo':
+					$('#costonvo').val(valor.toFixed(2));
+					vmargen = ($('#margennvo').val()>0) ? $('#margennvo').val() : valant;
+					vmargen = vmargen>maxmargen ? maxmargen : vmargen;
+					vmargen = vmargen * 1;
+					vprecio1 = (valor / (100-vmargen)) * 100;
+					vpvpiva = vprecio1*(1+(pimpuesto/100))
+					$('#margennvo').val(vmargen.toFixed(2));
+					$('#precio1nvo').val(vprecio1.toFixed(2));
+					$('#pvpivanvo').val(vpvpiva.toFixed(2));
+					break;
+				case 'margen':
+					valor = valor>maxmargen ? maxmargen : valor;
+					$('#margennvo').val(valor.toFixed(2));
+					vcosto = ($('#costonvo').val()>0) ? $('#costonvo').val() : valant;
+					vcosto =  vcosto * 1;
+					vprecio1 = (vcosto / (100-valor)) * 100;
+					vpvpiva = vprecio1*(1+(pimpuesto/100))
+					$('#costonvo').val(vcosto.toFixed(2));
+					$('#precio1nvo').val(vprecio1.toFixed(2));
+					$('#pvpivanvo').val(vpvpiva.toFixed(2));
+					break;
+				case 'precio1':
+					$('#precio1nvo').val(valor.toFixed(2));
+					vcosto = ($('#costonvo').val()>0) ? $('#costonvo').val() : valant;
+					vcosto =  vcosto * 1;
+					vmargen = ((valor - vcosto) / valor) * 100
+					if(vmargen>maxmargen) {
+						calcMontos('margen', maxmargen, pimpuesto, vcosto);
+						break;
+					} else {
+						vpvpiva = valor * (1 + (pimpuesto/100))
+						$('#costonvo').val(vcosto.toFixed(2));
+						$('#margennvo').val(vmargen.toFixed(2));
+						$('#pvpivanvo').val(vpvpiva.toFixed(2));
+					}
+					break;
+				case 'pvpiva':
+					$('#pvpivanvo').val(valor.toFixed(2));
+					vcosto = ($('#costonvo').val()>0) ? $('#costonvo').val() : valant;
+					vcosto =  vcosto * 1;
+					vprecio1 = valor / (1+(pimpuesto/100))
+					vmargen = ((vprecio1 - vcosto) / vprecio1) * 100
+					if(vmargen>maxmargen) {
+						calcMontos('margen', maxmargen, pimpuesto, vcosto);
+						break;
+					} else {
+						$('#costonvo').val(vcosto.toFixed(2));
+						$('#margennvo').val(vmargen.toFixed(2));
+						$('#precio1nvo').val(vprecio1.toFixed(2));
+					}
+					break;
+			}
+		} else {
+			$('#costonvo').val([]);
+			$('#margennvo').val([]);
+			$('#precio1nvo').val([]);
+			$('#pvpivanvo').val([]);
+		}
+	}
+
+	function valCantidad(cantidad) {
+		if(cantidad==0) {
+			$('#costonvo').val([]);
+			$('#margennvo').val([]);
+			$('#precio1nvo').val([]);
+			$('#pvpivanvo').val([]);
+		}
+	}
+	
+	function savDatosCosto(codigo) {
+		var table = $('#tbl_LstArticulos').DataTable();
+		var cantidadnvo = ($('#cantidadnvo').val() > 0 ? $('#cantidadnvo').val() : 0)*1;
+		var costonvo    = ($('#costonvo'   ).val() > 0 ? $('#costonvo'   ).val() : 0)*1;
+		var precio1nvo  = ($('#precio1nvo' ).val() > 0 ? $('#precio1nvo' ).val() : 0)*1;
+		var margennvo   = ($('#margennvo'  ).val() > 0 ? $('#margennvo'  ).val() : 0)*1;
+		var pvpivanvo   = ($('#pvpivanvo'  ).val() > 0 ? $('#pvpivanvo'  ).val() : 0)*1;
+
+		datos = table.row(rowact).data()
+		datos['cntnva'] = (cantidadnvo > 0) ? cantidadnvo : (datos['cntnva'] > 0 ? 0 : 0);
+		datos['cstnva'] = (costonvo    > 0) ? costonvo    : (datos['cstnva'] > 0 ? 0 : 0);
+		datos['marnva'] = (margennvo   > 0) ? margennvo   : (datos['marnva'] > 0 ? 0 : 0);
+		datos['prenva'] = (precio1nvo  > 0) ? precio1nvo  : (datos['prenva'] > 0 ? 0 : 0);
+		datos['pvpnva'] = (pvpivanvo   > 0) ? pvpivanvo   : (datos['pvpnva'] > 0 ? 0 : 0);
+
+		datos['cntver'] = (datos['id']==0) ? 0 :
+			(datos['cntori']).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")
+		datos['cstver'] = (costonvo   > 0) ?
+			costonvo.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")    :
+			(datos['cstori']).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+		datos['marver'] = (margennvo  > 0) ?
+			margennvo.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")   :
+			(datos['marori']).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+		datos['prever'] = (precio1nvo > 0) ?
+			precio1nvo.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")  :
+			(datos['preori']).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+		datos['pvpver'] = (pvpivanvo  > 0) ?
+			pvpivanvo.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")   :
+			(datos['pvpori']).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+
+		table.cell({row: rowact, column: 4}).data(datos['cstver']);
+		table.cell({row: rowact, column: 5}).data(datos['marver']);
+		table.cell({row: rowact, column: 6}).data(datos['prever']);
+		table.cell({row: rowact, column: 7}).data(datos['pvpver']);
+
+		$(regact).html(cantidadnvo.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"));
+		datos['boton'] = $(regact)[0].outerHTML;
+
+		var activaprocesar = 0;
+		table.rows().data().each(function (value) {
+			if(value['cntnva']>0) activaprocesar=1;
+		});
+
+		table.draw(false);
+		$.ajax({
+			url: "app/DBProcs.php",
+			type: "POST",		
+			data: {
+				opcion: 'saveTMPCmp',
+				sqlcnx: 1,
+				idprov: $('#codprov').html(),
+				userid: $('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
+				dato  : table.row(rowact).data(),
+			},
+			dataType: "json",
+			success: function(data) {
+				if(data.status==0) {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: data.mensaje+'<br>'+data.query,
+						showCancelButton: false,
+					}).then((result) => {
+						if (result.value) {
+							$('#btn'+datos['codigo']).click();
+						}
+					})
+				}
+			}
+		});
+
+		if (activaprocesar==1) {
+			$('#btnProcesar').switchClass('btn-secondary', 'btn-info');
+			$('#btnGuardar').switchClass('btn-secondary', 'btn-success');
+			$('#btnEspera').switchClass('btn-secondary', 'btn-warning');
+			$('#btnProcesar').attr('disabled', false);
+			$('#btnGuardar').attr('disabled', false);
+			$('#btnEspera').attr('disabled', false);
+			$('#insall').val(1);
+		} else {
+			$('#btnProcesar').switchClass('btn-info', 'btn-secondary');
+			$('#btnGuardar').switchClass('btn-success', 'btn-secondary');
+			$('#btnEspera').switchClass('btn-warning', 'btn-secondary');
+			$('#btnProcesar').attr('disabled', true);
+			$('#btnGuardar').attr('disabled', true);
+			$('#btnEspera').attr('disabled', true);
+		}
+
+		if($('#btn'+codigo).hasClass('btn-info')) {
+			$('#btn'+codigo).removeClass('btn-info');
+			$('#btn'+codigo).addClass('btn-light');
+		}
+		if(cantidadnvo>0) {
+			$('#btn'+codigo).removeClass('btn-light');
+			$('#btn'+codigo).addClass('btn-info');
+		}
+
+		$('#ModalDatos2').modal('hide');
+	}
+
+	$('#tbl_LstArticulos tbody').on( 'click', 'button', function () {
+		var table = $('#tbl_LstArticulos').DataTable();
+		regact   = $(this);
+		rowact   = table.row($(regact).closest('tr[role="row"]')).index();
+		modificaCant(table.row(rowact).data());
+	});
+
+	$('#btnGuardar').on('click', function() {
+		var table = $('#tbl_LstArticulos').DataTable();
+		var procArt = new Array();
+		table.rows().data().each(function (registro) {
+			if(registro['cntnva']>0) {
+				procArt.push(registro);
+			}
+		});
+		var datos = new FormData();
+		datos.append('sqlcnx', 1);
+		datos.append('opcion', 'proGESCmp');
+		datos.append('idprov', $('#codprov').html());
+		datos.append('userid', $('#uinombre').val() + ' (' + $('#uilogin').val() + ')');
+		datos.append('fechav', moment($('#fecha').val(), 'DD-MM-YYYY').format('YYYY-MM-DD') );
+		datos.append('idpara', JSON.stringify(procArt));
+		$.ajax({
+			url: "app/DBProcs.php",
+			contentType:false,
+			processData:false,
+			cache:false,
+			data: datos,
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.status==0) {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: data.mensaje+'<br>'+data.query,
+						showCancelButton: false,
+					})
+				} else {
+					window.location='gdc2pdf-'+data.status;
+				}
+			},
+			complete: function() {
+				cargarcontenido('perecederos_gdc');
+			}
+		});
+	})
+
+	$('#btnLimpiar').on('click', function() {
+		if(!$('#btnProcesar').is(":disabled")) {
+			msg.fire({
+				title: '!!! A T E N C I Ó N ¡¡¡',
+				icon: 'warning',
+				html: 'Toda la información que haya modificado será borrada.<br><b>¿Desea continuar?</b>',
+				onOpen: function() { setTimeout("$('.swal2-cancel').focus()", 150) },
+			}).then((result) => {
+				if (result.value) {
+					$.ajax({
+						url: "app/DBProcs.php",
+						type: "POST",		
+						data: {
+							opcion: 'delTMPCmp',
+							sqlcnx: 1,
+							idprov: $('#codprov').html(),
+							userid: $('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
+						},
+						dataType: "text",
+						success: function(data) {
+							data = data.split('¬');
+							if(data[0]==0) {
+								msg.fire({
+									title: '!!! A T E N C I Ó N ¡¡¡',
+									icon: 'error',
+									html: 'Se presentó un error al modificar, intente de nuevo.<br>'+data[1],
+									showCancelButton: false,
+								})
+							} else {
+								cargarcontenido('perecederos_gdc');
+							}
+						}
+					})
+				}
+			})
+		} else {
+			cargarcontenido('perecederos_gdc');
+		}
+	});
+</script>

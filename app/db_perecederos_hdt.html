@@ -1,0 +1,272 @@
+<style>
+	.table-sticky>thead>tr>th,
+	.table-sticky>thead>tr>td {
+		top: -1px;
+		position: sticky;
+	}
+	#tblConsolida td, th {
+		padding: 0px !important;
+		vertical-align: middle !important;
+		height: 28px !important;
+	}
+	#listaArticulos {
+		overflow: hidden;
+		overflow-x: none;
+		overflow-y: scroll;
+	}
+	.selectSize {
+		width: 90% !important;
+	}
+	.dataTables_filter {
+		display: none;
+	}
+	.txttachado {
+		text-decoration: line-through wavy red;
+	}
+</style>
+<!-- Main row -->
+<div class="row">
+	<div class="col-md-12 col-sm-12 mt-2">
+		<div class="card card-primary elevation-2 border border-dark" style="height: 86vh;">
+			<div class="card-header p-1 m-0 d-flex align-items-baseline">
+				<i class="fas fa-compress-arrows-alt"></i>&nbsp;
+				<span class="col">Hojas de Trabajo Perecederos</span>
+				<div class="col-1 m-0"></div>
+				<div class="input-group input-daterange ml-auto date gfechas align-items-center col" id="fechas">
+					<div class="input-group-addon font-weight-normal ml-1 mr-1">Del</div>
+					<input type="text" data-id="fechai" class="form-control form-control-sm rounded"
+						autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+						onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(1, 'day').format('DD-MM-YYYY'));">
+					<div class="input-group-addon font-weight-normal ml-1 mr-1">Al</div>
+					<input type="text" data-id="fechaf" class="form-control form-control-sm rounded"
+						autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+						onblur="if(this.value=='') $(this).datepicker('setDate', moment().format('DD-MM-YYYY'));">
+				</div>
+				<div class="col d-flex align-items-baseline">
+					<select id="lstHDTant" class="selectpicker form-control form-control-sm"
+						data-style="btn-inverse" data-size="8">
+					</select>
+					<div class="col-1 m-0"></div>
+					<button class="btn-warning btn btn-sm col m-0" id="btnconsultar">
+						<i class="fas fa-search"></i> Consultar
+					</button>
+				</div>
+			</div>
+			<div class="p-0 m-0 ml-1 mr-1 mt-1" id="divthtbl">
+				<table width="100%" class="table-bordered table-striped table-hover txtcomp">
+					<thead class="text-center">
+						<tr>
+							<th width=" 8%" class="bg-primary-gradient"><small>CÓDIGO</small></th>
+							<th width="22%" class="bg-primary-gradient"><small>DESCRIPCIÓN</small></th>
+							<th width=" 6%" class="bg-primary-gradient"><small>EXIST.</small></th>
+							<th width=" 6%" class="bg-warning-gradient"><small>PEDIR</small></th>
+							<th width=" 6%" class="bg-success-gradient"><small>TOTAL</small></th>
+							<th width="60%" class="bg-secondary-gradient">
+								<small>NOMBRE DE LAS TIENDAS QUE SOLICITEN ARTÍCULOS A Perecederos</small>
+							</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			<form action="" onsubmit="return false;" class="p-0 m-0 ml-1 mr-1" id="listaArticulos" style="height: 100%;">
+				<div class="w-100 h-100 d-flex text-center align-items-center justify-content-center alert-secondary">
+					<span>
+						<b>No hay información para mostrar<br><br>Haga click en Conultar Pendientes</b>
+					</span>
+				</div>
+			</form>
+			<div class="p-0 m-0 ml-1 mr-1" id="divfotbl">
+				<table width="100%" class="table-bordered table-striped table-hover txtcomp">
+					<thead class="text-right">
+						<tr>
+							<th width=" 8%" class="bg-primary-gradient text-center"><small>Ítems: 0</small></th>
+							<th width="22%" class="bg-primary-gradient pr-1"><small>TOTAL GENERAL:</small></th>
+							<th width=" 6%" class="bg-primary-gradient">&nbsp;</th>
+							<th width=" 6%" class="bg-warning-gradient">&nbsp;</th>
+							<th width=" 6%" class="bg-success-gradient">&nbsp;</th>
+							<th width="60%" class="bg-secondary-gradient">&nbsp;</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			<div class="d-flex p-1 m-0 justify-content-center alert-secondary border border-dark">
+				<button class="btn btn-sm btn-success" disabled="true" id="btnGenerar">
+					<i class="fas fa-file-excel"></i> Generar Excel
+				</button>
+				&emsp;&emsp;&emsp;&emsp;
+				<button class="btn btn-sm btn-danger" onclick="cargarcontenido('perecederos_hdt')">
+					<i class="fas fa-times"></i> Cancelar
+				</button>
+			</div>
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<script>
+	var htmldivthtbl = $('#divthtbl').html();
+	var htmllistaArticulos = $('#listaArticulos').html();
+
+	$('#fechas').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "0d",
+	});
+
+	$('.input-daterange input').each(function() {
+		if($(this).data('id') == 'fechai') {
+			$(this).datepicker("setDate", moment().subtract(1,'d').format('DD-MM-YYYY'));
+		}
+		if($(this).data('id') == 'fechaf') {
+			$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+		}
+	});
+
+	$('#fechas').on('change', function() {
+		$.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "lstHDTant",
+				fdesde: moment($('#fechas').data('datepicker').inputs[0].value, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment($('#fechas').data('datepicker').inputs[1].value, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				$("#lstHDTant").empty();
+				$("#btnconsultar").attr('disabled', data.length==0);
+				for (i=0; i<data.length; i++) {
+					$("#lstHDTant").append('<option value="'+data[i].id+'">'+data[i].fecha+'</option>');
+				}
+				$("#lstHDTant").selectpicker('refresh');
+			}
+		})
+	})
+
+	$('[data-mask]').inputmask();
+
+	$('#fechas').change();
+	
+	$('#btnconsultar').on('click', function() {
+		$('#divthtbl').html(htmldivthtbl);
+		$('#listaArticulos').html(htmllistaArticulos);
+		cargando('show');
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "detHDTant",
+				idpara: $('#lstHDTant').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if((data.datos).length>0) {
+					$('#btnGenerar').attr('disabled', false);
+					$('#divthtbl').html(data.thtabla);
+					$('#listaArticulos').html(data.tabla);
+					var valor = 0;
+					$.each(data.datos, function(i, v) {
+						pedido = parseInt(v.pedido);
+						valor = parseInt($('#t'+v.codigo).html()) + pedido;
+						$('#'+v.id).html(pedido.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+						$('#'+v.id).data('val', pedido);
+						$('#t'+v.codigo).html(valor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+						$('#t'+v.codigo).data('total', parseInt($('#t'+v.codigo).html()) );
+						$('#t'+v.codigo).data('val', valor );
+					})
+					$('#listaArticulos').removeClass('d-none');
+					$('#thtblConsolida').width( $('#tblConsolida').width() )
+					var nColumnas = $("#tblConsolida tr:last td").length;
+					for (var i = 0; i < nColumnas; i++) {
+						$('#th'+i).width($($("#tblConsolida tr").find("td")[i]).width());
+					}
+					$('#divfotbl').html(data.fotabla);
+					var nColumnas = $("#tblConsolida tr:last td").length;
+					for (var i = 0; i < nColumnas; i++) {
+						$('#fo'+i).width($($("#tblConsolida tr").find("td")[i]).width());
+					}
+					for(i=3;i<=nColumnas;i++) {
+						var total=0;
+						$('table#tblConsolida tbody td:nth-child(' + i + ')').each(function (index) {
+							if($(this).text()!='') {
+								total += parseInt($(this).data('val'));
+							} else {
+								total += 0;
+							}
+						});
+						if(!isNaN(total)) {
+							$('table#fotblConsolida thead th:nth-child(' + i + ')').data('val', total);
+							total = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+							$('table#fotblConsolida thead th:nth-child(' + i + ')').text(total);
+						}
+					}
+					var items = 0;
+					$('table#tblConsolida tbody td:nth-child(' + 1 + ')').each(function (index) {
+						items++;
+					});
+					$('#fo0').text('Ítems: '+items);
+				}
+			}
+		}).done(function() {
+			cargando('hide');
+			$('#tblConsolida').find('input').first().focus();
+		});
+	});
+
+	$('#btnGenerar').on('click', function() {
+		$.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "genHDTPerecederos",
+				idpara: $('#lstHDTant').val()+'¬'+'null',
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				fetch(data['enlace'])
+					.then(resp => resp.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = data['archivo'];
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						$.ajax({
+							data: { 
+								opcion: "borrarArchivoTNS",
+								idpara: data['archivo'],
+							},
+							type: "POST",
+							dataType: "text",
+							url: "app/DBProcs.php",
+						})
+					}).catch(function() {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Se prsentó un error, no se pudo descargar '+
+									data['archivo']+' de forma automática, '+
+									'para descargar haga click en el enlace '+
+									'<i class="fas fa-hand-point-down"></i><br>'+
+							  		'[ <a id="enlacef" href="' + data['enlace'] +
+							  			'"><span class="btn-link">' + data['archivo'] +
+							  		'</span></a> ]',
+							showCancelButton: false,
+						})
+					});
+			}
+		});
+	});
+</script>

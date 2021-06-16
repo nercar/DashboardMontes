@@ -1,0 +1,493 @@
+<!-- Main row -->
+<div class="row">
+	<div class="col mt-2">
+		<div class="d-flex">
+			<div class="d-flex align-items-center mr-1" style="width: 200px;">
+				<select id="selEmpresa" class="form-control form-control-sm border">
+					<option value="0">Comercializadora</option>
+					<option value="1">Operadora</option>
+				</select>
+			</div>
+			<div class="d-flex align-items-center mr-1" style="width: 250px;">
+				<input type="hidden" id="cdidcltefe">
+				<input style="display: none;" placeholder="Código/RIF/Nombre Parcial del Cliente">
+				<input type="text" id="idclientefe"
+					onkeyup="if(event.keyCode=='13' && $(this).val().trim()!='')
+						{ $(this).blur() } else if($(this).val().trim()=='') { $(this).val([]); $('#cdidcltefe').val([]) }"
+					onblur="if($(this).val().trim()!='')
+						{ listaClientesfe(); } else if($(this).val().trim()=='') { $(this).val([]); $('#cdidcltefe').val([]) }"
+					placeholder="Código/RIF/Nombre Parcial del Cliente"
+					title="Código/RIF/Nombre Parcial del Cliente"
+					class="form-control form-control-sm" autocomplete="off">
+			</div>
+			<div class="input-group input-daterange date filtroFechas d-flex align-items-center" style="width: 250px">
+				<div class="input-group-addon font-weight-normal">Del&nbsp;</div>
+				<input type="text" data-id="fdesde" class="form-control form-control-sm rounded pl-0 pr-0"
+					autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy">
+				<div class="input-group-addon font-weight-normal">&nbsp;Al&nbsp;</div>
+				<input type="text" data-id="fhasta" class="form-control form-control-sm rounded pl-0 pr-0"
+					autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy">
+			</div>
+			<div class="col d-inline-flex align-items-end">
+				<button class="btn btn-primary btn-sm ml-auto" id="btnConsultarfe">
+					<i class="fas fa-search"></i> Consultar
+				</button>
+				&nbsp;
+				<button class="btn btn-success btn-sm" disabled id="btnExportfe">
+					<i class="fas fa-file-excel"></i> Exportar
+				</button>
+			</div>
+		</div>
+		<div class="card card-primary elevation-2 border border-dark mt-1" id="divTblDatosfe">
+			<div class="card-header d-flex p-1 pl-2 mb-1 align-items-baseline">
+				<i class="fas fa-hand-holding-usd"></i>&nbsp;
+				<span id="titulofe">Resumen de Facturas/Notas Electrónicas</span>&emsp;
+				<span class="badge badge-warning m-0" id="filtros"></span>
+			</div>
+			<div class="card-body p-1 m-0" id="lstClientes">
+				<table id="lstDocsFacEle" class="table-striped table-hover txtcomp2" width="100%" style="font-size: 90%;">
+					<thead class="bg-dark-gradient">
+						<tr class="text-nowrap txtcomp">
+							<th class="text-center border border-top-0 border-bottom-0">No.</th>
+							<th class="text-center border border-top-0 border-bottom-0">Fecha</th>
+							<th class="text-center border border-top-0 border-bottom-0">#Doc.Elec.</th>
+							<th class="text-center border border-top-0 border-bottom-0">#Adm.</th>
+							<th class="text-center border border-top-0 border-bottom-0">RIF Cliente</th>
+							<th class="text-center border border-top-0 border-bottom-0">Cód</th>
+							<th class="text-center border border-top-0 border-bottom-0">Nombre Cliente</th>
+							<th class="text-center border border-top-0 border-bottom-0">Moneda</th>
+							<th class="text-center border border-top-0 border-bottom-0">Total Doc.</th>
+							<th class="text-center border border-top-0 border-bottom-0">Status</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+					<tfoot class="bg-dark txtcomp">
+						<tr>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
+							<th class="text-center border border-top-0 border-bottom-0">0</th>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
+							<th class="text-center border border-top-0 border-bottom-0">0.00</th>
+							<th class="text-center border border-top-0 border-bottom-0">0/0</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<!-- /.card-body -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- Modal para datos 1-->
+<div class="modal fade" id="dtmodalfe" style="z-index: 9889" tabindex="-1" role="dialog"
+	aria-labelledby="dtmodalfeLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold" id="ttmodalfe"></h5>
+				<button type="button" onclick="$('#dtmodalfe').modal('hide')"
+					class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div class="modal-body m-0 p-0" id="cntmodalfe">
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal para modifica datos del cliente-->
+<div class="modal fade" id="dtmodalclte" style="z-index: 9889" tabindex="-1" role="dialog"
+	aria-labelledby="dtmodalclteLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-body m-0 p-0" id="cntmodalclte">
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	$(document).ready(function () {
+		iniTabs();
+		fnresize();
+	});
+
+	var filtros = '';
+
+	$('#dtmodalclte').on('hide.bs.modal', function() { $('#dtmodalclte').html(''); })
+
+	$(window).resize( ()=>fnresize() );
+
+	function fnresize() {
+		let whrfe = window.innerHeight;
+		let ltrfe = $('#lstDocsFacEle').offset().top;
+		let dtrfe = $('#titulofe').offset().top;
+		let altoTablaDatosrfe = (whrfe-ltrfe-dtrfe)+45
+		$('#lstDocsFacEle_wrapper .dataTables_scrollBody').height(altoTablaDatosrfe)
+	}
+
+	$('#lstDocsFacEle').scroll(function() {
+		console.log($('#lstDocsFacEle_wrapper .dataTables_scrollBody').scrollTop());
+	})
+
+	$('.filtroFechas').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "0d",
+	});
+
+	$('#selEmpresa').on('change', function() {
+		iniTabs()
+	})
+
+	$('[data-mask]').inputmask();
+
+	$('#btnConsultarfe').on('click', function() {
+		cargando('show');
+		let fdesde = $('.filtroFechas').data('datepicker').inputs[0].value
+		let fhasta = $('.filtroFechas').data('datepicker').inputs[1].value
+		filtros = '['+$('#selEmpresa option:selected').text()+'] '+
+		'['+($('#cdidcltefe').val()==''?'Todos los Clientes':+$('#cdidcltefe').val())+' '+capitalize($('#idclientefe').val())+']'+
+		' - [Desde: ' + (fdesde).toString() + ' - Hasta: ' + (fhasta).toString() + ']';
+		$('#filtros').html(filtros)
+		tomar_datos = $.ajax({
+			url: "app/controller/resumen_fac_ele.php",
+			data: {
+				opcion: "consultarFacturas",
+				fdesde: moment(fdesde, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fhasta, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#selEmpresa').val(),
+				cdclte: $('#cdidcltefe').val(),
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				let ht = $('#lstDocsFacEle_wrapper .dataTables_scrollBody').height();
+				$('#lstDocsFacEle').dataTable( {
+					scrollY: ht+'px',
+					scrollCollapse: false,
+					data: data,
+					autoWidth: false,
+					buttons: [
+						{
+							extend: 'excelHtml5',
+							autoFilter: true,
+							title: $('#titulofe').html()+' '+filtros,
+							filename: 'DocsElectronicos'+fdesde,
+							sheetName: 'DocsElectronicos'+fdesde,
+							footer: true,
+							exportOptions: {
+								format: {
+										body: function(data, row, column, node) {
+												data = $('<p>' + data + '</p>').text();
+												if( $.isNumeric(data.replace(',', '.')) ) {
+													data = data.replace(',', '.');
+												}
+												if(column==0) {
+													data = moment(data.substring(0, 10)).format('DD-MM-YYYY');
+												}
+												return data;
+										}
+								},
+								columns: ':visible'
+							}
+						}
+					],
+					columns: [
+						{ data: 'linea', sClass: "txtcomp text-right align-middle", render: $.fn.dataTable.render.number(",", ".", 0) },
+						{ data: null,
+							render: function(data) {
+								txt = '<span style="display: none">'+data.fecha+'</span>'+data.fechadoc
+								return txt;
+							}, sClass: "txtcomp text-left align-middle" },
+						{ data: 'llavecomprobante', sClass: "txtcomp text-left align-middle" },
+						{ data: 'documento_origen', sClass: "txtcomp text-left align-middle" },
+						{ data: 'rifcliente', sClass: "txtcomp text-left align-middle" },
+						{ data: 'codigo', sClass: "txtcomp text-center align-middle" },
+						{ data: null,
+							render: function(data) {
+								let txt = data.nomcliente
+								if(data.status == 0 && data.existcli > 0) {
+									txt = 	'<a href="javascript:void(0);" class="m-0 p-0 txtcomp"'+
+												'onclick="$(\'#codclteindex\').val('+data.codigo+'); '+
+													'$(\'#origenui\').val(\'dtmodalclte\'); '+
+													'$(\'#dtmodalclte\').modal(\'show\'); '+
+													'$(\'#dtmodalclte\').load(\'app/db_registro_clientes.html?t=00:00:00\');" >'+
+												data.nomcliente+
+											'</a>'
+								}
+								return txt
+							}, sClass: "txtcomp text-left align-middle" },
+						{ data: 'moneda', sClass: "txtcomp text-left align-middle" },
+						{ data: 'total', sClass: "txtcomp text-right align-middle", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: null,
+							render: function(data) {
+								let txt = data.doc_ele_gen
+								if(data.cnt_docs > 1 && data.status == 0) {
+									txt = data.id_fac_ele + ', ' + data.codigo + ', \'' + data.nomcliente + '\', \'' + data.llavecomprobante + '\'';
+									txt = '<button class="btn btn-sm btn-danger pt-0 pb-0 m-0" onclick="eliminarClte('+txt+')">Eliminar</button>'
+								}
+								return txt
+							}, sClass: "txtcomp text-left align-middle" },
+						{ data: 'status', visible: false }
+					],
+					rowCallback: function( row, data, index ) {
+						if(data.status == 0) {
+							$('td', row).css('background-color', '#FACCAB');
+							$('td', row).hover(
+								function() { $('td', row).css('background-color', '#FEB16B') },
+								function() { $('td', row).css('background-color', '#FACCAB') }
+							);
+						} else if(data.tipo == 8) {
+							$('td', row).css('background-color', '#FFFFB7');
+							$('td', row).hover(
+								function() { $('td', row).css('background-color', '#D7DC72') },
+								function() { $('td', row).css('background-color', '#FFFFB7') }
+							);
+						} else {
+							$('td', row).css('background-color', '#FFFFFF');
+							$('td', row).hover(
+								function() { $('td', row).css('background-color', '#BFC7D4') },
+								function() { $('td', row).css('background-color', '#FFFFFF') }
+							);
+						}
+					},
+					footerCallback: function (row) {
+						let cntdocs = this.api().rows().count();
+						let total = this.api()
+										.column(8) //numero de columna a sumar
+										.data() //obtenemos los datos en la columna
+										.reduce(function (a, b) { return parseInt(a) + parseInt(b);	}, 0);
+						let proc = this.api()
+										.column(10) //numero de columna a sumar
+										.data() //obtenemos los datos en la columna
+										.reduce(function (a, b) { return parseInt(a) + parseInt(b);	}, 0);
+						let procesados = proc.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + '/' + cntdocs.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+						$(this.api().column(1).footer()).html(cntdocs.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+						$(this.api().column(6).footer()).html('Totales');
+						$(this.api().column(8).footer()).html(total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(9).footer()).html(procesados);
+					},
+				});
+				$('#btnExportfe').attr('disabled', false);
+			}
+		}).done(function() {
+			cargando('hide');
+		})
+	});
+
+	$('#btnExportfe').on('click', function (){
+		$('#lstDocsFacEle').DataTable().button( '0' ).trigger();
+	});
+
+	function iniTabs() {
+		$('#btnExportfe').attr('disabled', true);
+		$('#selEmpresa').selectpicker();
+		$('.input-daterange input').each(function() {
+			if($(this).data('id') == 'fdesde')
+				$(this).datepicker("setDate", moment().startOf('month').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fhasta')
+				$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+		});
+		$('#lstDocsFacEle').DataTable().clear().draw();
+	}
+
+	function listaClientesfe() {
+		if($('#idclientefe').val().trim()!='') {
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/controller/resumen_fac_ele.php",
+				data: {
+					opcion: "listaClientesfe",
+					idpara: ($('#idclientefe').val().trim()).toUpperCase(),
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>1){
+						$('#ttmodalfe').html('Clientes que cumplen con la busqueda: "'+
+							$('#idclientefe').val().trim() + '"');
+						var contenido = '';
+						contenido +=
+							'<table id="listaClientesfe" ' +
+								'class="table table-striped table-hover w-100">' +
+								'<thead class="bg-dark-gradient">' +
+									'<tr>' +
+										'<th>ID Cliente</th>' +
+										'<th>RIF Cliente</th>' +
+										'<th>Nombre o razón Social</th>' +
+									'</tr>' +
+								'</thead>' +
+								'<tbody>';
+						for (i = 0; i < data.length; i++) {
+							contenido +=
+								'<tr>' +
+									'<td>' + data[i].codigo + '</td>' +
+									'<td>' + data[i].rif + '</td>' +
+									'<td>' + data[i].nombre + '</td>' +
+								'</tr>';
+						}
+						contenido += '</tbody></table>';
+						contenido += '<script>' +
+							'$("#listaClientesfe").dataTable({ ' +
+								'scrollY: "40vh", ' +
+								'order: [1, "asc"],' +
+							'});' +
+							'</' + 'script>';
+						$('#cntmodalfe').addClass('m-1');
+						$('#cntmodalfe').html(contenido);
+						$('#dtmodalfe').modal('show');
+					} else if(data.length>0) {
+						seleccion(data[0]['codigo'], data[0]['snombre'])
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontraron proveedores para: <b>"'+$('#idclientefe').val()+ '</b>"',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#idclientefe').attr('title', 'Código/Nombre Parcial del Cliente');
+								$('#idclientefe').val([]);
+								$('#idclientefe').focus().select();
+							}
+						})
+					}
+				}
+			}).done(function() {
+				setTimeout(function() {
+					$('#cntmodalfe').css( 'display', 'block' );
+					$('#listaClientesfe').DataTable().columns.adjust().draw();
+					cargando('hide');
+				}, 150);
+			})
+		} else {
+			$('#idclientefe').attr('title', 'Código/Nombre Parcial del Cliente');
+			$('#idclientefe').val([]);
+			$('#idclientefe').focus();
+		}
+	}
+
+	function seleccion(codigo, desc) {
+		if($('#cdidcltefe').val()!=codigo) {
+			iniTabs()
+		}
+		$('#cdidcltefe').val(codigo);
+		$('#idclientefe').attr('title', desc);
+		$('#idclientefe').val(desc);
+		$('#dtmodalfe').modal('hide');
+	}
+
+	function exportResumen() {
+		cargando2('show');
+		var fdesde = $('.filtroFechas').data('datepicker').inputs[0].value
+		var fhasta = $('.filtroFechas').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/controller/resumen_fac_ele.php",
+			data: {
+				opcion: "exportResumenEmp",
+				fdesde: moment(fdesde, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fhasta, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltefe').val(),
+				nomemp: $('#idclientefe').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				fetch(data['enlace'])
+					.then(resp => resp.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = data['archivo'];
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						$.ajax({
+							data: {
+								opcion: "borrarArchivoTNS",
+								idpara: data['archivo'],
+							},
+							type: "POST",
+							dataType: "text",
+							url: "app/controller/resumen_fac_ele.php",
+						})
+					}).catch(function() {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Se prsentó un error, no se pudo descargar '+
+									data['archivo']+' de forma automática, '+
+									'para descargar haga click en el enlace '+
+									'<i class="fas fa-hand-point-down"></i><br>'+
+							  		'[ <a id="enlacef" href="' + data['enlace'] +
+							  			'"><span class="btn-link">' + data['archivo'] +
+							  		'</span></a> ]',
+							showCancelButton: false,
+						})
+					});
+			}
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function eliminarClte(id_fac_ele, codigo, nomcliente, llavecomprobante) {
+		msg.fire({
+			title: '!!! A T E N C I Ó N ¡¡¡',
+			icon: 'warning',
+			html: 'Eliminar el documento pendiente:<br><div class="m-0 ml-auto mr-auto p-1 pl-2 pr-2 text-left border alert alert-primary"><b>#Doc.Elec.: </b>'+
+				llavecomprobante+'<hr class="mt-1 mb-1"><b>Cliente .....: </b>('+codigo+') '+nomcliente+'</div>',
+			onOpen: function() { setTimeout("$('.swal2-cancel').focus()", 150) },
+		}).then((result) => {
+			if (result.value) {
+				$.ajax({
+					url: "app/controller/resumen_fac_ele.php",
+					data: {
+						opcion: "eliminarClte",
+						idpara: id_fac_ele,
+						cdclte: codigo,
+					},
+					type: "POST",
+					dataType: "text",
+					success : function(data) {
+						if(data==1) {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'success',
+								html: 'Eliminación realizada con exito!!',
+								showCancelButton: false,
+								onAfterClose: function() {
+									$('#btnConsultarfe').click()
+								}
+							})
+						} else {
+							msg.fire({
+								title: '!!! A T E N C I Ó N ¡¡¡',
+								icon: 'error',
+								html: 'No se pudo eliminar la información',
+								showCancelButton: false,
+							})
+						}
+					}
+				})
+			}
+		})
+	}
+</script>

@@ -1,0 +1,1118 @@
+<style>
+	.group {
+		background-color: #A2CFFF !important;
+		color: #232F89 !important;
+	}
+	.table-sticky>thead>tr>th,
+	.table-sticky>thead>tr>td {
+		top: -1px;
+		position: sticky;
+	}
+
+	#tbLstMvtosmbEmpD {
+		overflow: hidden;
+		overflow-x: none;
+		overflow-y: scroll;
+	}
+</style>
+<!-- Main row -->
+<div class="row">
+	<div class="col mt-2">
+		<div class="d-flex">
+			<div class="d-flex align-items-center mr-1" style="width: 200px;">
+				<select id="selTipoReporte" class="form-control form-control-sm border">
+					<option value="1">Reporte Benefactor</option>
+					<option value="2">Reporte Beneficiarios</option>
+				</select>
+			</div>
+			<div class="d-flex align-items-center mr-1" style="width: 110px;">
+				<select id="tipoReporte" class="form-control form-control-sm border">
+					<option value="1">Resumido</option>
+					<option value="2">Detallado</option>
+				</select>
+			</div>
+			<div class="d-flex align-items-center mr-1" style="width: 250px;">
+				<input type="hidden" id="cdidcltemb">
+				<input style="display: none;" placeholder="Código/Nombre Parcial del Cliente">
+				<input type="text" id="idclientemb" 
+					onkeyup="if(event.keyCode=='13' && $(this).val().trim()!='')
+						{ $(this).blur() } else if($(this).val().trim()=='') { $(this).val([]) }"
+					onblur="if($(this).val().trim()!='')
+						{ consultaCltemb(); } else if($(this).val().trim()=='') { $(this).val([]) }" 
+					placeholder="Código/Nombre Parcial del Cliente"
+					title="Código/Nombre Parcial del Cliente" 
+					class="form-control form-control-sm" autocomplete="off">
+			</div>
+			<div class="input-group input-daterange date filtrofmb d-flex align-items-center" style="width: 250px">
+				<div class="input-group-addon font-weight-normal">Del&nbsp;</div>
+				<input type="text" data-id="fecha1" class="form-control form-control-sm rounded pl-0 pr-0"
+					autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy">
+				<div class="input-group-addon font-weight-normal">&nbsp;Al&nbsp;</div>
+				<input type="text" data-id="fecha2" class="form-control form-control-sm rounded pl-0 pr-0" 
+					autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy">
+			</div>
+			<div class="col d-inline-flex align-items-end">
+				<button class="btn btn-primary btn-sm ml-auto" id="btnConsultarmb">
+					<i class="fas fa-search"></i> Consultar
+				</button>
+				&nbsp;
+				<button class="btn btn-success btn-sm" disabled id="btnExportmb">
+					<i class="fas fa-file-excel"></i> Exportar
+				</button>
+			</div>
+		</div>
+		<div class="card card-primary elevation-2 border border-dark mt-1" id="divTblDatosmb">
+			<div class="card-header d-flex p-1 pl-2 mb-1 align-items-baseline">
+				<i class="fas fa-hand-holding-usd"></i>&nbsp;
+				<span id="titulomb">Listado de Movimientos de los Bonos Montes</span>
+			</div>
+			<div id="divBenefactor">
+				<div class="card-body p-0 m-0" id="divTblmbEmpR">
+					<table id="LstMvtosmbEmpR" class="table table-striped table-hover table-bordered w-100">
+						<thead class="bg-dark">
+							<tr>
+								<th class="text-center" width=" 5%">Nº</th>
+								<th class="text-center" width="10%">ID Beneficiario</th>
+								<th class="text-center" width="45%">Nombre Beneficiario</th>
+								<th class="text-center" width="10%">Debe</th>
+								<th class="text-center" width="10%">Haber</th>
+								<th class="text-center" width="10%">Saldo</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+						<tfoot class="bg-dark">
+							<tr>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+				<div class="card-body p-0 m-0 d-none" id="divTblmbEmpD">
+					<table id="LstMvtosmbEmpD" class="table table-striped table-hover table-bordered w-100">
+						<thead class="bg-dark">
+							<tr>
+								<th class="text-center" width=" 5%">Nº</th>
+								<th></th>
+								<th></th>
+								<th class="text-center" width="15%">Fecha</th>
+								<th class="text-center" width="45%">Movimiento</th>
+								<th class="text-center" width="10%">Debe</th>
+								<th class="text-center" width="10%">Haber</th>
+								<th class="text-center" width="10%">Saldo</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+						<tfoot class="bg-dark">
+							<tr>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+			<div id="divBeneficiarios" class="d-none">
+				<div class="card-body p-0 m-0" id="divTblmbBenR">
+					<table id="LstMvtosmbBenR" class="table table-striped table-hover table-bordered w-100">
+						<thead class="alert-success">
+							<tr>
+								<th class="text-center" width=" 5%">Nº</th>
+								<th class="text-center" width="10%">ID Benefactor</th>
+								<th class="text-center" width="45%">Nombre Benefactor</th>
+								<th class="text-center" width="10%">Debe</th>
+								<th class="text-center" width="10%">Haber</th>
+								<th class="text-center" width="10%">Saldo</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+						<tfoot class="alert-success">
+							<tr>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+				<div class="card-body p-0 m-0 d-none" id="divTblmbBenD">
+					<table id="LstMvtosmbBenD" class="table table-striped table-hover table-bordered w-100">
+						<thead class="alert-success">
+							<tr>
+								<th class="text-center" width=" 5%">Nº</th>
+								<th></th>
+								<th></th>
+								<th class="text-center" width="15%">Fecha</th>
+								<th class="text-center" width="45%">Movimiento</th>
+								<th class="text-center" width="10%">Debe</th>
+								<th class="text-center" width="10%">Haber</th>
+								<th class="text-center" width="10%">Saldo</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+						<tfoot class="alert-success">
+							<tr>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-center">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+								<th class="text-right ">&nbsp;</th>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+			<!-- /.card-body -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- Modal para datos 1-->
+<div class="modal fade" id="dtmodalmb" style="z-index: 9889" tabindex="-1" role="dialog"
+	aria-labelledby="dtmodalmbLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold" id="ttmodalmb"></h5>
+				<button type="button" onclick="$('#dtmodalmb').modal('hide')"
+					class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div class="modal-body m-0 p-0" id="cntmodalmb">
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	var filtros = '';
+
+	$('.filtrofmb').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "0d",
+	});
+
+	$('.input-daterange input').each(function() {
+		if($(this).data('id') == 'fecha1')
+			$(this).datepicker("setDate", moment().subtract('1', 'M').startOf('month').format('DD-MM-YYYY'));
+		if($(this).data('id') == 'fecha2')
+			$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+	});
+
+	$('#selTipoReporte').selectpicker();
+	$('#tipoReporte').selectpicker();
+
+	$('#selTipoReporte').on('change', function() {
+		if($(this).val()==1) {
+			$('#divBenefactor').removeClass('d-none')
+			$('#divBeneficiarios').addClass('d-none')
+		} else {
+			$('#divBenefactor').addClass('d-none')
+			$('#divBeneficiarios').removeClass('d-none')
+		}
+		$('#tipoReporte').change();
+		iniTabs()
+	})
+	
+	$('#tipoReporte').on('change', function() {
+		if($('#selTipoReporte').val()==1) {
+			if($(this).val()==1) {
+				$('#divTblmbEmpR').removeClass('d-none')
+				$('#divTblmbEmpD').addClass('d-none')
+			} else {
+				$('#divTblmbEmpR').addClass('d-none')
+				$('#divTblmbEmpD').removeClass('d-none')
+			}
+		} else {
+			if($(this).val()==1) {
+				$('#divTblmbBenR').removeClass('d-none')
+				$('#divTblmbBenD').addClass('d-none')
+			} else {
+				$('#divTblmbBenR').addClass('d-none')
+				$('#divTblmbBenD').removeClass('d-none')
+			}
+		}
+		iniTabs()
+	})
+
+	$('[data-mask]').inputmask();
+
+	$('#divTblDatosmb').height($('#wp_ppal').height()-$('#btnConsultarmb').offset().top+'px');
+	var altoLstMvtosmb = $('#divTblDatosmb').height()-$('#btnConsultarmb').offset().top-40;
+
+	iniTabs()
+
+	$('#btnConsultarmb').on('click', function() {
+		if($('#cdidcltemb').val()!='') {
+			cargando2('show');
+			iniTabs();
+			var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+			var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+			filtros = '['+$('#cdidcltemb').val()+' '+capitalize($('#idclientemb').val())+']'+
+					' - [Desde: ' + (fecha1).toString() + ' - Hasta: ' + (fecha2).toString() + ']';
+			switch (true) {
+				case ($('#selTipoReporte').val()==1 && $('#tipoReporte').val()==1):
+					mvtosBMontesEmpR();
+					break;
+
+				case ($('#selTipoReporte').val()==1 && $('#tipoReporte').val()==2):
+					mvtosBMontesEmpD();
+					break;
+
+				case ($('#selTipoReporte').val()==2 && $('#tipoReporte').val()==1):
+					mvtosBMontesBenR();
+					break;
+
+				case ($('#selTipoReporte').val()==2 && $('#tipoReporte').val()==2):
+					mvtosBMontesBenD();
+					break;
+			}
+		} else {
+			msg.fire({
+				title: '!!! A T E N C I Ó N ¡¡¡',
+				icon: 'info',
+				html: 'Debe seleccionar un Cliente y un rango de fechas',
+				showCancelButton: false,
+				onAfterClose: function() { $('#idclientemb').focus() }
+			})
+		}
+	});
+
+	$('#btnExportmb').on('click', function (){
+		// se dispara el evento export del boton oculto del datatable
+		switch (true) {
+			case ($('#selTipoReporte').val()==1 && $('#tipoReporte').val()==1):
+				exportResumenEmp();
+				break;
+			case ($('#selTipoReporte').val()==1 && $('#tipoReporte').val()==2):
+				exportDetalleEmp();
+				break;
+			case ($('#selTipoReporte').val()==2 && $('#tipoReporte').val()==1):
+				exportResumenBen();
+				break;
+			case ($('#selTipoReporte').val()==2 && $('#tipoReporte').val()==2):
+				exportDetalleBen();
+				break;
+		}
+	});
+
+	function iniTabs() {
+		$('#btnExportmb').attr('disabled', true);
+		// Inicializa tabla resumen por empresa
+		$('#LstMvtosmbEmpR').DataTable({
+			scrollY: altoLstMvtosmb+'px',
+			ordering: false,
+			data: [],
+			footerCallback: function () {
+				$(this.api().column(0).footer()).html('0');
+				$(this.api().column(2).footer()).html('Totales');
+				$(this.api().column(3).footer()).html('0.00');
+				$(this.api().column(4).footer()).html('0.00');
+				$(this.api().column(5).footer()).html('0.00');
+			},
+		}).columns.adjust().draw()
+		// Inicializa tabla detalle por empresa
+		$('#LstMvtosmbEmpD').DataTable({
+			scrollY: altoLstMvtosmb+'px',
+			ordering: false,
+			data: [],
+			columnDefs: [
+				{ visible: false, targets: [1, 2] }
+			],
+		}).columns.adjust().draw()
+		// Inicializa tabla resumen beneficiario
+		$('#LstMvtosmbBenR').DataTable({
+			scrollY: altoLstMvtosmb+'px',
+			ordering: false,
+			data: [],
+			footerCallback: function () {
+				$(this.api().column(0).footer()).html('0');
+				$(this.api().column(2).footer()).html('Totales');
+				$(this.api().column(3).footer()).html('0.00');
+				$(this.api().column(4).footer()).html('0.00');
+				$(this.api().column(5).footer()).html('0.00');
+			},
+		}).columns.adjust().draw()
+		// Inicializa tabla detalle beneficiario
+		$('#LstMvtosmbBenD').DataTable({
+			scrollY: altoLstMvtosmb+'px',
+			ordering: false,
+			data: [],
+			columnDefs: [
+				{ visible: false, targets: [1, 2] }
+			],
+			footerCallback: function () {
+				$(this.api().column(4).footer()).html('Totales');
+				$(this.api().column(5).footer()).html('0.00');
+				$(this.api().column(6).footer()).html('0.00');
+				$(this.api().column(7).footer()).html('0.00');
+			},
+		}).columns.adjust().draw()
+	}
+
+	function consultaCltemb() {
+		if($('#selTipoReporte').val()==1) {
+			listaCCBonosb();
+		} else {
+			listaBenBonosb();
+		}
+	}
+
+	function listaCCBonosb() {
+		if($('#idclientemb').val().trim()!='') {
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "listaCCBonos",
+					idpara: ($('#idclientemb').val().trim()).toUpperCase(),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>1){
+						$('#ttmodalmb').html('Proveedores que cumplen con la busqueda: "'+
+							$('#idclientemb').val().trim() + '"');
+						var contenido = '';
+						contenido +=
+							'<table id="listaCCBonosb" ' +
+								'class="table table-striped table-hover w-100">' +
+								'<thead class="bg-dark-gradient">' +
+									'<tr>' +
+										'<th>ID Cliente</th>' +
+										'<th>Nombre o razón Social</th>' +
+										'<th>Monto por Canjear</th>'+
+									'</tr>' +
+								'</thead>' +
+								'<tbody>';
+						for (i = 0; i < data.length; i++) {
+							var saldo = data[i].saldo*1
+							contenido +=
+								'<tr>' +
+									'<td>' + data[i].id_empresa + '</td>' +
+									'<td>' + data[i].nom_empresa + '</td>' +
+									'<td align="right">' +
+										(saldo.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')) +
+									'</td>' +
+								'</tr>';
+						}
+						contenido += '</tbody></table>';
+						contenido += '<script>' +
+							'$("#listaCCBonosb").dataTable({ ' +
+								'scrollY: "40vh", ' +
+								// 'scrollCollapse: true, ' +
+								'order: [1, "asc"],' +
+							'});' +
+							'</' + 'script>';
+						$('#cntmodalmb').addClass('m-1');
+						$('#cntmodalmb').html(contenido);
+						$('#dtmodalmb').modal('show');
+					} else if(data.length>0) {
+						seleccion(data[0]['id_empresa'], data[0]['nombre'], data[0]['saldo']*1)
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontraron proveedores para: <b>"'+$('#idclientemb').val()+ '</b>"',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#idclientemb').attr('title', 'Código/Nombre Parcial del Cliente');
+								$('#idclientemb').val([]);
+								$('#idclientemb').focus().select();
+							}
+						})
+					}
+				}
+			}).done(function() {
+				setTimeout(function() {
+					$('#cntmodalmb').css( 'display', 'block' );
+					$('#listaCCBonosb').DataTable().columns.adjust().draw();
+					cargando('hide'); 
+				}, 150);
+			})
+		} else {
+			$('#idclientemb').attr('title', 'Código/Nombre Parcial del Cliente');
+			$('#idclientemb').val([]);
+			$('#idclientemb').focus();
+		}
+	}
+
+	function listaBenBonosb() {
+		if($('#idclientemb').val().trim()!='') {
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "listaBenBonos",
+					idpara: ($('#idclientemb').val().trim()).toUpperCase(),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>1){
+						$('#ttmodalmb').html('Beneficiarios que cumplen con la busqueda: "'+
+							$('#idclientemb').val().trim() + '"');
+						var contenido = '';
+						contenido +=
+							'<table id="listaBenBonosb" ' +
+								'class="table table-striped table-hover w-100">' +
+								'<thead class="bg-dark-gradient">' +
+									'<tr>' +
+										'<th>ID Cliente</th>' +
+										'<th>Nombre o razón Social</th>' +
+										'<th>Monto por Canjear</th>'+
+									'</tr>' +
+								'</thead>' +
+								'<tbody>';
+						for (i = 0; i < data.length; i++) {
+							var saldo = data[i].saldo*1
+							contenido +=
+								'<tr>' +
+									'<td>' + data[i].id_ben + '</td>' +
+									'<td>' + data[i].nom_ben + '</td>' +
+									'<td align="right">' +
+										(saldo.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')) +
+									'</td>' +
+								'</tr>';
+						}
+						contenido += '</tbody></table>';
+						contenido += '<script>' +
+							'$("#listaBenBonosb").dataTable({ ' +
+								'scrollY: "40vh", ' +
+								// 'scrollCollapse: true, ' +
+								'order: [1, "asc"],' +
+							'});' +
+							'</' + 'script>';
+						$('#cntmodalmb').addClass('m-1');
+						$('#cntmodalmb').html(contenido);
+						$('#dtmodalmb').modal('show');
+					} else if(data.length>0) {
+						seleccion(data[0]['id_ben'], data[0]['nombre'], data[0]['saldo']*1)
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontraron beneficiarios para: <b>"'+$('#idclientemb').val()+ '</b>"',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#idclientemb').attr('title', 'Código/Nombre Parcial del Cliente');
+								$('#idclientemb').val([]);
+								$('#idclientemb').focus().select();
+							}
+						})
+					}
+				}
+			}).done(function() {
+				setTimeout(function() {
+					$('#cntmodalmb').css( 'display', 'block' );
+					$('#listaBenBonosb').DataTable().columns.adjust().draw();
+					cargando('hide'); 
+				}, 150);
+			})
+		} else {
+			$('#idclientemb').attr('title', 'Código/Nombre Parcial del Cliente');
+			$('#idclientemb').val([]);
+			$('#idclientemb').focus();
+		}
+	}
+
+	function seleccion(codigo, desc, monto=0) {
+		if($('#cdidcltemb').val()!=codigo) {
+			iniTabs()
+		}
+		$('#cdidcltemb').val(codigo);
+		$('#idclientemb').attr('title', desc);
+		$('#idclientemb').val(desc);
+		$('#dtmodalmb').modal('hide');
+	}
+
+	function mvtosBMontesEmpR() {
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "mvtosBMontesEmpR",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				var items  = data.items;
+				var debeg  = data.debeg;
+				var haberg = data.haberg;
+				var saldog = data.saldog;
+				var data   = data.data;
+				if(data.length>0) {
+					if(data.length>=1000) {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'info',
+							html: 'La información solcitada supera los 1000 registros, '+
+								  'para consultar los registros completos, haga click '+
+								  'en el botón "Exportar", y espere a que se genere el '+
+								  'archivo, este proceso tomará 1 ó 2 minutos.',
+							showCancelButton: false,
+						})
+					}
+					$('#LstMvtosmbEmpR').dataTable( {
+						scrollY: altoLstMvtosmb+'px',
+						scrollCollapse: false,
+						data: data,
+						autoWidth: false,
+						columns: [
+							{ data: 'id',
+								sClass: "text-left align-middle" },
+							{ data: 'id_beneficiario',
+								sClass: "text-left align-middle" },
+							{ data: 'nom_beneficiario',
+								sClass: "text-left align-middle" },
+							{ data: 'debe',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'haber',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'saldo',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+						footerCallback: function (row) {
+							$(this.api().column(0).footer()).html(items.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+							$(this.api().column(2).footer()).html('Totales');
+							$(this.api().column(3).footer()).html(debeg.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(4).footer()).html(haberg.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(5).footer()).html(saldog.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						},
+					});
+					$('#btnExportmb').attr('disabled', false);
+				}
+			}
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function exportResumenEmp() {
+		cargando2('show');
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "exportResumenEmp",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				nomemp: $('#idclientemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				fetch(data['enlace'])
+					.then(resp => resp.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = data['archivo'];
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						$.ajax({
+							data: { 
+								opcion: "borrarArchivoTNS",
+								idpara: data['archivo'],
+							},
+							type: "POST",
+							dataType: "text",
+							url: "app/DBProcs.php",
+						})
+					}).catch(function() {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Se prsentó un error, no se pudo descargar '+
+									data['archivo']+' de forma automática, '+
+									'para descargar haga click en el enlace '+
+									'<i class="fas fa-hand-point-down"></i><br>'+
+							  		'[ <a id="enlacef" href="' + data['enlace'] +
+							  			'"><span class="btn-link">' + data['archivo'] +
+							  		'</span></a> ]',
+							showCancelButton: false,
+						})
+					});
+			}
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function mvtosBMontesEmpD() {
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "mvtosBMontesEmpD",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				var items  = data.items;
+				var debeg  = data.debeg;
+				var haberg = data.haberg;
+				var saldog = data.saldog;
+				var data   = data.data;
+				if(data.length>0) {
+					if(data.length>=1000) {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'info',
+							html: 'La información solcitada supera los 1000 registros, '+
+								  'para consultar los registros completos, haga click '+
+								  'en el botón "Exportar", y espere a que se genere el '+
+								  'archivo, este proceso tomará 1 ó 2 minutos.',
+							showCancelButton: false,
+						})
+					}
+					$('#LstMvtosmbEmpD').dataTable({
+						scrollY: altoLstMvtosmb+'px',
+						scrollCollapse: false,
+						ordering: false,
+						data: data,
+						autoWidth: false,
+						columns: [
+							{ data: 'id',
+								sClass: "text-left align-middle" },
+							{ data: 'id_ben',
+								sClass: "text-left align-middle" },
+							{ data: 'nom_ben',
+								sClass: "text-left align-middle" },
+							{ data: 'fecha',
+								sClass: "text-left align-middle" },
+							{ data: 'movimiento',
+								sClass: "text-left align-middle" },
+							{ data: 'debe',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'haber',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'saldo',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+						columnDefs: [
+							{ visible: false, targets: [1, 2] }
+						],
+						drawCallback: function (settings) {
+							var api = this.api();
+							var rows = api.rows().nodes();
+							var last=null;
+							api.column(1).data().each( function (group, i) {
+								if(last !== group) {
+									var rowData = api.row(i).data();
+									$(rows).eq( i ).before(
+										'<tr class="group"><td colspan="2">'+
+											'<span class="font-weight-bold">'+
+											'Beneficiario: </span>[ '+group+' ]</td>'+
+											'<td colspan="4">'+rowData['nom_ben']+
+										'</td></tr>'
+									);
+									last = group;
+								}
+							});
+						},
+						footerCallback: function (row) {
+							$(this.api().column(0).footer()).html(items.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+							$(this.api().column(4).footer()).html('Totales');
+							$(this.api().column(5).footer()).html(debeg.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(6).footer()).html(haberg.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(7).footer()).html(saldog.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						},
+					});
+
+					$('#btnExportmb').attr('disabled', false);
+				}
+			},
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function exportDetalleEmp() {
+		cargando2('show');
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "exportDetalleEmp",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				nomemp: $('#idclientemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				fetch(data['enlace'])
+					.then(resp => resp.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = data['archivo'];
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						$.ajax({
+							data: { 
+								opcion: "borrarArchivoTNS",
+								idpara: data['archivo'],
+							},
+							type: "POST",
+							dataType: "text",
+							url: "app/DBProcs.php",
+						})
+					}).catch(function() {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Se prsentó un error, no se pudo descargar '+
+									data['archivo']+' de forma automática, '+
+									'para descargar haga click en el enlace '+
+									'<i class="fas fa-hand-point-down"></i><br>'+
+							  		'[ <a id="enlacef" href="' + data['enlace'] +
+							  			'"><span class="btn-link">' + data['archivo'] +
+							  		'</span></a> ]',
+							showCancelButton: false,
+						})
+					});
+			}
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function mvtosBMontesBenR() {
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "mvtosBMontesBenR",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>0) {
+					$('#LstMvtosmbBenR').dataTable( {
+						scrollY: altoLstMvtosmb+'px',
+						scrollCollapse: false,
+						data: data,
+						autoWidth: false,
+						columns: [
+							{ data: 'id',
+								sClass: "text-left align-middle" },
+							{ data: 'id_emp',
+								sClass: "text-left align-middle" },
+							{ data: 'nom_emp',
+								sClass: "text-left align-middle" },
+							{ data: 'debe',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'haber',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'saldo',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+						footerCallback: function (row, data, start, end, display) {
+							totalt0 = this.api().rows().count();
+							totalt3 = this.api()
+								.column(3) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseInt(a) + parseInt(b);
+								}, 0);
+							totalt4 = this.api()
+								.column(4) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+							totalt5 = totalt3 - totalt4
+
+							$(this.api().column(0).footer()).html((isNaN(totalt0) ? 0 : totalt0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+							$(this.api().column(2).footer()).html('Totales');
+							$(this.api().column(3).footer()).html((isNaN(totalt3) ? 0 : totalt3).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(4).footer()).html((isNaN(totalt4) ? 0 : totalt4).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(5).footer()).html((isNaN(totalt5) ? 0 : totalt5).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						},
+					});
+					$('#btnExportmb').attr('disabled', false);
+				}
+			}
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function exportResumenBen() {
+		cargando2('show');
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "exportResumenBen",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				nomben: $('#idclientemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				fetch(data['enlace'])
+					.then(resp => resp.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = data['archivo'];
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						$.ajax({
+							data: { 
+								opcion: "borrarArchivoTNS",
+								idpara: data['archivo'],
+							},
+							type: "POST",
+							dataType: "text",
+							url: "app/DBProcs.php",
+						})
+					}).catch(function() {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Se prsentó un error, no se pudo descargar '+
+									data['archivo']+' de forma automática, '+
+									'para descargar haga click en el enlace '+
+									'<i class="fas fa-hand-point-down"></i><br>'+
+							  		'[ <a id="enlacef" href="' + data['enlace'] +
+							  			'"><span class="btn-link">' + data['archivo'] +
+							  		'</span></a> ]',
+							showCancelButton: false,
+						})
+					});
+			}
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function mvtosBMontesBenD() {
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "mvtosBMontesBenD",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				var items  = data.items;
+				var debeg  = data.debeg;
+				var haberg = data.haberg;
+				var saldog = data.saldog;
+				var data   = data.data;
+				if(data.length>0) {
+					$('#LstMvtosmbBenD').dataTable({
+						scrollY: altoLstMvtosmb+'px',
+						scrollCollapse: false,
+						ordering: false,
+						data: data,
+						autoWidth: false,
+						columns: [
+							{ data: 'id',
+								sClass: "text-left align-middle" },
+							{ data: 'id_ben',
+								sClass: "text-left align-middle" },
+							{ data: 'nom_ben',
+								sClass: "text-left align-middle" },
+							{ data: 'fecha',
+								sClass: "text-left align-middle" },
+							{ data: 'movimiento',
+								sClass: "text-left align-middle" },
+							{ data: 'debe',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'haber',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'saldo',
+								sClass: "text-right align-middle",
+								render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+						columnDefs: [
+							{ visible: false, targets: [1, 2] }
+						],
+						drawCallback: function (settings) {
+							var api = this.api();
+							var rows = api.rows().nodes();
+							var last=null;
+							api.column(1).data().each( function (group, i) {
+								if(last !== group) {
+									var rowData = api.row(i).data();
+									$(rows).eq( i ).before(
+										'<tr class="group"><td colspan="6">'+
+											'<div class="font-weight-bold">'+
+											'Beneficiario: [ '+group+' ] '+
+											rowData['nom_ben']+'</div>'+
+										'</td></tr>'
+									);
+									last = group;
+								}
+							});
+						},
+						footerCallback: function (row) {
+							$(this.api().column(0).footer()).html(items.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+							$(this.api().column(4).footer()).html('Totales');
+							$(this.api().column(5).footer()).html(debeg.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(6).footer()).html(haberg.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(7).footer()).html(saldog.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						},
+					});
+
+					$('#btnExportmb').attr('disabled', false);
+				}
+			},
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+
+	function exportDetalleBen() {
+		cargando2('show');
+		var fecha1 = $('.filtrofmb').data('datepicker').inputs[0].value
+		var fecha2 = $('.filtrofmb').data('datepicker').inputs[1].value
+
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "exportDetalleBen",
+				fdesde: moment(fecha1, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				fhasta: moment(fecha2, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				idpara: $('#cdidcltemb').val(),
+				nomben: $('#idclientemb').val(),
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				fetch(data['enlace'])
+					.then(resp => resp.blob())
+					.then(blob => {
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.style.display = 'none';
+						a.href = url;
+						// the filename you want
+						a.download = data['archivo'];
+						document.body.appendChild(a);
+						a.click();
+						window.URL.revokeObjectURL(url);
+						$.ajax({
+							data: { 
+								opcion: "borrarArchivoTNS",
+								idpara: data['archivo'],
+							},
+							type: "POST",
+							dataType: "text",
+							url: "app/DBProcs.php",
+						})
+					}).catch(function() {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'Se prsentó un error, no se pudo descargar '+
+									data['archivo']+' de forma automática, '+
+									'para descargar haga click en el enlace '+
+									'<i class="fas fa-hand-point-down"></i><br>'+
+							  		'[ <a id="enlacef" href="' + data['enlace'] +
+							  			'"><span class="btn-link">' + data['archivo'] +
+							  		'</span></a> ]',
+							showCancelButton: false,
+						})
+					});
+			}
+		}).done(function() {
+			cargando2('hide');
+		})
+	}
+</script>

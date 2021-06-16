@@ -1,0 +1,543 @@
+<style>
+	.dataTables_filter {
+		display: none;
+	}
+</style>
+<!-- Main row -->
+<div class="row m-0 p-0 pt-2 pb-1">
+	<form action="" onsubmit="return false;"
+		class="form-inline align-items-baseline col">
+		<div class="input-group input-daterange date gfechas col">
+			<label for="fechai">Período Del:&nbsp;</label>
+			<input type="text" data-id="fechai" id="fechai" class="form-control form-control-sm rounded col"
+				autocomplete="off" data-mask placeholder="mm-yyyy"
+				onblur="resetFecha('fi', this.value)">
+			<label for="fechaf">&nbsp;Al:&nbsp;</label>
+			<input type="text" data-id="fechaf" id="fechaf" class="form-control form-control-sm rounded col"
+				autocomplete="off" data-mask placeholder="mm-yyyy"
+				onblur="resetFecha('ff', this.value)">
+		</div>
+		<div class="col-1"></div>
+		<label for="select_cliente">Cliente:</label>
+		<select id="select_cliente" class="selectpicker form-control form-control-sm col"
+			data-live-search="true" data-size="10" data-style="btn-outline-primary rounded"
+			data-live-search-placeholder="Nombre Parcial/Total del Cliente">
+		</select>
+		<div class="col-1"></div>
+		<button class="btn btn-outline-primary btn-sm" onclick="$('#nrodoc').val(0); consultar()">
+			<i class="fas fa-search"></i> Consultar
+		</button>
+	</form>
+</div>
+<div class="row m-0 p-0 card card-primary elevation-2 border border-dark">
+	<div class="card-header p-1 pl-2 mb-1">
+		<i class="fas fa-file-export"></i>&nbsp;
+		<span id="ttitulo">Ventas Administrativas</span>
+	</div>
+	<div class="card-body m-0 ml-1 mr-1 p-0">
+		<table id="lstVtasExpDian" class="table table-striped table-hover table-bordered w-100">
+			<thead class="bg-dark-gradient">
+				<tr>
+					<th class="text-center align-middle">Fecha</th>
+					<th class="text-center align-middle">#NDE</th>
+					<th class="text-center align-middle">#Fact</th>
+					<th class="text-center align-middle">Nombre del Cliente</th>
+					<th class="text-center align-middle">Subtotal</th>
+					<th class="text-center align-middle">Impuesto</th>
+					<th class="text-center align-middle">Total</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+			<tfoot class="bg-dark-gradient" id="footVtasExpDian">
+				<tr>
+					<th colspan = "3"></th>
+					<th align="left"></th>
+					<th align="right"></th>
+					<th align="right"></th>
+					<th align="right"></th>
+				</tr>
+			</tfoot>
+		</table>
+		<div id="divdetVtasExpDian">
+			<table id="detVtasExpDian" class="table table-striped table-hover table-bordered w-100">
+				<thead class="bg-primary-gradient">
+					<tr>
+						<th class="text-center align-middle">Código</th>
+						<th class="text-center align-middle">Descripción Artículo</th>
+						<th class="text-center align-middle">Cantidad</th>
+						<th class="text-center align-middle">Precio</th>
+						<th class="text-center align-middle">Subtotal</th>
+						<th class="text-center align-middle">Impuesto</th>
+						<th class="text-center align-middle">Total</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+				<tfoot class="bg-primary-gradient">
+					<tr>
+						<th colspan = "2"></th>
+						<th align="right"></th>
+						<th align="right"></th>
+						<th align="right"></th>
+						<th align="right"></th>
+						<th align="right"></th>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+	<!-- /.card-body -->
+</div>
+<!-- /.col -->
+
+<input type="hidden" id="nrodoc" value=0>
+
+<!-- Modal lista de articulos -->
+<div class="modal fade" id="mKardexArt" style="z-index: 9888;" tabindex="-1" role="dialog" aria-labelledby="KardexArtLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl modal-dialog-centered">
+		<!-- Modal content-->
+		<div class="modal-content">
+			<div class="modal-header bg-primary pt-1 pb-1">
+				<h4 class="modal-title">Kardex Artículo</h4>
+				<button type="button" data-dismiss="modal" aria-label="Close" class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+				<div class="m-0 ml-auto mr-auto w-100 bg-danger-gradient font-weight-bold text-center elevation-2"
+					id="nomarticulo">
+				</div>
+			<div class="modal-body p-0" id="contKardexArt">
+				<form action="" onsubmit="return false;" class="form-inline col-12 p-0 m-0 mt-2">
+					<div class="d-flex w-100 align-content-center justify-content-center ml-2 mr-2">
+						<label for="buscarKardexArt">Buscar:</label>
+						<input type="text" class="form-control form-control-sm col-9"
+							id="buscarKardexArt" value="" placeholder="Buscar en la Lista...">
+						<button class="btn btn-success btn-outline-success btn-sm ml-auto" id="btnExport">
+							<i class="fas fa-file-excel"></i> Exportar
+						</button>
+					</div>
+				</form>
+				<form action="" onsubmit="return false;" class="p-1 m-0 col-12">
+					<table id="kardexExpDian" class="w-100 table-striped table-hover table-bordered text-nowrap">
+						<thead>
+							<tr>
+								<th class="d-none">Artículo</th>
+								<th class="d-none">Descripción</th>
+								<th class="d-none">#NDE</th>
+								<th class="d-none">#Fact.</th>
+								<th class="d-none">Cliente</th>
+								<th class="d-none">Fecha NDE</th>
+								<th class="txtcomp text-center bg-warning-gradient">Proceso</th>
+								<th class="txtcomp text-center bg-warning-gradient">Fecha</th>
+								<th class="txtcomp text-center bg-warning-gradient">Descripción Tercero</th>
+								<th class="txtcomp text-center bg-warning-gradient">#Doc.</th>
+								<th class="txtcomp text-center bg-warning-gradient">Costo</th>
+								<th class="txtcomp text-center bg-warning-gradient">Precio</th>
+								<th class="txtcomp text-center bg-warning-gradient">Cantidad</th>
+								<th class="txtcomp text-center bg-warning-gradient">Existencia</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	$('#divdetVtasExpDian').hide();
+
+	$('.gfechas').datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showButtonPanel: true,
+		language: "es",
+		autoclose: true,
+		format: "mm-yyyy",
+		startView: "months", 
+		minViewMode: "months",
+		endDate: "0m"	
+	});
+
+	$('[data-mask]').inputmask('m-y');
+
+	resetFecha('fi');
+	resetFecha('ff');
+
+	function resetFecha(id, valor='') {
+		if(id='fi' && valor=='') {
+			$('#fechai').datepicker("setDate", moment().subtract(1, 'month').format('MM-YYYY'));
+		}
+		if(id='ff' && valor=='') {
+			$('#fechaf').datepicker("setDate", moment().format('MM-YYYY'));
+		}
+	}
+	
+	$('#lstVtasExpDian').DataTable( { scrollY: '63vh' } ).columns.adjust().draw();
+
+	$('#mKardexArt').on('shown.bs.modal', function () {
+		$('#kardexExpDian').DataTable().columns.adjust().draw();
+		$('#buscarKardexArt').focus();
+	})
+
+	$("#buscarKardexArt").keyup(function() {
+		// Buscar en la tabla
+		$('#kardexExpDian').dataTable().fnFilter( this.value );
+	});
+
+	$('#btnExport').on('click', function (){
+		// se dispara el evento export del boton oculto del datatable
+		$('#kardexExpDian').DataTable().button( '0' ).trigger();
+	})
+
+	$.ajax({
+		data: {
+			opcion: "esclientesBDES",
+			sqlcnx: 1,
+		},
+		type: "POST",
+		dataType: "json",
+		url: "app/DBProcs.php",
+		success: function(data) {
+			$("#select_cliente").append('<option value="bv.CODIGO">Todos los Clientes</option>');
+			for (i=0; i<data.length; i++) {
+				$("#select_cliente").append('<option value="'+data[i].codigo+'">'+data[i].descripcion+'</option>');
+			}
+		}
+	}).done(function() {
+		$('#select_cliente').selectpicker();
+	})
+
+	function consultar() {
+		cargando('show');
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "exportacionesDIAN",
+				fechai: moment($('#fechai').val(), 'MM-YYYY').format('YYYYMM'),
+				fechaf: moment($('#fechaf').val(), 'MM-YYYY').format('YYYYMM'),
+				idpara: $('#select_cliente').val(),
+				nrodoc: function() { return $('#nrodoc').val() },
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>0) {
+					$('#lstVtasExpDian').dataTable( {
+						scrollY: '63vh',
+						scrollCollapse: ($('#nrodoc').val()==0)?false:true,
+						data: data,
+						columns: [
+							{ data: 'fecha',    sClass: 'txtcomp align-middle text-center' },
+							{ data: null,
+								render: function(data) {
+									var datos = new Array("'"+data.documento+"'", "'"+data.serie+"'", "'"+data.cliente+"'", "'"+data.fechad+"'")
+									var ret = 
+											'<button class="btn btn-link font-weight-bold"'+
+											' onclick="buscarDoc('+datos+')">'+
+												data.documento +
+											'</button>';
+									return ret;
+								}, sClass: 'txtcomp align-middle text-center'
+							},
+							{ data: 'serie',    sClass: 'txtcomp align-middle text-center' },
+							{ data: 'cliente',  sClass: 'txtcomp align-middle text-left'   },
+							{ data: 'subtotal', sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'impuesto', sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'total',    sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+						footerCallback: function (row, data, start, end, display) {
+							if($('#nrodoc').val()==0) {
+								$('#footVtasExpDian').removeClass('d-none');
+								$('#divdetVtasExpDian').hide();
+								totalp0 = this.api().rows().count();
+								totalp4 = this.api()
+									.column(4) //numero de columna a sumar
+									.data() //obtenemos los datos en la columna
+									.reduce(function (a, b) {
+										return parseFloat(a) + parseFloat(b);
+									}, 0);
+								totalp5 = this.api()
+									.column(5) //numero de columna a sumar
+									.data() //obtenemos los datos en la columna
+									.reduce(function (a, b) {
+										return parseFloat(a) + parseFloat(b);
+									}, 0);
+								totalp6 = this.api()
+									.column(6) //numero de columna a sumar
+									.data() //obtenemos los datos en la columna
+									.reduce(function (a, b) {
+										return parseFloat(a) + parseFloat(b);
+									}, 0);
+
+								$(this.api().column(0).footer()).html((isNaN(totalp0) ? 0 : totalp0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + ' Documentos');
+								$(this.api().column(3).footer()).html('Totales');
+								$(this.api().column(4).footer()).html((isNaN(totalp4) ? 0 : totalp4).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+								$(this.api().column(5).footer()).html((isNaN(totalp5) ? 0 : totalp5).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+								$(this.api().column(6).footer()).html((isNaN(totalp6) ? 0 : totalp6).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							} else {
+								$('#footVtasExpDian').addClass('d-none');
+							}
+						}
+					});	
+				}
+			}
+		}).done(function() {
+			cargando('hide');
+		})
+	};
+
+	function buscarDoc(nrodoc, serie, cliente, fecha) {
+		$('#nrodoc').val(nrodoc);
+		consultar();
+		detalleDoc(nrodoc, serie, cliente, fecha)
+	}
+
+	function detalleDoc(nrodoc, serie, cliente, fecha) {
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "detVtasExpDian",
+				idpara: nrodoc,
+				sqlcnx: 1
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>0) {
+					$('#detVtasExpDian').dataTable( {
+						data: data,
+						columns: [
+							{ data: null,
+								render: function(data) {
+									var datos = new Array(data.codigo, "'"+data.descripcion+"'", "'"+nrodoc+"'", "'"+serie+"'", "'"+cliente+"'", "'"+fecha+"'")
+									var ret = 
+											'<button class="btn btn-link font-weight-bold"'+
+											' onclick="kardexArt('+datos+')">'+
+												data.codigo +
+											'</button>';
+									return ret;
+								}, sClass: 'txtcomp align-middle text-center' },
+							{ data: 'descripcion', sClass: 'txtcomp align-middle' },
+							{ data: 'cantidad', sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'precio', sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'subtotal', sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'impuesto', sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'total', sClass: 'txtcomp align-middle text-right', render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+						footerCallback: function (row, data, start, end, display) {
+							totalp0 = this.api().rows().count();
+							totalp2 = this.api()
+								.column(2) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+							totalp4 = this.api()
+								.column(4) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+							totalp5 = this.api()
+								.column(5) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+
+							totalp6 = this.api()
+								.column(6) //numero de columna a sumar
+								.data() //obtenemos los datos en la columna
+								.reduce(function (a, b) {
+									return parseFloat(a) + parseFloat(b);
+								}, 0);
+
+							$(this.api().column(0).footer()).html((isNaN(totalp0) ? 0 : totalp0).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + ' Items');
+							$(this.api().column(2).footer()).html((isNaN(totalp2) ? 0 : totalp2).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(4).footer()).html((isNaN(totalp4) ? 0 : totalp4).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(5).footer()).html((isNaN(totalp5) ? 0 : totalp5).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+							$(this.api().column(6).footer()).html((isNaN(totalp6) ? 0 : totalp6).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						},
+					});	
+				}
+			}
+		}).done(function() {
+			$('#divdetVtasExpDian').show();
+			$('#detVtasExpDian').DataTable( { scrollY: '48vh', scrollCollapse: false, } ).columns.adjust().draw
+		})
+	}
+
+	function kardexArt(articulo, desart, nrodoc, serie, cliente, fecha) {
+		cargando('show');
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "kardexExpDian",
+				idart : articulo,
+				perfin: moment($('#fechaf').val(), 'MM-YYYY').format('YYYYMM'),
+				fecha : fecha,
+				sqlcnx: 1
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>0) {
+					$('#nomarticulo').html('Código: '+articulo+'=>'+desart);
+					$('#kardexExpDian').dataTable({
+						scrollY: "50vh",
+						scrollCollapse: false,
+						autoWidth: false,
+						searching: true,
+						sScrollX: "100%",
+						scrollX: true,
+						ordering: false,
+						buttons: [
+							{
+								extend: 'excelHtml5',
+								autoFilter: true,
+								title: $('#nomarticulo').html(),
+								filename: 'VtasAdmtivas',
+								sheetName: 'VtasAdmtivas',
+								exportOptions: {
+									format: {
+											body: function(data, row, column, node) {
+													data = $('<p>' + data + '</p>').text();
+													if( $.isNumeric(data.replace(',', '.')) ) {
+														data = data.replace(',', '.');
+													}
+													if(column==7) {
+														data = data.substring(0, 19);
+													}
+													return data;
+											}
+									}
+								}
+							}
+						],
+						data: data,
+						columns: [
+							{ visible: false, render: function() { return articulo } },
+							{ visible: false, render: function() { return desart } },
+							{ visible: false, render: function() { return nrodoc } },
+							{ visible: false, render: function() { return serie } },
+							{ visible: false, render: function() { return cliente } },
+							{ visible: false, render: function() { return fecha } },
+							{ data: null, sClass:"txtcomp align-middle",
+								render: function(data) {
+									return '('+data.tipo+') '+data.proceso;
+								}
+							},
+							{ data: null,         sClass:"txtcomp align-middle",
+								render: function(data) {
+									txt = '<span style="display: none;">'+data.fecha+'</span>'+
+											moment(data.fecha, 'YYYY-MM-DD HH:mm:ss').format('DD-MM-YYYY HH:mm:ss');
+									return txt;
+								}
+							},
+							{ data: 'DesTercero', sClass:"txtcomp align-middle" },
+							{ data: 'NumeroDoc',  sClass:"txtcomp align-middle" },
+							{ data: 'costoss',    sClass:"txtcomp align-middle text-right", render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'PRECIO',     sClass:"txtcomp align-middle text-right", render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'cantidad',   sClass:"txtcomp align-middle text-right", render: $.fn.dataTable.render.number(",", ".", 2) },
+							{ data: 'existencia', sClass:"txtcomp align-middle text-right", render: $.fn.dataTable.render.number(",", ".", 2) },
+						],
+					});	
+				}
+			}
+		}).done(function() {
+			cargando('hide');
+			$('#mKardexArt').modal('show');
+		})
+	}
+
+	function validaropciones() {
+		var fechas = [];
+		$('.input-daterange input').each(function() {
+			fechas.push($(this).datepicker().val())
+		});
+		if($('#select_tiendas').val().length>0 && fechas[0]!='' && fechas[1]!='') {
+			$('#btn_consultar').attr('disabled', false);
+		} else {
+			$('#btn_consultar').attr('disabled', true);
+		}
+	}
+
+	// Presenta un listado de proveedores con el filtro indicado
+	function listaProvBDES() {
+		cargando('show')
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "listaProvBDES",
+				idpara: $('#fprov').val().trim(),
+				sqlcnx: 1
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>1){
+					$('#tituloModal2').html('Proveedores que cumplen con la busqueda: "' + $('#fprov').val().trim() + '"');
+					$('#subtitulo').html('Seleccione un Proveedor');
+					var contenido = '';
+					contenido +=
+						'<table id="tlistaProvBDES" cellpadding="0" cellspacing="0" ' +
+							'class="table table-striped table-hover p-0 m-0 w-100">' +
+							'<thead class="bg-dark-gradient">' +
+								'<tr>' +
+									'<th>Código</th>' +
+									'<th>Rif</th>' +
+									'<th>Nombre o razón Social</th>' +
+								'</tr>' +
+							'</thead>' +
+							'<tbody>';
+					for (i = 0; i < data.length; i++) {
+						contenido +=
+							'<tr>' +
+								'<td>' + data[i].codigo + '</td>' +
+								'<td>' + data[i].rif + '</td>' +
+								'<td>' + data[i].descripcion + '</td>' +
+							'</tr>';
+					}
+					contenido += '</tbody></table>';
+					contenido += '<script>' +
+						'$("#tlistaProvBDES").dataTable({ ' +
+							'scrollY: "60vh", ' +
+							'scrollCollapse: true, ' +
+							'order: [2, "asc"],' +
+						'});' +
+						'</' + 'script>';
+					$('#contenidoModal2').html(contenido);
+					$('#ModalDatos2').modal('show');
+				} else if(data.length>0) {
+					seleccion('prov', data[0]['codigo'], data[0]['nombre']);
+				} else {
+					msg.fire({
+						title: '!!! A T E N C I Ó N ¡¡¡',
+						icon: 'error',
+						html: 'No se encontraron proveedores para: "' + $('#fprov').val() + '"',
+						showCancelButton: false,
+						onAfterClose: function() {
+							$('#fprov').val('');
+						}
+					})
+				}
+			}
+		}).done(function() {
+			setTimeout(function() {
+				$('#contenidoModal2').css( 'display', 'block' );
+				$('#tlistaProvBDES').DataTable().columns.adjust().draw();
+				cargando('hide'); 
+			}, 150);
+		})
+	}
+
+	function seleccion(campo, codigo, desc) {
+		$('#cod_'+campo).html(codigo);
+		$('#f'+campo).val(desc);
+		$('#f'+campo).attr('title', desc);
+		$('#f'+campo).removeClass('d-none');
+		$('#ModalDatos2').modal('hide');
+	}
+</script>

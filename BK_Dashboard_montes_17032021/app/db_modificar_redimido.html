@@ -1,0 +1,587 @@
+<style>
+	.minibadge {
+		color:#1f2d3d;
+		background-color:#ffc107;
+		padding-top: .05em;
+		padding-bottom: .05em;
+		padding-left: .4em;
+		padding-right: .4em;
+		font-size:60%;
+		letter-spacing: -0.1px;
+		line-height: 0.7em;
+		border-radius: .25em;
+		border: 1px solid #000;
+		margin: 0px;
+	}
+	.selectSize {
+		width: 100% !important;
+	}
+
+	.dataTables_filter {
+		display: none;
+	}
+</style>
+
+<!-- Main row -->
+<div class="row">
+	<!-- Solicitud de Pedidos -->
+	<div class="col-md-12 col-sm-12 mt-2">
+		<div class="card card-primary elevation-2 border border-dark">
+			<div class="card-header p-1 pl-2 mb-1">
+				<i class="fas fa-file-alt"></i>
+				<span id="ttitulo">Configuración Artículos por Proveedor</span>
+			</div>
+			<div class="p-0 m-0 pl-1 pr-1" id="divDatos" style="height: 80vh;">
+				<div class="col d-flex">
+					<div class="col-5">
+						<label for="fcliente">Cliente a Crédito:&nbsp;</label>
+						<div class="form-inline">
+							<input style="display: none;" placeholder="Código/Nombre Parcial del Cliente a Crédito">
+							<input type="text" id="fcliente"
+								onkeyup="if(event.keyCode=='13' && $(this).val().trim()!='')
+									{ $(this).blur() } else if($(this).val().trim()=='') { $(this).val([]) }"
+								onblur="if($(this).val().trim()!='')
+									{ listaCCBonos(); } else if($(this).val().trim()=='') { $(this).val([]) }"
+								placeholder="Código/Nombre Parcial del Cliente a Crédito"
+								class="form-control form-control-sm w-75" autocomplete="off">
+							<span id="codcliente" class="bg-warning rounded border border-dark pl-1 pr-1 w-25">
+								&nbsp;
+							</span>
+						</div>
+					</div>
+					<div class="col">
+						<label for="select_tiendas">Seleccione una Tienda</label>
+						<select id="select_tiendas" class="selectpicker form-control form-control-sm col"
+							data-style="btn-light border border-dark" data-size="8">
+							<option value="0">Seleccione una Tienda</option>;
+						</select>
+					</div>
+					<div class="col d-flex">
+						<div class="col text-center">
+							<label for="nrocaja">#Caja</label>
+							<input type="text" id="nrocaja" class="form-control form-control-sm"
+								placeholder="123" value="">
+						</div>
+						<div class="col text-center">
+							<label for="nrofac">#Factura</label>
+							<input type="text" id="nrofac" class="form-control form-control-sm"
+								placeholder="123456" value="">
+						</div>
+						<div class="col mt-auto">
+							<button class="col btn btn-sm btn-danger" tabindex="-1" onclick="cargarcontenido('modificar_redimido')">
+								<i class="fas fa-broom"></i> Limpiar
+							</button>
+							<button class="col btn btn-sm btn-primary" onclick="btn_consultar()">
+								<i class="fas fa-search"></i> Consultar
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="col mt-2 align-items-baseline" id="div_datos_clte">
+					<table width="100%" border="1">
+						<tr>
+							<th colspan="3" class="bg-warning-gradient text-center">
+								DATOS DE LA FACTURA
+							</th>
+						</tr>
+						<tr class="bg-secondary text-center">
+							<th width="25%">ID Cliente</th>
+							<th width="50%">Nombre</th>
+							<th width="25%">Monto Factura</th>
+						</tr>
+						<tr>
+							<td id="idcliente">&nbsp;</td>
+							<td id="nomclte">&nbsp;</td>
+							<td class="text-right" id="montofac">&nbsp;</td>
+						</tr>
+					</table>
+					<br>
+					<table width="100%" border="1">
+						<tr class="bg-primary-gradient text-center">
+							<th colspan="4">
+								DATOS DEL BONO
+							</th>
+						</tr>
+						<tr class="bg-secondary text-center">
+							<th width="20%">ID Cliente&nbsp;
+								<button class="btn btn-sm btn-warning p-0 pl-1 pr-1 d-none"
+									data-target="#bdtmodal" data-toggle="modal"
+									title="Buscar información del Bono" id="btnBusBono">
+									<i class="fas fa-search"></i>
+								</button>
+							</th>
+							<th width="40%">Nombre</th>
+							<th width="20%">Referencia</th>
+							<th width="20%">Monto</th>
+						</tr>
+						<tr>
+							<td id="bidcliente">&nbsp;</td>
+							<td id="bnomclte">&nbsp;</td>
+							<td id="brefer">&nbsp;</td>
+							<td class="text-right" id="bmonto">&nbsp;</td>
+						</tr>
+					</table>
+				</div>
+				<div class="col mt-2 align-items-baseline">
+					<table class="table table-striped table-bordered w-100" id="tbl_datos">
+						<thead>
+							<tr class="bg-dark-gradient">
+								<th class="text-center" width="5%">ID</th>
+								<th class="text-center" width="20%">Forma de Pago</th>
+								<th class="text-center" width="25%">Banco</th>
+								<th class="text-center" width="25%">Referencia</th>
+								<th class="text-center" width="20%">Monto Pago</th>
+								<th class="text-center" width="5%">Acción</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="bdtmodal" style="z-index: 8889" tabindex="-1" role="dialog" aria-labelledby="bdtmodalLabel" aria-hidden="true">
+	<div class="modal-dialog modal modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold">Buscar Datos del Bono</h5>
+				<button type="button" data-dismiss="modal" aria-label="Close" class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<!-- <label for="busfecha" class="m-0">Fecha y Hora del Bono</label>
+					<input type="datetime-local" id="busfecha" class="form-control">
+					<br>
+					<label for="busidben" class="m-0">ID Beneficiario:</label>
+					<input type="text" class="form-control" id="busidben" value=""> -->
+					<label for="refbono" class="m-0">Ingrese el ID del Bono ó Escaneé la Referencia:</label>
+					<input type="text" class="form-control" id="refbono" value=""
+						onkeyup="if(event.keyCode=='13' && $(this).val().trim()!='')
+							{ $('#btnBuscarBono').click() }">
+					<div class="col text-center mt-2 d-none">
+						<button class="btn btn-sm btn-primary" id="btnBuscarBono">
+							Buscar Datos
+						</button>
+					</div>
+					<hr>
+					<label for="busnomben" class="m-0">ID del Beneficiario:</label>
+					<span id="busid_ben">&nbsp;</span>
+					<br>
+					<label for="busnomben" class="m-0">Nombre del Beneficiario:</label>
+					<span id="busnomben">&nbsp;</span>
+					<br>
+					<label for="busmonto" class="m-0">Monto del Bono:</label>
+					<span id="busmonto">&nbsp;</span>
+					<br>
+					<label for="busrefer" class="m-0">Referencia del Bono:</label>
+					<span id="busrefer">&nbsp;</span>
+					<div class="col text-center mt-2">
+						<button class="btn btn-sm btn-success" disabled id="btnObtnerDatos"
+							aria-label="Close" data-dismiss="modal">
+							Aceptar esta Información
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal para datos 1-->
+<div class="modal fade" id="dtmodal" style="z-index: 8889" tabindex="-1" role="dialog" aria-labelledby="dtmodalLabel" aria-hidden="true">
+	<div class="modal-dialog modal modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold" id="ttmodal"></h5>
+				<button type="button" data-dismiss="modal" aria-label="Close" class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div class="modal-body" id="cntmodal">
+				<div class="form-group">
+					<label for="midben" class="m-0">ID Beneficiario:</label>
+					<input type="text" class="form-control" id="midben" value="">
+					<br>
+					<label for="mnomben" class="m-0">Nombre del Beneficiario:</label>
+					<input type="text" class="form-control" id="mnomben" value="">
+					<br>
+					<label for="mrefbon" class="m-0">Referencia del Pago:</label>
+					<span id="mrefbon">&nbsp;</span>
+					<label>Se modificará a [ <span id="refbon"></span> ]</label>
+					<br>
+					<label for="mfpagoa" class="m-0">Forma de Pago Actual:</label>
+					<span id="mfpagoa">&nbsp;</span>
+					<label>Se modificará a [ 45  BONO DIGITAL ]</label>
+					<br>
+					<label for="mbancoa" class="m-0">Banco Actual:</label>
+					<span id="mbancoa">&nbsp;</span>
+					<label>Se modificará a [ 96  Z.BONOS MONTES ]</label>
+				</div>
+				<div class="col text-center mt-2">
+					<button class="btn btn-sm btn-success" id="btnGuardar">
+						Guardar Cambios
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	// Se consultan las tiendas activas en el dashboard para seleccionar
+	$.ajax({
+		data: {
+			opcion: "listaTiendasBDES",
+			sqlcnx: 1,
+			idpara: ptodas + '¬' + ptienda,
+		},
+		type: "POST",
+		dataType: "json",
+		url: "app/DBProcs.php",
+		success: function(data) {
+			for (i=0; i<data.length; i++) {
+				$('#select_tiendas').append(
+					'<option value="'+data[i].servidor+'¬'+data[i].servidorpos+'¬'+data[i].codigo+'">'+
+						data[i].nombre+
+					'</option>');
+			}
+			$('#select_tiendas').selectpicker();
+			setTimeout("$('#fcliente').focus().val('')", 250);
+		},
+	})
+
+	var datos = new Array();
+	var idmod = 0;
+
+	$('#tbl_datos').DataTable({
+		scrollY: ($('#divDatos').height()-$('#tbl_datos').offset().top)+60+'px',
+		order: [ 3, 'desc' ],
+	}).columns.adjust().draw();
+
+	$('#fechas').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "-1d",
+	});
+
+	$('.input-daterange input').each(function() {
+		if($(this).data('id') == 'fechai')
+			$(this).datepicker("setDate", moment().subtract(3, 'day').format('DD-MM-YYYY'));
+		if($(this).data('id') == 'fechaf')
+			$(this).datepicker("setDate", moment().subtract(1, 'day').format('DD-MM-YYYY'));
+	});
+
+	$('[data-mask]').inputmask();
+
+	var fechas = [];
+	$('.input-daterange input').each(function() {
+		// inicializacion de fechas
+		fechas.push(moment($(this).datepicker().val(), 'DD-MM-YYYY').format('YYYY-MM-DD'))
+	});
+
+	function btn_consultar() {
+		if($('#select_tiendas').val()==0  ||
+			$('#codcliente').html()==''   ||
+			$('#nrofac').val().trim()=='' ||
+			$('#nrocaja').val().trim()=='') {
+			msg.fire({
+				title: '!!! A T E N C I Ó N ¡¡¡',
+				icon: 'info',
+				html: 'Debe ingresar la información solicitada',
+				showCancelButton: false,
+			})
+		} else {
+			cargando('show');
+			$('#btnExport #fechai #fechaf').attr('disabled', true);
+			if(!$('#btnBusBono').hasClass('d-none')) {
+				$('#btnBusBono').addClass('d-none');
+			}
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: 'consFacturaTienda',
+					clteid: $('#codcliente').html(),
+					server: $('#select_tiendas').val(),
+					nrofac: $('#nrofac').val().trim(),
+					nrocaj: $('#nrocaja').val().trim(),
+					sqlcnx: 1,
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>0) {
+						$('#codcliente').attr('disabled', true);
+						$('#select_tiendas').attr('disabled', true);
+						$('#select_tiendas').selectpicker('refresh');
+						$('#nrofac').attr('disabled', true);
+						$('#nrocaja').attr('disabled', true);
+						$('#btnmodificar').attr('disabled', false);
+						$('#idcliente').html(data[0].idcliente);
+						$('#nomclte').html(data[0].razon);
+						$('#montofac').html(data[0].monto);
+						$('#bidcliente').html(data[0].id_bono);
+						$('#bnomclte').html(data[0].nom_bono);
+						$('#brefer').html(data[0].referencia);
+						$('#bmonto').html(data[0].mon_bono);
+						if( (data[0].razon).trim()=='' || (data[0].nom_bono).trim() == '' ||
+							data[0].idcliente!=data[0].id_bono) {
+							$('#btnBusBono').removeClass('d-none');
+						}
+						datos = data;
+					}
+					var htable = $('.dataTables_scrollBody').height();
+					$('#tbl_datos').DataTable({
+						scrollY: htable+'px',
+						scrollCollapse: false,
+						order: [ 3, 'desc' ],
+						data: data,
+						autoWidth: false,
+						columns: [
+							{ data: "idpago",     sClass: "text-left   align-middle" },
+							{ data: "fpago",      sClass: "text-left   align-middle" },
+							{ data: "banco",      sClass: "text-left   align-middle" },
+							{ data: "referencia", sClass: "text-left   align-middle" },
+							{ data: "monto_pago", sClass: "text-right  align-middle" },
+							{ data: "marcar",     sClass: "text-center" },
+						],
+					});
+				}
+			}).done(function() {
+				cargando('hide');
+			})
+		}
+	};
+
+	// Presenta un listado de Cliente Credito con el filtro indicado
+	function listaCCBonos() {
+		if($('#fcliente').val().trim()!='') {
+			cargando('show')
+			tomar_datos = $.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "listaCCBonos",
+					idpara: ($('#fcliente').val().trim()).toUpperCase(),
+					sqlcnx: 1
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>1){
+						$('#tituloModal').html('Proveedores que cumplen con la busqueda: "' + $('#fcliente').val().trim() + '"');
+						var contenido = '';
+						contenido +=
+							'<table id="listaCCBonos" ' +
+								'class="table table-striped table-hover p-0 m-1 w-100">' +
+								'<thead class="bg-dark-gradient">' +
+									'<tr>' +
+										'<th>ID Cliente</th>' +
+										'<th>Nombre o razón Social</th>' +
+									'</tr>' +
+								'</thead>' +
+								'<tbody>';
+						for (i = 0; i < data.length; i++) {
+							contenido +=
+								'<tr>' +
+									'<td>' + data[i].id_empresa + '</td>' +
+									'<td>' + data[i].nom_empresa + '</td>' +
+								'</tr>';
+						}
+						contenido += '</tbody></table>';
+						contenido += '<script>' +
+							'$("#listaCCBonos").dataTable({ ' +
+								'scrollY: "60vh", ' +
+								'scrollCollapse: true, ' +
+								'order: [1, "asc"],' +
+							'});' +
+							'</' + 'script>';
+						$('#contenidoModal').html(contenido);
+						$('#ModalDatos').modal('show');
+					} else if(data.length>0) {
+						$('#btnExport').attr('disabled', false);
+						$('#btnExport').switchClass("btn-secondary", "btn-success");
+						$('#codcliente').removeClass('d-none');
+						$('#codcliente').html(data[0]['id_empresa']);
+						$('#fcliente').val(data[0]['nombre']);
+						$('#fcliente').attr('disabled', true);
+						$('#select_tiendas').focus();
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontraron proveedores para: <b>"'+$('#fcliente').val()+ '</b>"',
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								$('#btnExport').attr('disabled', true);
+								$('#btnExport').switchClass("btn-success", "btn-secondary");
+								$('#codcliente').addClass('d-none');
+								$('#codcliente').html('');
+								$('#fcliente').val([]);
+								$('#fcliente').focus().select();
+							}
+						})
+					}
+				}
+			}).done(function() {
+				setTimeout(function() {
+					$('#contenidoModal').css( 'display', 'block' );
+					$('#listaCCBonos').DataTable().columns.adjust().draw();
+					cargando('hide');
+				}, 150);
+			})
+		} else {
+			$('#fcliente').val();
+			$('#fcliente').focus();
+		}
+	}
+
+	function seleccion(codigo, desc) {
+		$('#btnExport').attr('disabled', false);
+		$('#btnExport').switchClass("btn-secondary", "btn-success");
+		$('#codcliente').removeClass('d-none');
+		$('#codcliente').html(codigo);
+		$('#fcliente').val(desc);
+		$('#fcliente').attr('disabled', true);
+		$('#ModalDatos').modal('hide');
+		$('#select_tiendas').focus();
+	}
+
+	$('#dtmodal').on('hidden.bs.modal', function() {
+		$('#midben').val('');
+		$('#mnomben').val('');
+		$('#mrefbon').html('');
+		$('#mfpagoa').html('');
+		$('#mbancoa').html('');
+		$('#refbon').html('');
+	})
+
+	$('#bdtmodal').on('shown.bs.modal', function() { setTimeout("$('#refbono').focus()", 150) })
+
+	$('#tbl_datos tbody').on('click', 'button', function () {
+		var row = $(this).closest('tr');
+		var data = $(this).closest('table').DataTable().row(row).data();
+		idpago = data.idpago
+		$('#midben').val($('#bidcliente').html());
+		$('#mnomben').val($('#bnomclte').html());
+		$('#mrefbon').html(data.referencia);
+		$('#mfpagoa').html(datos[0].fpago);
+		$('#mbancoa').html(datos[0].banco);
+		$('#refbon').html($('#brefer').html());
+		$('#dtmodal').modal('show');
+	})
+
+	$('#btnGuardar').on('click', function() {
+		if($('#midben').val().trim() !='' || $('#mnomben').val().trim()!='') {
+			$.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "savInfoPayBonoRedimido",
+					midben: $('#midben').val().trim(),
+					mnombo: $('#mnomben').val().trim(),
+					refbon: $('#refbon').html(),
+					clteid: $('#codcliente').html(),
+					server: $('#select_tiendas').val(),
+					nrofac: $('#nrofac').val().trim(),
+					nrocaj: $('#nrocaja').val().trim(),
+					idpago: idpago,
+					sqlcnx: 1,
+				},
+				type: "POST",
+				dataType: "text",
+				success : function(data) {
+					data = data.split('¬');
+					if(data[0]=='1') {
+						$('#dtmodal').modal('hide');
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'info',
+							html: data[1],
+							showCancelButton: false,
+						}).then((result) => {
+							if (result.value) {
+								cargarcontenido('modificar_redimido');
+							}
+						})
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: data[1],
+							showCancelButton: false,
+						})
+					}
+				}
+			})
+		} else {
+			msg.fire({
+				title: '!!! A T E N C I Ó N ¡¡¡',
+				icon: 'info',
+				html: 'Datos incompletos, por favor verifique.',
+				showCancelButton: false,
+			}).then((result) => {
+				if (result.value) {
+					$('#dtmodal').modal('hide');
+				}
+			})
+		}
+	})
+
+	$('#btnBuscarBono').on('click', function() {
+		$('#btnObtnerDatos').attr('disabled', true);
+		if($('#refbono').val().trim()!='') {
+			$.ajax({
+				url: "app/DBProcs.php",
+				data: {
+					opcion: "busDatosBono",
+					idpara: $('#refbono').val().trim(),
+					// idpara: $('#busfecha').val().trim()+'¬'+($('#busidben').val().trim()).toUpperCase(),
+					idclte: $('#codcliente').html(),
+					sqlcnx: 1,
+				},
+				type: "POST",
+				dataType: "json",
+				success : function(data) {
+					if(data.length>0) {
+						data = data[0];
+						$('#busid_ben').html(data.id_ben);
+						$('#busnomben').html(data.nombre);
+						$('#busmonto').html(data.monto);
+						$('#busrefer').html(data.referencia);
+						$('#btnObtnerDatos').attr('disabled', false);
+					} else {
+						msg.fire({
+							title: '!!! A T E N C I Ó N ¡¡¡',
+							icon: 'error',
+							html: 'No se encontró el beneficiario o no pertenece a<br>'+$('#fcliente').val(),
+							showCancelButton: false,
+						})
+					}
+				}
+			})
+		} else {
+			msg.fire({
+				title: '!!! A T E N C I Ó N ¡¡¡',
+				icon: 'warning',
+				html: 'Debe ingresar una Fecha y un ID válidos',
+				showCancelButton: false,
+				onAfterClose: function() {
+					$('#bfecha').focus();
+				}
+			})
+		}
+	})
+
+	$('#btnObtnerDatos').on('click', function() {
+		$('#bidcliente').html(($('#busid_ben').html()).toUpperCase());
+		$('#bnomclte').html(($('#busnomben').html()).toUpperCase());
+		$('#brefer').html($('#busrefer').html());
+		$('#bmonto').html($('#busmonto').html());
+	})
+</script>

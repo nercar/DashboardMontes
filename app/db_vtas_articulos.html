@@ -1,0 +1,426 @@
+<!-- Main row -->
+<div class="row">
+	<div class="row col-12 mt-2 ml-auto mr-auto align-content-end justify-content-end">
+		<form action="#" onsubmit="return false" class="form-inline col-12">
+			<div class="input-group col-12">
+				<label for="material" class="text-right mt-1 mb-0 mr-1 ml-1">Código o Nombre del Artículo</label>
+				<input id="material" type="text" class="form-control form-control-sm mr-1 rounded"
+						placeholder="Ingrese Código/parte del nombre del Artículo a Buscar">
+				<button class="input-group-addon btn btn-primary btn-sm m-0" type="submit" onclick="lstArticulos()">
+					<i class="fas fa-search"></i> Consultar
+				</button>
+			</div>
+ 		</form>
+	</div>
+	<!-- Estadisticas de Clientes -->
+	<div class="col-md-12 col-sm-12 mt-1" id="div_tabla_datos">
+		<div class="card card-warning m-0 p-0 elevation-2 border border-dark">
+			<div class="card-header p-1 pl-2">
+				<i class="fas fa-cubes"></i>
+				<span id="titvxtienda">Ventas por Tienda</span>
+				<span id="ffecha"></span>
+				<div class="custom-control custom-checkbox card-tools bg-warning" style="font-size: 85%; letter-spacing: -0.5px;">
+					<input type="checkbox" class="custom-control-input" checked style="cursor: pointer;" id="todo">
+					<label class="custom-control-label font-weight-normal" style="cursor: pointer;" for="todo">Consultar las 24 Horas</label>
+				</div>
+			</div>
+			<div class="card-body p-0 m-0">
+				<table id="tabla_datos" cellpadding="0" cellspacing="0"
+						class="table table-striped table-hover w-100">
+					<thead class="bg-dark-gradient">
+						<tr>
+							<th width="16%" rowspan="2" class="bg-dark-gradient text-center border border-top-0 ml-0 mr-0 pl-0 pr-0">Tienda</th>
+							<th colspan="4" class="bg-success-gradient border border-top-0 ml-0 mr-0 pl-0 pr-0" id="h1">
+								<div class="input-group input-daterange date gfechas d-flex mr-auto ml-auto align-items-center" style="width: 85%;">
+									<div class="input-group-addon font-weight-normal ml-1 mr-1">Del</div>
+									<input type="text" data-id="fechai1" class="form-control form-control-sm rounded" style="height: 25px;"
+										autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+										onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(2, 'weeks').startOf('week').format('DD-MM-YYYY'));">
+									<div class="input-group-addon font-weight-normal ml-1 mr-1">Al</div>
+									<input type="text" data-id="fechaf1" class="form-control form-control-sm rounded" style="height: 25px;"
+										autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+										onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(2, 'weeks').endOf('week').format('DD-MM-YYYY'));">
+								</div>
+							</th>
+							<th colspan="4" class="bg-primary-gradient border border-top-0 ml-0 mr-0 pl-0 pr-0" id="h2">
+								<div class="input-group input-daterange date gfechas d-flex mr-auto ml-auto align-items-center" style="width: 85%;">
+									<div class="input-group-addon font-weight-normal ml-1 mr-1">Del</div>
+									<input type="text" data-id="fechai2" class="form-control form-control-sm rounded" style="height: 25px;"
+										autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+										onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(1, 'weeks').startOf('week').format('DD-MM-YYYY'));">
+									<div class="input-group-addon font-weight-normal ml-1 mr-1">Al</div>
+									<input type="text" data-id="fechaf2" class="form-control form-control-sm rounded" style="height: 25px;"
+										autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+										onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(1, 'weeks').endOf('week').format('DD-MM-YYYY'));">
+								</div>
+							</th>
+							<th colspan="4" class="bg-warning-gradient border border-top-0 ml-0 mr-0 pl-0 pr-0" id="h3">
+								<div class="input-group input-daterange date gfechas d-flex mr-auto ml-auto align-items-center" style="width: 85%;">
+									<div class="input-group-addon font-weight-normal ml-1 mr-1">Del</div>
+									<input type="text" data-id="fechai3" class="form-control form-control-sm rounded" style="height: 25px;"
+										autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+										onblur="if(this.value=='') $(this).datepicker('setDate', moment().startOf('week').format('DD-MM-YYYY'));">
+									<div class="input-group-addon font-weight-normal ml-1 mr-1">Al</div>
+									<input type="text" data-id="fechaf3" class="form-control form-control-sm rounded" style="height: 25px;"
+										autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+										onblur="if(this.value=='') $(this).datepicker('setDate', moment().format('DD-MM-YYYY'));">
+								</div>
+							</th>
+						</tr>
+						<tr>
+							<!-- Hoy -3 -->
+							<th width="7%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">#.Fact.</th>
+							<th width="7%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Cant.</th>
+							<th width="7%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Monto</th>
+							<th width="7%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Margen</th>
+							
+							<!-- Hoy -2 -->
+							<th width="7%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">#.Fact.</th>
+							<th width="7%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Cant.</th>
+							<th width="7%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Monto</th>
+							<th width="7%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Margen</th>
+							
+							<!-- Hoy -1 -->
+							<th width="7%" class="bg-warning-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">#.Fact.</th>
+							<th width="7%" class="bg-warning-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Cant.</th>
+							<th width="7%" class="bg-warning-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Monto</th>
+							<th width="7%" class="bg-warning-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Margen</th>
+						</tr>
+					</thead>
+					<tfoot>
+						<tr class="bg-dark-gradient" >
+							<th width="16%" class="text-left">Totales</th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-warning-gradient text-right"></th>
+							<th class="bg-warning-gradient text-right"></th>
+							<th class="bg-warning-gradient text-right"></th>
+							<th class="bg-warning-gradient text-right"></th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- hora para el reporte -->
+<input type="hidden" id="horah">
+
+<script>
+	$(function() {
+		var pnomart = '';
+		$('.gfechas').datepicker({
+			format: "dd-mm-yyyy",
+			todayBtn: "linked",
+			language: "es",
+			autoclose: true,
+			todayHighlight: true,
+			endDate: "0d",
+		});
+		
+		$('.input-daterange input').each(function() {
+			if($(this).data('id') == 'fechai1')
+				$(this).datepicker("setDate", moment().subtract(2, 'weeks').startOf('week').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechaf1')
+				$(this).datepicker("setDate", moment().subtract(2, 'weeks').endOf('week').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechai2')
+				$(this).datepicker("setDate", moment().subtract(1, 'weeks').startOf('week').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechaf2')
+				$(this).datepicker("setDate", moment().subtract(1, 'weeks').endOf('week').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechai3')
+				$(this).datepicker("setDate", moment().startOf('week').format('DD-MM-YYYY'));
+			if($(this).data('id') == 'fechaf3')
+				$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+		});
+
+		$('[data-mask]').inputmask();
+	});
+
+	function actualizar_datos(material, nomarticulo) {
+		var fechas = [];
+		var hora = $('#todo').prop('checked') ? '23:59:59' : moment().format("HH:mm:ss");
+		pnomart = nomarticulo;
+		fechas.length = 0;
+		
+		$('.input-daterange input').each(function() {
+			fechas.push($(this).datepicker().val())
+		});
+		
+		$('#ModalDatos3').modal('hide');
+
+		listVtasArticulos(fechas, hora, material, pnomart);
+	}
+
+	function lstArticulos() {
+		cargando('show')
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "lstArticulos",
+				idpara: $('#material').val().trim()
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>1){
+					$('#tituloModal3').html('Artículos que cumplen con la busqueda: "' + $('#material').val().trim() + '"');
+					$('#subtitulo3').html('Seleccione un Artículo');
+					var contenido = '';
+					contenido +=
+						'<table id="tlstArticulos" cellpadding="0" cellspacing="0" ' +
+							'class="table table-striped table-hover p-0 m-0 w-100">' +
+							'<thead class="bg-dark-gradient">' +
+								'<tr>' +
+									'<th>Código</th>' +
+									'<th>Descripción</th>' +
+									'<th>Departamento</th>' +
+								'</tr>' +
+							'</thead>' +
+							'<tbody>';
+					for (i = 0; i < data.length; i++) {
+						contenido +=
+							'<tr>' +
+								'<td>' + data[i].codigo + '</td>' +
+								'<td>' + data[i].articulo + '</td>' +
+								'<td>' + data[i].dpto + '</td>' +
+							'</tr>';
+					}
+					contenido += '</tbody></table>';
+					contenido += '<script>' +
+						'$("#tlstArticulos").dataTable({ ' +
+							'scrollY: "60vh", ' +
+							'scrollCollapse: true, ' +
+							'order: [1, "asc"],' +
+						'});' +
+						'</' + 'script>';
+					$('#contenidoModal3').html(contenido);
+					$('#ModalDatos3').modal('show');
+					setTimeout("var table = $('#tlstArticulos').DataTable(); $('#contenidoModal3').css( 'display', 'block' ); table.columns.adjust().draw();", 150)
+				} else {
+					actualizar_datos(data[0].codigo, data[0].articulo);
+				}
+			}
+		}).done(function() { cargando('hide'); })
+	}
+
+	/**
+	 * Se prepara la lista de ventas por una promocion, departamento, fecha o articulo
+	 * @param {array} pfecha array de fechas a consultar
+	 * @param {int} pmat codigo de material a consultar
+	 */
+	function listVtasArticulos(pfecha, phora, pmat, pnomart) {
+		cargando('show')
+		if (tomar_datos !== '') {
+			tomar_datos.abort();
+		}
+		tomar_datos = $.ajax({
+			data: {
+				opcion : 'listVtasArticulos',
+				fecha  : pfecha,
+				hora   : phora,
+				idpara : pmat
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				var costos = data['costos'];
+				var data = data['data'];
+				cargando('hide')
+				$('#ffecha').html( ($('#todo').prop('checked') ? '' : ' hasta las ' + to12hour(phora)) + ' del articulo: <b>"' + pnomart + '"</b>' );
+				$('#tabla_datos').dataTable({
+					scrollY: '60vh',
+					scrollCollapse: true,
+					data: data,
+					columns: [
+						{ data: "tienda",  sClass: "text-left font-weight-bold align-middle border border-top-0 border-bottom-0" },
+						{ data: "canfac2", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "cant2",   sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "total2",  sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "margen2", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "canfac1", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "cant1",   sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "total1",  sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "margen1", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "canfach", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "canth",   sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "totalh",  sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "margenh", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+					],
+					footerCallback: function (row, data, start, end, display) {
+						total01 = this.api()
+							.column(1) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total02 = this.api()
+							.column(2) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total03 = this.api()
+							.column(3) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+
+						total05 = this.api()
+							.column(5) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total06 = this.api()
+							.column(6) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total07 = this.api()
+							.column(7) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+
+						total09 = this.api()
+							.column(8) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total10 = this.api()
+							.column(10) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total11 = this.api()
+							.column(11) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+
+						total04 = (total03 == 0) ? 0 : (total03 - costos['costo2']) / total03 * 100;
+						total08 = (total07 == 0) ? 0 : (total07 - costos['costo1']) / total07 * 100;
+						total12 = (total11 == 0) ? 0 : (total11 - costos['costoh']) / total11 * 100;
+
+						$(this.api().column(1).footer() ).html((isNaN(total01) ? 0 : total01).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(2).footer() ).html((isNaN(total02) ? 0 : total02).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(3).footer() ).html((isNaN(total03) ? 0 : total03).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(4).footer() ).html((isNaN(total04) ? 0 : total04).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '%');
+						
+						$(this.api().column(5).footer() ).html((isNaN(total05) ? 0 : total05).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(6).footer() ).html((isNaN(total06) ? 0 : total06).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(7).footer() ).html((isNaN(total07) ? 0 : total07).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(8).footer() ).html((isNaN(total08) ? 0 : total08).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '%');
+						
+						$(this.api().column(9).footer() ).html((isNaN(total09) ? 0 : total09).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(10).footer()).html((isNaN(total10) ? 0 : total10).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(11).footer()).html((isNaN(total11) ? 0 : total11).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(12).footer()).html((isNaN(total12) ? 0 : total12).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '%');
+
+					},
+					initComplete: function (settings, json) {
+						arrayAuxiliar('tabla_datos');
+					}
+				});
+			}
+		});
+	}
+
+	/**
+	 * lista las facturas generadas por tienda
+	 * @param {int} ptienda id de la tienda a consultar
+	 * @param {string} pfecha fecha a consultar
+	 * @param {string} phora hora a consultar
+	 * @param {string} pnombretienda nombre de la tienda a consultar
+	 */
+	function listaFacturasxTiendaxArticulo(ptienda, pfecha, phora, pmat, pnombretienda) {
+		cargando('show')
+		tomar_datos = $.ajax({
+			data: {
+				opcion: "listaFacturasxTiendaxArticulo",
+				idpara: ptienda + '¬' + pfecha + '¬' + phora + '¬' + pmat,
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				if(data.length>0) {
+					var tcanfact = 0;
+					var tsubtotal = 0;
+					var fechaact = '';
+					$('#tituloModal3').html('Facturas de [ ' + pnomart + ' ]');
+					$('#subtitulo3').html('Seleccione una Factura de la tienda [ ' + capitalize(pnombretienda) + ' ]');
+					var contenido = '';
+					contenido += '<table id="tlistaFacturasxTiendaxArticulo" cellpadding="0" cellspacing="0" ' +
+						'class="table table-striped table-hover p-0 m-0 w-100">' +
+						'<thead class="bg-dark-gradient">' +
+							'<tr>' +
+								'<th width="13%">Fecha</th>' +
+								'<th width="14%">Factura</th>' +
+								'<th width="8%">Caja</th>' +
+								'<th width="13%">Cliente</th>' +
+								'<th width="40%">Nombre</th>' +
+								'<th width="12%">Subtotal</th>' +
+							'</tr>' +
+						'</thead>' +
+						'<tbody>';
+					for (i = 0; i < data.length; i++) {
+						contenido +=
+							'<tr class="txtcomp">' +
+								'<td width="13%">' + moment(data[i].fecha).format('DD-MM-YYYY') + '</td>' +
+								'<td width="14%">' + data[i].factura + '</td>' +
+								'<td width="8%">' + data[i].caja + '</td>' +
+								'<td width="13%">' + data[i].cliente + '</td>' +
+								'<td width="40%">' + data[i].razon + '</td>' +
+								'<td width="12%">' + data[i].subtotal + '</td>' +
+							'</tr>';
+						tcanfact += 1;
+						tsubtotal += parseFloat(data[i].subtotal);
+					}
+					contenido +=
+						'</tbody><tfoot>' +
+							'<tr class="bg-dark-gradient" >' +
+								'<th colspan="4" class="text-center mt-0 mb-0 pt-0 pb-0">Cant. de Facturas: [ ' + tcanfact.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ' ]</th>' +
+								'<th class="text-left mt-0 mb-0 pt-0 pb-0"></th>' +
+								'<th class="text-right mt-0 mb-0 pt-0 pb-0">' + tsubtotal.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + '</th>' +
+							'</tr>' +
+						'</tfoot></table>';
+					contenido +=
+						'<script>' +
+							'$("#tlistaFacturasxTiendaxArticulo").dataTable({ ' +
+								'scrollY: "60vh", ' +
+								'scrollCollapse: true, ' +
+								'columnDefs: [{ ' +
+									'targets: 5, ' +
+									'render: $.fn.dataTable.render.number(",", ".", 2), ' +
+									'sClass: "text-right align-middle" ' +
+								'}]' +
+							'});' +
+						'</' + 'script>';
+					$('#contenidoModal3').html(contenido);
+					$('#ModalDatos3').modal('show');
+					setTimeout("var table = $('#tlistaFacturasxTiendaxArticulo').DataTable(); $('#contenidoModal3').css( 'display', 'block' ); table.columns.adjust().draw();", 150)
+				} else {
+					alert('No hay información para presentar')
+				}
+			}
+		});
+	}
+</script>

@@ -1,0 +1,476 @@
+<!-- Main row -->
+<div class="row">
+	<div class="row col-12 mt-2 ml-auto mr-auto align-content-end justify-content-end">
+		<div class="d-flex form-inline col">
+			<label for="idart" class="text-right mr-1">Código o Nombre del Artículo</label>
+			<input id="idart" type="text" class="form-control form-control-sm mr-1 rounded col"
+					placeholder="Ingrese Código/parte del nombre del Artículo a Buscar"
+					onblur="listaArticulosBDES()" onkeyup="if(event.keyCode==13) $(this).blur()">
+			<span id="codart" class="d-none"></span>
+			<div class="input-group input-daterange date fechafiltro d-flex align-items-center">
+				<div class="input-group-addon font-weight-normal ml-1 mr-1">Del</div>
+				<input type="text" data-id="fechafiltro1" class="form-control form-control-sm rounded" style="width: 100px;"
+					autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+					onblur="if(this.value=='') $(this).datepicker('setDate', moment().startOf('month').format('DD-MM-YYYY'));">
+				<div class="input-group-addon font-weight-normal ml-1 mr-1">Al</div>
+				<input type="text" data-id="fechafiltro2" class="form-control form-control-sm rounded mr-2" style="width: 100px;"
+					autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
+					onblur="if(this.value=='') $(this).datepicker('setDate', moment().format('DD-MM-YYYY'));">
+			</div>
+			<button class="input-group-addon btn btn-primary btn-sm m-0 mr-2" type="submit" id="btnConsPedDes">
+				<i class="fas fa-search"></i> Consultar
+			</button>
+			<button class="btn btn-success btn-sm" disabled id="btnExporPedDes">
+				<i class="fas fa-file-excel"></i> Exportar
+			</button>
+ 		</div>
+	</div>
+	<div class="col-md-12 col-sm-12 mt-1" id="div_tblPedDesPer">
+		<div class="card card-warning m-0 p-0 elevation-2 border border-dark">
+			<div class="card-header p-1 pl-2">
+				<i class="fas fa-cubes"></i>
+				<span>Resumen Perecederos Vs. Despachos</span>
+				<span id="spnfiltro"></span>
+			</div>
+			<div class="card-body p-0 m-1">
+				<table id="tblPedDesPer" cellpadding="0" cellspacing="0"
+						class="table table-striped table-hover w-100 txtcomp">
+					<thead class="bg-dark-gradient">
+						<tr>
+							<th width="15%" rowspan="2" class="bg-dark-gradient text-center border border-top-0 ml-0 mr-0 pl-0 pr-0">Tienda</th>
+							<th colspan="3" class="bg-success-gradient border border-top-0 ml-0 mr-0 pl-0 pr-0 text-center">
+								Pedido
+							</th>
+							<th colspan="4" class="bg-primary-gradient border border-top-0 ml-0 mr-0 pl-0 pr-0 text-center">
+								Despachado
+							</th>
+							<th colspan="2" class="bg-danger-gradient border border-top-0 ml-0 mr-0 pl-0 pr-0 text-center">
+								Diferencia
+							</th>
+						</tr>
+						<tr>
+							<!-- Hoy -3 -->
+							<th width="10%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Kilogramos</th>
+							<th width="10%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Unidades</th>
+							<th width="10%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Total</th>
+
+							<!-- Hoy -2 -->
+							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Kilogramos</th>
+							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Unidades</th>
+							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Total</th>
+							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Costo</th>
+
+							<!-- diferencia entre totales -->
+							<th width="10%" class="bg-danger-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Totales</th>
+							<th width="5%"  class="bg-danger-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">%</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+					<tfoot>
+						<tr class="bg-dark-gradient" >
+							<th class="text-left">Totales</th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-success-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-primary-gradient text-right"></th>
+							<th class="bg-danger-gradient  text-right"></th>
+							<th class="bg-danger-gradient  text-right"></th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<!-- /.card-body -->
+		</div>
+	</div>
+	<!-- /.col -->
+</div>
+<!-- /.row (main row 2) -->
+
+<!-- Modal para datos 1-->
+<div class="modal fade" id="moddetPedDesArt" style="z-index: 9888" tabindex="-1" role="dialog" aria-labelledby="moddetPedDesArtLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header bg-primary pb-0 pt-0 pr-0">
+				<h5 class="modal-title font-weight-bold">Artículos Pedidos y Despachados de la tienda <span id="nomloc"></span></h5>
+				<button class="btn btn-success btn-sm m-1 ml-auto" id="btnExporDetPedDes">
+					<i class="fas fa-file-excel"></i> Exportar
+				</button>
+				<button type="button" data-dismiss="modal" aria-label="Close" class="btn btn-danger btn-lg float-right">
+					<span class="fas fa-window-close float-right" aria-hidden="true"></span>
+				</button>
+			</div>
+			<div class="modal-body m-0 p-0">
+				<table id="tbldetPedDesArt" class="table table-bordered table-striped w-100 txtcomp">
+					<thead>
+						<tr>
+							<th rowspan="2" class="text-center bg-dark">Código</th>
+							<th rowspan="2" class="text-center bg-dark">Descripción</th>
+							<th colspan="3" class="text-center bg-success">Pedido</th>
+							<th colspan="4" class="text-center bg-primary">Despachado</th>
+							<th colspan="2" class="text-center bg-danger">Diferencia</th>
+						</tr>
+						<tr>
+							<th class="text-center bg-success">Kilogramos</th>
+							<th class="text-center bg-success">Unidades</th>
+							<th class="text-center bg-success">Total</th>
+							<th class="text-center bg-primary">Kilogramos</th>
+							<th class="text-center bg-primary">Unidades</th>
+							<th class="text-center bg-primary">Total</th>
+							<th class="text-center bg-primary">Costo</th>
+							<th class="text-center bg-danger">Totales</th>
+							<th class="text-center bg-danger">%</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+					<tfoot>
+						<th class="text-center bg-dark"></th>
+						<th class="text-center bg-dark">Totales</th>
+						<th class="text-center bg-success"></th>
+						<th class="text-center bg-success"></th>
+						<th class="text-center bg-success"></th>
+						<th class="text-center bg-primary"></th>
+						<th class="text-center bg-primary"></th>
+						<th class="text-center bg-primary"></th>
+						<th class="text-center bg-primary"></th>
+						<th class="text-center bg-danger"></th>
+						<th class="text-center bg-danger"></th>
+					</tfoot>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	var altotabla = $('#wp_ppal').height()-$('#tblPedDesPer').offset().top-$('#btnConsPedDes').offset().top;
+	$('.fechafiltro').datepicker({
+		format: "dd-mm-yyyy",
+		todayBtn: "linked",
+		language: "es",
+		autoclose: true,
+		todayHighlight: true,
+		endDate: "0d",
+	});
+
+	$('.input-daterange input').each(function() {
+		if($(this).data('id') == 'fechafiltro1')
+			$(this).datepicker("setDate", moment().startOf('month').format('DD-MM-YYYY'));
+		if($(this).data('id') == 'fechafiltro2')
+			$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
+	});
+
+	$('[data-mask]').inputmask();
+
+	$('#btnExporPedDes').on('click', function (){
+		// se dispara el evento export del boton oculto del datatable
+		$('#tblPedDesPer').DataTable().button( '0' ).trigger();
+	})
+
+	$('#btnExporDetPedDes').on('click', function (){
+		// se dispara el evento export del boton oculto del datatable
+		$('#tbldetPedDesArt').DataTable().button( '0' ).trigger();
+	})
+
+	$('#tblPedDesPer').dataTable({scrollY: altotabla+'px'})
+
+	function seleccion(tipo, idart, nomarticulo) {
+		$('#idart').val(nomarticulo);
+		$('#codart').html(idart);
+		$('#ModalDatos3').modal('hide');
+	}
+
+	function listaArticulosBDES() {
+		cargando('show')
+		tomar_datos = $.ajax({
+			url: "app/DBProcs.php",
+			data: {
+				opcion: "listaArticulosBDES",
+				idpara: $('#idart').val().trim()+'¬¬¬¬*',
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			success : function(data) {
+				if(data.length>1){
+					$('#tituloModal3').html('Artículos que cumplen con la busqueda: "' + $('#idart').val().trim() + '"');
+					$('#subtitulo3').html('Seleccione un Artículo');
+					var contenido = '';
+					contenido +=
+						'<table id="tlistaArticulosBDES" cellpadding="0" cellspacing="0" ' +
+							'class="table table-striped table-hover p-0 m-0 w-100">' +
+							'<thead class="bg-dark-gradient">' +
+								'<tr>' +
+									'<th>Código</th>' +
+									'<th>Descripción</th>' +
+								'</tr>' +
+							'</thead>' +
+							'<tbody>';
+					for (i = 0; i < data.length; i++) {
+						contenido +=
+							'<tr>' +
+								'<td>' + data[i].codigo + '</td>' +
+								'<td>' + data[i].descripcion + '</td>' +
+							'</tr>';
+					}
+					contenido += '</tbody></table>';
+					contenido += '<script>' +
+						'$("#tlistaArticulosBDES").dataTable({ ' +
+							'scrollY: "60vh", ' +
+							'scrollCollapse: true, ' +
+							'order: [1, "asc"],' +
+						'});' +
+						'</' + 'script>';
+					$('#contenidoModal3').html(contenido);
+					$('#ModalDatos3').modal('show');
+					setTimeout("var table = $('#tlistaArticulosBDES').DataTable(); $('#contenidoModal3').css( 'display', 'block' ); table.columns.adjust().draw();", 150)
+				} else {
+					seleccion('material', data[0].codigo, data[0].nombre);
+				}
+			}
+		}).done(function() { cargando('hide'); })
+	}
+
+	/**
+	 * Se prepara la lista de ventas por una promocion, departamento, fecha o articulo
+	 * @param {array} pfecha array de fechas a consultar
+	 * @param {int} pmat codigo de idart a consultar
+	 */
+	$('#btnConsPedDes').on('click', function() {
+		var fechas = [];
+		$('.input-daterange input').each(function() {
+			fechas.push(moment($(this).datepicker().val(), 'DD-MM-YYYY').format('YYYY-MM-DD'))
+		});
+		$('#btnExporPedDes').attr('disabled', true);
+		var filtros = ($('#spnfiltro').html()!=''?'Articulo: '+$('#spnfiltro').html():'')+
+			'Desde: ' + moment(fechas[0]).format('DD-MM-YYYY') + ' - Hasta: ' + moment(fechas[1]).format('DD-MM-YYYY')
+		cargando('show')
+		tomar_datos = $.ajax({
+			data: {
+				opcion : 'consPedDesPer',
+				fecha  : fechas,
+				idpara : $('#codart').html(),
+				sqlcnx : 1,
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				cargando('hide')
+				if($('#idart').val()!='') {
+					$('#spnfiltro').html( ' del articulo: <b>"' + $('#idart').val() + '"</b>' );
+				}
+				$('#tblPedDesPer').dataTable({
+					scrollY: altotabla+'px',
+					scrollCollapse: false,
+					data: data,
+					buttons: [
+						{
+							extend: 'excelHtml5',
+							autoFilter: true,
+							title: 'Resumen Perecederos Vs. Despachos',
+							messageTop: filtros,
+							filename: 'PerpediVSdespa',
+							sheetName: 'PerpediVSdespa',
+						}
+					],
+					columns: [
+						{ data: "tienda", sClass: "text-left  align-middle border border-top-0 border-bottom-0" },
+						{ data: "kg_ped", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "undped", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "totped", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "kg_des", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "unddes", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "totdes", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "cosdes", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "diftot", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "pordif", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+					],
+					footerCallback: function (row, data, start, end, display) {
+						total01 = this.api()
+							.column(1) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total02 = this.api()
+							.column(2) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total03 = this.api()
+							.column(3) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total04 = this.api()
+							.column(4) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total05 = this.api()
+							.column(5) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total06 = this.api()
+							.column(6) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total07 = this.api()
+							.column(7) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+
+						total = (total06-total03);
+						porce = total03>0?(total * 100) / total03:0;
+						total08 = total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+						total09 = porce.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'%';
+
+						$(this.api().column(1).footer() ).html((isNaN(total01) ? 0 : total01).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(2).footer() ).html((isNaN(total02) ? 0 : total02).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(3).footer() ).html((isNaN(total03) ? 0 : total03).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(4).footer() ).html((isNaN(total04) ? 0 : total04).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(5).footer() ).html((isNaN(total05) ? 0 : total05).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(6).footer() ).html((isNaN(total06) ? 0 : total06).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(7).footer() ).html((isNaN(total07) ? 0 : total07).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(8).footer() ).html(total08);
+						$(this.api().column(9).footer() ).html(total09);
+					},
+					initComplete: function (settings, json) {
+						arrayAuxiliar('tblPedDesPer');
+						$('#btnExporPedDes').attr('disabled', false);
+					}
+				});
+			}
+		});
+	});
+
+	function detPedDes(ptienda, pidart, pnomtienda, pfecpedi, pfecpedf, pfecdesi, pfecdesf) {
+		cargando('show')
+		tomar_datos = $.ajax({
+			data: {
+				opcion: "detPedDes",
+				id_loc: ptienda,
+				id_art: pidart,
+				fecpei: pfecpedi,
+				fecpef: pfecpedf,
+				fecdei: pfecdesi,
+				fecdef: pfecdesf,
+				sqlcnx: 1,
+			},
+			type: "POST",
+			dataType: "json",
+			url: "app/DBProcs.php",
+			success: function (data) {
+				$('#nomloc').html(
+					pnomtienda+
+					' Del '+moment(pfecpedi).format('DD-MM-YYYY')+
+					' al '+moment(pfecpedf).format('DD-MM-YYYY'));
+				$('#tbldetPedDesArt').dataTable({
+					scrollY: '50vh',
+					scrollCollapse: false,
+					order: [ 1, 'asc' ],
+					data: data,
+					buttons: [
+						{
+							extend: 'excelHtml5',
+							autoFilter: true,
+							title: 'Detalle Perecederos Vs. Despachos',
+							messageTop: $('#nomloc').html(),
+							filename: 'PerDetpediVSdespa',
+							sheetName: 'PerDetpediVSdespa',
+						}
+					],
+					columns: [
+						{ data: "id_art", sClass: "text-left  align-middle border border-top-0 border-bottom-0" },
+						{ data: "nomart", sClass: "text-left  align-middle border border-top-0 border-bottom-0" },
+						{ data: "kg_ped", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "undped", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "totped", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "kg_des", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "unddes", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "totdes", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "cosdes", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "diftot", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+						{ data: "pordif", sClass: "text-right align-middle border border-top-0 border-bottom-0", render: $.fn.dataTable.render.number(",", ".", 2) },
+					],
+					footerCallback: function (row, data, start, end, display) {
+						total02 = this.api()
+							.column(2) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total03 = this.api()
+							.column(3) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total04 = this.api()
+							.column(4) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total05 = this.api()
+							.column(5) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total06 = this.api()
+							.column(6) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total07 = this.api()
+							.column(7) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+						total08 = this.api()
+							.column(8) //numero de columna a sumar
+							.data() //obtenemos los datos en la columna
+							.reduce(function (a, b) {
+								return parseFloat(a) + parseFloat(b);
+							}, 0);
+
+						total = (total07-total04);
+						porce = total04>0?(total * 100) / total04:0;
+						total09 = total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+						total10 = porce.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'%';
+
+						$(this.api().column(2).footer() ).html((isNaN(total02) ? 0 : total02).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(3).footer() ).html((isNaN(total03) ? 0 : total03).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(4).footer() ).html((isNaN(total04) ? 0 : total04).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(5).footer() ).html((isNaN(total05) ? 0 : total05).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(6).footer() ).html((isNaN(total06) ? 0 : total06).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(7).footer() ).html((isNaN(total07) ? 0 : total07).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(8).footer() ).html((isNaN(total08) ? 0 : total08).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(9).footer() ).html(total09);
+						$(this.api().column(10).footer() ).html(total10);
+					},
+				});
+			}
+		}).done(function() {
+			$('#btnExporDetPedDes').attr('disabled', false);
+			cargando('hide');
+			$('#moddetPedDesArt').modal('show');
+			setTimeout("$('#tbldetPedDesArt').DataTable().columns.adjust().draw()", 150);
+		});
+	}
+</script>
