@@ -3445,7 +3445,7 @@
 				$margen_ant = $datos['margen'];
 				// Se prepara la consulta con los parametros
 				$sql = "SELECT fecha, SUM(cantfact) AS transacciones,
-							SUM(cantidad) AS cantidad, SUM(subtotal) AS subtotal, SUM(costo) AS costo,							
+							SUM(cantidad) AS cantidad, SUM(subtotal) AS subtotal, SUM(costo) AS costo,
 							ROUND(
 								(CASE WHEN SUM(subtotal) = 0 THEN 0
 								ELSE ((SUM(subtotal) - SUM(costo)) / SUM(subtotal)) * 100
@@ -4379,7 +4379,7 @@
 
 			case 'consultaInv':
 				$params = explode('¬', $idpara);
-				$fechaini = date("Y-m-d", strtotime($fecha."-" . $params[0] . " days"));
+				$fechaini = date("Y-m-d", strtotime($fecha."-" . ($params[0]-1) . " days"));
 				$fechafin = $fecha;
 
 				$prov = '';
@@ -5654,7 +5654,9 @@
 			case 'mostrarPedido':
 				// Se prepara la consulta a la base de datos
 				$sql = "SELECT DISTINCT d.solipedi_status,
-							d.solipedidet_codigo, d.solipedidet_empaque AS empaque,
+							d.solipedidet_codigo,
+							( CASE WHEN d.solipedidet_empaque = 0 THEN 1
+								ELSE d.solipedidet_empaque END) AS empaque,
 							( SELECT TOP 1 a.descripcion
 								FROM BDES.dbo.ESARTICULOS AS a
 								WHERE a.codigo= d.solipedidet_codigo ) AS descripcion,
@@ -7939,7 +7941,7 @@
 					$objPHPExcel->getActiveSheet()
 						->getStyle('A5:'.$objPHPExcel->getActiveSheet()
 							->getHighestColumn().'5')->getFont()->setSize(12);
-					
+
 					foreach (range('A5', $objPHPExcel->getActiveSheet()->getHighestDataColumn()+'5') as $col) {
 						$objPHPExcel
 								->getActiveSheet()
@@ -8002,7 +8004,7 @@
 				while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
 					$margen = round(($row['precio1']==0)?0:($row['precio1']-$row['costo'])/$row['precio1']*100, 2);
 					$pvpiva = round($row['precio1']*(1+($row['impuesto']/100)), 2);
-					$datos[] = [						
+					$datos[] = [
 						'id'          => 0,
 						'codigo'      => $row['codigo'],
 						'descripcion' => '<span title="'.$row['codigo'].'">'.$row['descripcion'].'</span>',
@@ -8145,7 +8147,7 @@
 						$cntori = $datos['cntori'];
 						$costo  = $datos['cstnva']>0 ? $datos['cstnva'] : $datos['cstori'];
 						$precio = $datos['prenva']>0 ? $datos['prenva'] : $datos['preori'];
-						$sql = "MERGE INTO BDES.dbo.DBKardexCompras AS destino 
+						$sql = "MERGE INTO BDES.dbo.DBKardexCompras AS destino
 								USING (SELECT $codigo AS codigo, $cntnva AS comprado) AS origen
 								ON destino.codigo = origen.codigo
 								WHEN MATCHED THEN
@@ -8183,7 +8185,7 @@
 					$sql   = $connec->query($sql);
 					$sql   = $sql->fetch();
 					$codid = $sql['odc_id'];
-					$sql   = "	INSERT INTO BDES.dbo.DBODC_det(id_cab, codigo, cantidad, costo, precio) 
+					$sql   = "	INSERT INTO BDES.dbo.DBODC_det(id_cab, codigo, cantidad, costo, precio)
 								VALUES ";
 					foreach ($idpara as $datos) {
 						$codigo    = $datos['codigo'];
@@ -8196,7 +8198,7 @@
 					$result['query'] = $sql;
 					$sql = $connec->query($sql);
 					if($sql) {
-						$sql = "MERGE INTO BDES.dbo.DBCostoArticulos AS destino 
+						$sql = "MERGE INTO BDES.dbo.DBCostoArticulos AS destino
 								USING (SELECT codigo, costo, precio, '$userid' AS usuario
 										FROM BDES.dbo.DBODC_det
 										WHERE id_cab = $codid) AS origen
@@ -8230,7 +8232,7 @@
 									'</em>';
 								echo json_encode($result);
 								break;
-							} 
+							}
 						} else {
 							$result['query'] = '<em>'.$result['query'].'<br>'.
 								substr($connec->errorInfo()[2], strrpos($connec->errorInfo()[2], ']')+1).
@@ -9671,7 +9673,7 @@
 							"LEFT JOIN BDES.dbo.ESGruposFichas m ON m.ID = a.marca AND LOWER ( m.tipo ) = 'marca' " : '';
 				$sql.= (strpos($otrosc, 'dpto')!==false) ?
 							'LEFT JOIN BDES.dbo.ESDpto dpto ON dpto.CODIGO = a.departamento ' : '';
-				$sql.= (strpos($otrosc, 'prov')!==false) ?
+				$sql.= ($idprov!='') ?
 							'LEFT JOIN BDES.dbo.ESArticulosxProv pxa ON pxa.articulo = a.codigo
 							LEFT JOIN BDES.dbo.ESProveedores pro ON pro.codigo = pxa.proveedor ' : '';
 				$sql.= 'WHERE a.activo = 1 ';
