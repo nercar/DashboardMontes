@@ -28,6 +28,30 @@
 				} else {
 					$localidad = 'v.localidad=' . $idpara;
 				}
+				/**
+				 *
+				 * SELECT localidad, 403470 AS codigo, 0, 0, subtotal AS base, 0 AS impuesto FROM (
+				 *			SELECT localidad, sum(montoservicio) AS subtotal FROM
+				 *			(SELECT distinct(CAST(documento AS VARCHAR)+CAST(localidad AS VARCHAR)+CAST(caja AS VARCHAR)) AS documento, localidad, montoservicio
+				 *			FROM BDES_POS.dbo.BIVENTAS_INVC_FP v WHERE CAST(fecha AS DATE) = '$fecha' AND $localidad) AS v
+				 *			GROUP BY localidad ) AS j
+				 *		UNION ALL
+				 *		SELECT localidad, 100000 AS codigo, tipo, porc, sum(base)-
+				 *			CASE WHEN tipo = 0 then
+				 *				(SELECT sum(montoservicio) AS subtotal FROM
+				 *					(SELECT distinct(CAST(documento AS VARCHAR)+CAST(localidad AS VARCHAR)+CAST(caja AS VARCHAR)) AS documento, montoservicio
+				 *				FROM BDES_POS.dbo.BIVENTAS_INVC_FP v WHERE CAST(fecha AS DATE) = '$fecha' AND v.localidad = j.localidad) AS v)
+				 *			ELSE 0 END AS base, sum(impuesto) AS impuesto FROM (
+				 *			SELECT localidad, subgrupo, tipo, CAST(porc AS NUMERIC) AS porc, sum(subtotal) AS base, sum(impuesto) AS impuesto
+				 *			FROM (SELECT v.localidad, coalesce(a.subgrupo,0) AS subgrupo, a.codigo,
+				 *			v.tipo - 26 AS tipo, CASE WHEN v.impuesto = 0 THEN 0 ELSE (v.impuesto * 100 )/ v.subtotal END AS porc, v.subtotal, v.impuesto
+				 *			FROM BDES_POS.dbo.BIVENTAS_INV v LEFT JOIN bdes.dbo.esarticulos a ON
+				 *			a.codigo=v.material WHERE CAST(v.fecha AS DATE) = '$fecha' AND $localidad AND v.material NOT IN('2005404','2005405','2005406')) AS tb
+				 *			GROUP BY tipo, CAST(porc AS NUMERIC), subgrupo, tb.localidad ) AS j
+				 *		WHERE porc ='0'
+				 *		GROUP BY tipo, porc, localidad
+				 *
+				 */
 				$sql = "SELECT localidad, 403471 AS codigo, tipo, porc,  sum(base) AS base,sum(impuesto) AS impuesto FROM (
 							SELECT localidad, subgrupo, tipo, CAST(porc AS NUMERIC) AS porc, sum(subtotal) AS base, sum(impuesto) AS impuesto
 							FROM (SELECT v.localidad, coalesce(a.subgrupo,0) AS subgrupo,a.codigo,
@@ -38,18 +62,25 @@
 						WHERE porc ='0'
 						GROUP BY tipo, porc, localidad
 						UNION ALL
-						SELECT localidad, 403470 AS codigo, 0, 0, subtotal AS base, 0 AS impuesto FROM (
-							SELECT localidad, sum(montoservicio) AS subtotal FROM 
-							(SELECT distinct(CAST(documento AS VARCHAR)+CAST(localidad AS VARCHAR)+CAST(caja AS VARCHAR)) AS documento, localidad, montoservicio
-							FROM BDES_POS.dbo.BIVENTAS_INVC_FP v WHERE CAST(fecha AS DATE) = '$fecha' AND $localidad) AS v
-							GROUP BY localidad ) AS j
+						SELECT v.LOCALIDAD, 403470 AS codigo, 0 AS tipo, 0 AS porc, SUM(D.CANTIDAD*COALESCE(A.CPE, 0)) AS subtotal, 0 AS impuesto
+						FROM BDES_POS.dbo.BIVENTAS_INVC v
+						INNER JOIN BDES_POS.dbo.BIVENTAS_INV D ON D.LOCALIDAD = v.LOCALIDAD AND D.DOCUMENTO = v.DOCUMENTO AND v.CAJA = D.CAJA
+						INNER JOIN BDES.DBO.ESARTICULOS A ON A.CODIGO = D.MATERIAL
+						WHERE a.tipoarticulo = 7 AND CAST(v.FECHA AS DATE) = '$fecha' AND $localidad
+						GROUP BY v.LOCALIDAD
 						UNION ALL
 						SELECT localidad, 100000 AS codigo, tipo, porc, sum(base)-
-							CASE WHEN tipo = 0 then 
-								(SELECT sum(montoservicio) AS subtotal FROM 
-									(SELECT distinct(CAST(documento AS VARCHAR)+CAST(localidad AS VARCHAR)+CAST(caja AS VARCHAR)) AS documento, montoservicio
-									FROM BDES_POS.dbo.BIVENTAS_INVC_FP v WHERE CAST(fecha AS DATE) = '$fecha' AND v.localidad = j.localidad) AS v)
-							ELSE 0 END AS base, sum(impuesto) AS impuesto FROM (
+							CASE WHEN tipo = 0 then
+								COALESCE((
+								SELECT SUM(D.CANTIDAD*COALESCE(A.CPE, 0))
+								FROM BDES_POS.dbo.BIVENTAS_INVC v
+								INNER JOIN BDES_POS.dbo.BIVENTAS_INV D ON D.LOCALIDAD = v.LOCALIDAD AND D.DOCUMENTO = v.DOCUMENTO AND v.CAJA = D.CAJA
+								INNER JOIN BDES.DBO.ESARTICULOS A ON A.CODIGO = D.MATERIAL
+								WHERE a.tipoarticulo = 7 AND CAST(v.FECHA AS DATE) = '$fecha' AND v.localidad = j.localidad
+								GROUP BY v.LOCALIDAD
+								), 0)
+							ELSE 0 END AS base, sum(impuesto) AS impuesto
+						FROM (
 							SELECT localidad, subgrupo, tipo, CAST(porc AS NUMERIC) AS porc, sum(subtotal) AS base, sum(impuesto) AS impuesto
 							FROM (SELECT v.localidad, coalesce(a.subgrupo,0) AS subgrupo, a.codigo,
 							v.tipo - 26 AS tipo, CASE WHEN v.impuesto = 0 THEN 0 ELSE (v.impuesto * 100 )/ v.subtotal END AS porc, v.subtotal, v.impuesto

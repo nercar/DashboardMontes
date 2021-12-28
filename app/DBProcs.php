@@ -5015,7 +5015,8 @@
 					$pedidos = implode(',',$idpara);
 					$tienda = implode(',', $tienda);
 					$sql = "SELECT DISTINCT
-								d.solipedidet_codigo, d.solipedidet_empaque AS empaque,
+								d.solipedidet_codigo,
+								CASE WHEN d.solipedidet_empaque = 0 THEN 1 ELSE d.solipedidet_empaque END AS empaque,
 								( SELECT TOP 1 a.descripcion
 									FROM BDES.dbo.ESARTICULOS AS a
 									WHERE a.codigo= d.solipedidet_codigo ) AS descripcion,
@@ -5656,7 +5657,7 @@
 				$sql = "SELECT DISTINCT d.solipedi_status,
 							d.solipedidet_codigo,
 							( CASE WHEN d.solipedidet_empaque = 0 THEN 1
-								ELSE d.solipedidet_empaque END) AS empaque,
+							  ELSE d.solipedidet_empaque END) AS empaque,
 							( SELECT TOP 1 a.descripcion
 								FROM BDES.dbo.ESARTICULOS AS a
 								WHERE a.codigo= d.solipedidet_codigo ) AS descripcion,

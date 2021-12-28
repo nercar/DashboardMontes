@@ -45,7 +45,7 @@
 							FROM BDES.dbo.BIKARDEX KAR
 							LEFT JOIN BDES.dbo.DBGCarnicosCab DBGC ON KAR.ID = DBGC.id_bikardex
 							INNER JOIN BDES.dbo.ESUsuarios USR ON USR.codusuario = KAR.USUARIO
-							WHERE KAR.FECHA >= '10-06-2020' AND KAR.LOCALIDAD = 14
+							WHERE KAR.FECHA >= '10-06-2021' AND KAR.LOCALIDAD = 14
 								AND ESTADO = 1 AND ELIMINADO = 0 AND KAR.localidad_dest = $tienda
 								AND KAR.TIPO = 17 AND DBGC.id_bikardex IS NULL";
 					$result['query'] = $sql;

@@ -301,7 +301,9 @@
 	})
 
 	$('#btnExport').on('click', function (){
+		cargando('show');
 		$('#tbl_consultaInv').DataTable().button( '0' ).trigger();
+		cargando('hide');
 	})
 
 	// Para detectar el enter en los input
@@ -590,7 +592,7 @@
 		ffecha = moment(ffecha).format('YYYY-MM-DD');
 
 		var filtros = '';
-		filtros += 'Consultando [desde: ' + moment(ffecha, 'YYYY-MM-DD').subtract( ($('#fdias').val() != '' ? $('#fdias').val() : 0), 'days').format('DD-MM-YYYY');
+		filtros += 'Consultando [desde: ' + moment(ffecha, 'YYYY-MM-DD').subtract( ($('#fdias').val() != '' ? $('#fdias').val()-1 : 0), 'days').format('DD-MM-YYYY');
 		filtros += ' hasta: ' + moment(ffecha, 'YYYY-MM-DD').format('DD-MM-YYYY') + ']';
 		filtros += ($('#fprov').val() != '' ? ' [Proveedor: ' + $('#fprov').val() + '-' + $('#nom_prov').attr('title') + ']' : '');
 		filtros += ($('#fgrupo').val() != '' ? ' [Grupo: ' + $('#nom_grupo').attr('title') + ']' : '');

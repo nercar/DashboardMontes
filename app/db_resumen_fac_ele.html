@@ -51,6 +51,7 @@
 							<th class="text-center border border-top-0 border-bottom-0">No.</th>
 							<th class="text-center border border-top-0 border-bottom-0">Fecha</th>
 							<th class="text-center border border-top-0 border-bottom-0">#Doc.Elec.</th>
+							<th class="text-center border border-top-0 border-bottom-0">Tienda</th>
 							<th class="text-center border border-top-0 border-bottom-0">#Adm.</th>
 							<th class="text-center border border-top-0 border-bottom-0">RIF Cliente</th>
 							<th class="text-center border border-top-0 border-bottom-0">Cód</th>
@@ -63,6 +64,7 @@
 					<tbody></tbody>
 					<tfoot class="bg-dark txtcomp">
 						<tr>
+							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
 							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
 							<th class="text-center border border-top-0 border-bottom-0">&nbsp;</th>
 							<th class="text-center border border-top-0 border-bottom-0">0</th>
@@ -213,6 +215,7 @@
 								return txt;
 							}, sClass: "txtcomp text-left align-middle" },
 						{ data: 'llavecomprobante', sClass: "txtcomp text-left align-middle" },
+						{ data: 'tienda', sClass: "txtcomp text-left align-middle" },
 						{ data: 'documento_origen', sClass: "txtcomp text-left align-middle" },
 						{ data: 'rifcliente', sClass: "txtcomp text-left align-middle" },
 						{ data: 'codigo', sClass: "txtcomp text-center align-middle" },
@@ -280,9 +283,9 @@
 							}, 0 );
 						let procesados = proc.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + '/' + cntdocs.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
 						$(this.api().column(2).footer()).html(cntdocs.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
-						$(this.api().column(6).footer()).html('Totales');
-						$(this.api().column(8).footer()).html(total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-						$(this.api().column(9).footer()).html(procesados);
+						$(this.api().column(7).footer()).html('Totales');
+						$(this.api().column(9).footer()).html(total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+						$(this.api().column(10).footer()).html(procesados);
 					},
 				});
 				$('#btnExportfe').attr('disabled', false);

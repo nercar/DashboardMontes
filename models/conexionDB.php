@@ -34,9 +34,15 @@ class Database
       // Se establece la conexion con la BBDD
         $params = parse_ini_file('../dist/config.ini');
       // connect to the sql server database
-        $conStrSql = sprintf("sqlsrv:Server=%s,%d;",
-                    $params['host_sql'],
-                    $params['port_sql']);
+		if($params['instance']!='') {
+			$conStrSql = sprintf("sqlsrv:Server=%s\%s;",
+				$params['host_sql'],
+				$params['instance']);
+		} else {
+			$conStrSql = sprintf("sqlsrv:Server=%s,%d;",
+				$params['host_sql'],
+				$params['port_sql']);
+		}
         try{
             $connecSql = new \PDO($conStrSql, $params['user_sql'], $params['password_sql']);
             $connecSql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

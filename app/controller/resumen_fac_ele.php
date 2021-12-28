@@ -2,12 +2,12 @@
 	// conexion a bbdd principal
 	try {
 		date_default_timezone_set('America/Bogota');
-		
+
 		$connec = new \PDO("sqlsrv:Server=192.168.50.242,1433", 'sa', '');
 		$srvvin = '[192.168.50.9].';
 		// $connec = new \PDO("sqlsrv:Server=localhost,1433", 'sa', '');
 		// $srvvin = '';
-		
+
 		extract($_POST);
 		$datos = [];
 		switch ($opcion) {
@@ -53,7 +53,7 @@
 				}
 				$sql = "SELECT linea, cnt_docs, id_fac_ele, existcli, codigo, fecha, llavecomprobante, documento_origen,
 							rifcliente, COALESCE(nomcliente, '*** CLIENTE NO EXISTE ***') AS nomcliente, folio, moneda,
-							SUM(total) AS total, status, tipo
+							SUM(total) AS total, status, tipo, localidad, tienda
 						FROM
 							(SELECT ROW_NUMBER() OVER(ORDER BY biv.ORGANIZACION, biv.TIPO, biv.DOCUMENTO) AS linea,
 								COALESCE(cli.codigo, biv.CODIGO) AS codigo, biv.TIPO AS tipo, COALESCE(cli.codigo, 0) AS existcli,
@@ -67,7 +67,7 @@
 								biv.DOCUMENTO_SERIE AS documento_origen, cli.rif AS rifcliente,
 								(CASE WHEN cli.tipopersona = '1' THEN cli.rsocial
 								ELSE
-									CASE WHEN 
+									CASE WHEN
 										(cli.pnombre + (CASE WHEN LTRIM(RTRIM(COALESCE(cli.snombre, ''))) = '' THEN ' '
 										ELSE ' ' + cli.snombre + ' '  END) +
 										cli.papellido +	(CASE WHEN COALESCE(cli.sapellido, '') = '' THEN ''
@@ -90,7 +90,7 @@
 										ELSE biv.TASAC
 										END)
 									END), 3, 1)
-								AS NUMERIC(20, 2)) + 
+								AS NUMERIC(20, 2)) +
 								CAST(ROUND((biv.FLETE + biv.SEGURO + biv.OTROSG) /
 									(CASE WHEN biv.exp = 0 THEN 1
 									ELSE
@@ -102,8 +102,9 @@
 										END)
 									END), 3, 1)
 								AS NUMERIC(20, 2))) AS total,
-								(CASE WHEN COALESCE(FE.cufe, '') = '' THEN 0 ELSE 1 END) AS status, biv.id_fac_ele
+								(CASE WHEN COALESCE(FE.cufe, '') = '' THEN 0 ELSE 1 END) AS status, biv.id_fac_ele, biv.LOCALIDAD AS localidad, loc.Nombre As tienda
 							FROM FAC_ELE.dbo.BIVentas biv
+								INNER JOIN [192.168.50.9].BDES.dbo.ESSucursales loc ON loc.codigo = biv.LOCALIDAD
 								LEFT JOIN FAC_ELE.dbo.ESClientes cli ON biv.CODIGO = cli.codigo
 								LEFT OUTER JOIN FAC_ELE.dbo.factura_electronica AS FE ON
 									FE.llavecomprobante =
@@ -114,7 +115,7 @@
 							WHERE biv.ESTADO = 1 AND biv.ELIMINADO = 0 AND biv.ORGANIZACION = $idpara AND $codcliente
 								AND CAST(biv.FECHA AS DATE) BETWEEN '$fdesde' AND '$fhasta') AS DATOS
 						GROUP BY linea, cnt_docs, id_fac_ele, codigo, fecha, llavecomprobante, documento_origen,
-							rifcliente, nomcliente, folio, moneda, status, tipo, existcli";
+							rifcliente, nomcliente, folio, moneda, status, tipo, existcli, localidad, tienda";
 				$sql = $connec->query($sql);
 				$datos = [];
 				if(!$sql) {
@@ -127,7 +128,7 @@
 
 				echo json_encode($datos);
 				break;
-			
+
 			case 'eliminarClte':
 					$sql = "DELETE FROM FAC_ELE.dbo.BIVentas WHERE id_fac_ele = $idpara;
 							DELETE FROM FAC_ELE.dbo.ESClientes WHERE codigo = $cdclte;
@@ -141,7 +142,7 @@
 					}
 
 					break;
-			
+
 			default:
 				break;
 		}
