@@ -32,8 +32,8 @@
 				<span id="ttitulo">Lista de Pedidos</span>
 			</div>
 			<div class="row p-0 pl-1 pr-1 m-0">
-				<div class="col-3 pl-1 pr-1" style="max-height: 202px !important; min-height: 202px !important;">
-					<table width="100%" cellpadding="2" style="height: 100%;">
+				<div class="col-3 pl-1 pr-1">
+					<table width="100%" cellpadding="5">
 						<thead>
 							<tr>
 								<td colspan="3" class="bg-dark-gradient text-center">Opciones de la Consulta</td>
@@ -75,7 +75,7 @@
 						</tbody>
 						<tfoot>
 							<tr class="text-center border border-secondary alert-dark">
-								<td colspan="3" class="text-center p-1">
+								<td colspan="3" class="text-center p-2">
 									<button class="btn btn-danger btn-sm" onclick="limpiarFiltros()">
 										<i class="fas fa-broom"></i> Limpiar
 									</button>
@@ -93,7 +93,7 @@
 					</div>
 				</div>
 				<div class="col-9 pl-1 pr-1" id="tbl_Pedidos">
-					<table width="100%" class="table-striped table-hover table-bordered" id="tbl_consultaInvPedidosList">
+					<table width="100%" class="table-striped table-hover table-bordered nowrap" id="tbl_consultaInvPedidosList">
 						<thead>
 							<tr>
 								<th width="15%" class="text-center txtcomp bg-warning-gradient">Fecha Sol.</th>
@@ -107,7 +107,7 @@
 					</table>
 				</div>
 				<div class="col-9 pl-1 pr-1" style="display: none" id="tbl_Espera">
-					<table width="100%" class="table-striped table-hover table-bordered" id="tbl_consultaInvEspera">
+					<table width="100%" class="table-striped table-hover table-bordered nowrap" id="tbl_consultaInvEspera">
 						<thead>
 							<tr>
 								<th width="15%" class="text-center txtcomp bg-warning-gradient">Destino</th>
@@ -115,7 +115,7 @@
 								<th width="15%" class="text-center txtcomp bg-warning-gradient">Fecha Asig.</th>
 								<th width="25%" class="text-center txtcomp bg-warning-gradient">Responsable</th>
 								<th width="10%" class="text-center txtcomp bg-warning-gradient">Dias</th>
-								<th width="20%" class="text-center txtcomp bg-warning-gradient">Transferencia</th>
+								<th width="20%" class="text-center txtcomp bg-warning-gradient" title="#Transferencia / #Factura (para Montes Plus)">#Transf./#Fact. <span class="text-primary"><i class="fas fa-info-circle"></i></span></th>
 								<th width="10%" class="text-center txtcomp bg-ligh-gradient   ">Opciones</th>
 							</tr>
 						</thead>
@@ -158,9 +158,9 @@
 			</div>
 			<div class="row pl-3 pr-3" style="display: none" id="tbl_det">
 				<!-- <div class="col-12"> -->
-					<div class="d-flex col-12 p-0 m-0 pt-1">
+					<div class="d-flex col-12 p-0 m-0 pt-2">
 						<div class="d-flex w-100 align-content-center justify-content-center ml-2 mr-2">
-							<span class="col-1 font-weight-bold m-0 p-0">Buscar: </span>
+							<span class="col-1 font-weight-bold">Buscar: </span>
 							<input type="text" class="form-control form-control-sm m-0 ml-1 mr-l p-1 col-8" id="buscar" value=""
 								placeholder="Buscar Artículo en la Lista...">
 							<div class="col-1"></div>
@@ -194,7 +194,7 @@
 						</table>
 					</form>
 					<!-- <form action="" onsubmit="return false;" class="form-inline col-12 p-0 m-0 pt-2"> -->
-					<div class="d-flex col-12 p-0 m-0 pt-1 align-items-baseline">
+					<div class="d-flex col-12 p-0 m-0 pt-2 align-items-baseline">
 						<div class="d-flex col-2 align-middle font-weight-bold">
 							<input id="itemssel" type="text" size="3" class="m-0 p-0 font-weight-bold bg-transparent border-0 text-center"
 								disabled value="">Items
@@ -202,13 +202,13 @@
 						<div class="d-flex col-8 align-items-baseline">
 							<form class="form-inline w-100" action="" onsubmit="return false;">
 								<label for="responsable">Responsable: &nbsp;</label>
-								<input type="text" autocomplete="on" class="form-control form-control-sm w-75" id="responsable" value="" placeholder="Nombre del responsable del despacho">
+								<input type="text" autocomplete="on" class="form-control w-75" id="responsable" value="" placeholder="Nombre del responsable del despacho">
 								<input type="hidden" placeholder="Nombre del responsable del despacho">
 							</form>
 						</div>
 						<div class="d-flex col-2 mr-3 justify-content-end">
-							<button id="addProcpedido" class="btn btn-sm btn-info mr-4"><i class="fas fa-check"></i>Procesar</button>
-							<button id="delProcpedido" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i>Eliminar</button>
+							<button id="addProcpedido" class="btn btn-info mr-4"><i class="fas fa-check"></i>Procesar</button>
+							<button id="delProcpedido" class="btn btn-danger"><i class="fas fa-trash"></i>Eliminar</button>
 						</div>
 					</div>
 					<!-- </form>	 -->
@@ -415,15 +415,15 @@
 		}, 100);
 		$('#tbl_consultaInvPedidosDet').DataTable().clear()
 		setTimeout(function() {
-			$('#tbl_consultaInvPedidosDet').DataTable({ scrollY: "23vh", searching: true, }).columns.adjust().draw();
+			$('#tbl_consultaInvPedidosDet').DataTable({ scrollY: "23vh" }).columns.adjust().draw();
 		}, 100);
 		$('#tbl_consultaInvPedidosList').DataTable().clear()
 		setTimeout(function() {
-			$('#tbl_consultaInvPedidosList').DataTable({ scrollY: "25vh", searching: true, }).columns.adjust().draw();
+			$('#tbl_consultaInvPedidosList').DataTable({ scrollY: "25vh" }).columns.adjust().draw();
 		}, 100);
 		$('#tbl_consultaInvPedidosElim').DataTable().clear()
 		setTimeout(function() {
-			$('#tbl_consultaInvPedidosElim').DataTable({ scrollY: "72vh", order: [0, 'desc'] }).columns.adjust().draw();
+			$('#tbl_consultaInvPedidosElim').DataTable({ scrollY: "72vh" }).columns.adjust().draw();
 		}, 100);
 		switch ( valor ) {
 			case '1':
@@ -806,20 +806,12 @@
 			success: function (data) {
 				// Mostrar boton para procesar el pedido en un principio
 				cargando('hide');
-				$('#tbl_consultaInvPedidosList').dataTable().fnFilter('', 1);
 				$('#tbl_consultaInvPedidosList').dataTable({
 					scrollY: "25vh",
 					data: data,
 					autoWidth: false,
-					searching: true,
 					columns: [
-						{ data: null, sClass: "txtcomp align-middle",
-							render: function(data) {
-								return '<span style="display: none;">'+
-									moment(data.fechaPedido, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')+
-									'</span>'+data.fechaPedido
-							}
-						},
+						{ data: "fechaPedido",   sClass: "txtcomp align-middle" },
 						{ data: "localidadName", sClass: "txtcomp align-middle" },
 						{ data: "solicitadoPor", sClass: "txtcomp align-middle" },
 						{ data: null, sClass: "txtcomp align-middle",
@@ -831,15 +823,14 @@
 								return '<div class="form-group mb-0 pt-0 pb-0">'+
 										'<div class="form-check mb-0 pt-0 pb-0">'+
 											'<input style="cursor: pointer;" class="form-check-input p-0 chknropedido" name="chknropedido" id="chk'+data.numero+'" '+
-												'type="checkbox" data-localidad="'+data.localidad+'" value="'+data.numero+'" '+
-												'data-tienda="'+data.localidadName+'" '+
+												'type="checkbox" data-localidad="'+data.localidad+'" value="'+data.numero+'"'+
 												($('#prioritarios').is(':checked') ? ' checked ' : '') + '>' +
 											'<label style="cursor: pointer;" class="btn-link form-check-label p-0" for="chk'+data.numero+'">'+
 												'Seleccione'+
 											'</label>'+
 										'</div>'+
 									'</div>';
-							}
+						   }
 						},
 					],
 					initComplete: function() {
@@ -855,12 +846,6 @@
 						datos.push($(this).val());
 						tiendas.push($(this).data('localidad'));
 					});
-					if(datos.length>0) {
-						$('#tbl_consultaInvPedidosList').dataTable().fnFilter($(this).data('tienda'), 1);
-						setTimeout(() => $('#chk'+$(this).val()).focus(), 500);
-					}
-					else $('#tbl_consultaInvPedidosList').dataTable().fnFilter('', 1);
-					
 					getDeta(datos, tiendas);
 				});
 			}
@@ -1003,25 +988,14 @@
 					scrollY: "72vh",
 					data: data,
 					autoWidth: false,
-					order: [0, 'desc'],
 					columns: [
-						{ data: null, sClass: "txtcomp align-middle",
-							render: function(data) {
-								return '<span style="display: none;">'+
-									moment(data.fechaPedido, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')+'</span>'
-									+data.fechaPedido
-							}
-						},
+						{ data: "fechaPedido"  , sClass: "txtcomp align-middle" },
 						{ data: "localidadName", sClass: "txtcomp align-middle" },
 						{ data: null, sClass: "txtcomp align-middle",
 							render: function(data) { return  String('00000'+data.numero).slice(-5); }
 						},
 						{ data: null, sClass: "txtcomp align-middle",
-							render: function(data) {
-								return '<span style="display: none;">'+
-									moment(data.fechadesp, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')+'</span>'
-									+data.fechadesp
-								}
+							render: function(data) { return data.fechadesp; }
 						},
 						{ data: 'usuariodesp', sClass: "txtcomp align-middle" },
 						{ data: 'dias'       , sClass: "txtcomp text-center align-middle" },
@@ -1066,13 +1040,7 @@
 								return txt;
 							}
 						},
-						{ data: null, sClass: "txtcomp align-middle",
-							render: function(data) {
-								return '<span style="display: none;">'+
-									moment(data.fechaEspera, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')+
-									'</span>'+data.fechaEspera;
-							}
-						},
+						{ data: 'fechaEspera', sClass: "txtcomp align-middle" },
 						{ data: 'responsable', sClass: "txtcomp align-middle" },
 						{ data: 'dias',        sClass: "txtcomp align-middle text-center" },
 						{ data: null,
@@ -1156,21 +1124,9 @@
 					columns: [
 						{ data: 'localidad',  sClass: "txtcomp align-middle" },
 						{ data: 'numerosoli', sClass: "txtcomp align-middle text-center" },
-						{ data: null, sClass: "txtcomp align-middle text-center text-nowrap",
-							render: function(data) {
-								return '<span style="display:none;">'+
-									moment(data.fechasoli, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')+
-									'</span>'+data.fechasoli;
-							}
-						},
+						{ data: 'fechasoli',  sClass: "txtcomp align-middle text-center text-nowrap" },
 						{ data: 'numerodesp', sClass: "txtcomp align-middle text-center" },
-						{ data: null, sClass: "txtcomp align-middle text-center text-nowrap",
-							render: function(data) {
-								return '<span style="display:none;">'+
-									moment(data.fechadesp, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm')+
-									'</span>'+data.fechadesp;
-							}
-						},
+						{ data: 'fechadesp',  sClass: "txtcomp align-middle text-center text-nowrap" },
 						{ data: 'dias',       sClass: "txtcomp align-middle text-center" },
 						{ data: 'transfer',   sClass: "txtcomp align-middle text-center" },
 					],
@@ -1187,8 +1143,7 @@
 	$('#procSoli').click( function() {
 		flag = 0;
 		inptrans = [];
-		// inpnde   = [];
-		lstdesp   = [];
+		inpnde   = [];
 		procSoli = [];
 		$('input[name="chkdespacho"]:checked').each(function() {
 			var nrosol = $(this).val()
@@ -1203,12 +1158,11 @@
 			if(value['nrostran'].trim()=='') {
 				flag = 1;
 			} else {
-				lstdesp.push( value['nrodesp'].trim() );
-				// if(value['tipo']==4) {
-				// 	// inpnde.push( value['nrostran'].trim() );
-				// } else {
+				if(value['tipo']==4) {
+					inpnde.push( value['nrostran'].trim() );
+				} else {
 					inptrans.push( value['nrostran'].trim() );
-				// }
+				}
 			}
 		});
 		if(flag==1) {
@@ -1221,55 +1175,51 @@
 		} else {
 			docsinval = [];
 			valtrans = (inptrans.toString()).split(',').filter(Boolean);
-			valdespa = (lstdesp.toString()).split(',').filter(Boolean);
-			// $.each( valtrans, function(key, valor) {
-			// 	if(isNaN(valor.trim())) {
-			// 		docsinval.push( 'Transferencia: ' + valor.trim() );
-			// 	} else {
+			valtrans.forEach( function(valor) {
+				if(isNaN(valor.trim())) {
+					docsinval.push( 'Transferencia: ' + valor.trim() );
+				} else {
 					$.ajax({
 						url: "app/DBProcs.php",
 						data: {
 							opcion : "validarTrans",
 							sqlcnx : 1,
-							trans : valtrans,
-							despa : valdespa,
+							idpara : valor.trim(),
 						},
 						type: "POST",
 						dataType: "text",
 						async: false,
 						success : function(data) {
 							if(data==0) {
-								$.each(valtrans, function(key, value) {
-									docsinval.push( 'Transferencia: ' + value );
-								})
+								docsinval.push( 'Transferencia: ' + valor.trim() );
 							}
 						}
 					});
-			// 	}
-			// });
-			// valnde = (inpnde.toString()).split(',').filter(Boolean);
-			// valnde.forEach( function(valor) {
-			// 	if(isNaN(valor.trim())) {
-			// 		docsinval.push( 'Factura: ' + valor.trim() );
-			// 	} else {
-			// 		$.ajax({
-			// 			url: "app/DBProcs.php",
-			// 			data: {
-			// 				opcion : "validarNDE",
-			// 				sqlcnx : 1,
-			// 				idpara : valor.trim(),
-			// 			},
-			// 			type: "POST",
-			// 			dataType: "text",
-			// 			async: false,
-			// 			success : function(data) {
-			// 				if(data==0) {
-			// 					docsinval.push( 'Factura: ' + valor.trim() );
-			// 				}
-			// 			}
-			// 		})
-			// 	}
-			// })
+				}
+			});
+			valnde = (inpnde.toString()).split(',').filter(Boolean);
+			valnde.forEach( function(valor) {
+				if(isNaN(valor.trim())) {
+					docsinval.push( 'Factura: ' + valor.trim() );
+				} else {
+					$.ajax({
+						url: "app/DBProcs.php",
+						data: {
+							opcion : "validarNDE",
+							sqlcnx : 1,
+							idpara : valor.trim(),
+						},
+						type: "POST",
+						dataType: "text",
+						async: false,
+						success : function(data) {
+							if(data==0) {
+								docsinval.push( 'Factura: ' + valor.trim() );
+							}
+						}
+					})
+				}
+			})
 			if(docsinval.length > 0) {
 				var txt = '';
 				$.each(docsinval, function(index, valor) {

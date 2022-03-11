@@ -34,17 +34,22 @@
 <div class="row">
 	<div class="col-md-12 col-sm-12 mt-2">
 		<div class="card card-primary elevation-2 border border-dark" style="height: 86vh;">
-			<div class="card-header p-1 m-0 d-flex align-items-baseline">
+			<div class="card-header p-0 pl-1 pr-1 m-0 d-flex align-items-baseline">
 				<i class="fas fa-compress-arrows-alt"></i>&nbsp;
-				<span>Consolidar Pedidos de las Sucursales a Perecederos</span>
-				<div class="d-flex col-3 m-0 p-0 ml-auto align-items-baseline">
-					<label for="select_tiendas">Tienda:&nbsp;</label>
-					<select id="select_tiendas" class="selectpicker form-control form-control-sm"
-							multiple data-hide-disabled="true" data-actions-box="true" data-size="5">
+				<span class="mt-0 mb-0">Consolidar Pedidos a Perecederos:</span>
+				<select id="select_cedim" class="selectpicker form-control form-control-sm ml-1 col-1 mt-0 mb-0"
+					data-style="btn-inverse p-0 pl-1 pr-1">
+					<option value="6" selected>Fruver</option>
+					<option value="14">Cárnico</option>
+				</select>
+				<!-- <div class="d-flex p-0 mt-0 mb-0 ml-auto mr-auto col-3"> -->
+					<span class="mt-0 mb-0 ml-auto mr-1">Tienda:</span>
+					<select id="select_tiendas" class="selectpicker form-control form-control-sm mt-0 mb-0 col-3 mr-auto"
+							multiple data-hide-disabled="true" data-actions-box="true" data-size="5" data-style="p-0 pl-1 pr-1">
 					</select>
-				</div>
-				<button class="btn btn-sm btn-warning font-weight-bold ml-auto" id="btnconsultar">
-					<i class="fas fa-search"></i> Consultar Pendientes
+				<!-- </div> -->
+				<button class="btn btn-sm btn-warning font-weight-bold p-0 pl-1 pr-1 m-1" id="btnconsultar">
+					<i class="fas fa-search"></i> Consultar
 				</button>
 			</div>
 			<div class="p-0 m-0 ml-1 mr-1 mt-1" id="divthtbl">
@@ -160,6 +165,7 @@
 	var htmldivthtbl = $('#divthtbl').html();
 	var htmllistaArticulos = $('#listaArticulos').html();
 	$('#tbl_ListaArticulos').DataTable({ scrollY: "50vh" }).columns.adjust().draw();
+	$('#select_cedim').selectpicker();
 
 	$.ajax({
 		data: {
@@ -193,11 +199,13 @@
 		$('#listaArticulos').html(htmllistaArticulos);
 		cargando('show');
 		tomar_datos = $.ajax({
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			data: {
 				opcion: "lstPendPerecederos",
 				idpara: $('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
 				idloca: ($('#select_tiendas').val()).toString(),
+				cedim : $('#select_cedim').val(),
+				alm_cd: $('#select_cedim').val()==6?[601,602]:[1401],
 				sqlcnx: 1,
 			},
 			type: "POST",
@@ -298,11 +306,12 @@
 			datos.append('opcion'  , 'procPediPerecederos');
 			datos.append('usidnom' , $('#uinombre').val() + ' (' + $('#uilogin').val() + ')');
 			datos.append('idloca'  , ($('#select_tiendas').val()).toString());
+			datos.append('cedim'   , $('#select_cedim').val());
 			datos.append('codigos' , codigos);
 			datos.append('cantidad', cantidad);
 			datos.append('existen' , existen);
 			$.ajax({
-				url: "app/DBProcs.php",
+				url: "app/controller/perecederos.php",
 				contentType:false,
 				processData:false,
 				cache:false,
@@ -352,9 +361,12 @@
 	$('#TblArt').on('shown.bs.modal', function () {
 		cargando('show');
 		tomar_datos = $.ajax({
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			data: {
 				opcion: "artDispoPerecederos",
+				cpe   : $('#select_cedim').val()==6?8:4,
+				cedim : $('#select_cedim').val(),
+				alm_cd: $('#select_cedim').val()==6?[601,602]:[1401],
 				sqlcnx: 1,
 			},
 			type: "POST",
@@ -512,10 +524,11 @@
 
 	function genHDTPerecederos(cod_id) {
 		$.ajax({
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			data: {
 				opcion: "genHDTPerecederos",
-				idpara: cod_id+'¬'+$('#uinombre').val() + ' (' + $('#uilogin').val() + ')',
+				nrodes: cod_id,
+				cedim : $('#select_cedim').val(),
 				sqlcnx: 1,
 			},
 			type: "POST",

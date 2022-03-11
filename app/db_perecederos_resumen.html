@@ -6,6 +6,11 @@
 			<input id="idart" type="text" class="form-control form-control-sm mr-1 rounded col"
 					placeholder="Ingrese Código/parte del nombre del Artículo a Buscar"
 					onblur="listaArticulosBDES()" onkeyup="if(event.keyCode==13) $(this).blur()">
+			<select id="select_cedim" class="selectpicker form-control form-control-sm col-1 ml-1 mr-auto"
+				data-style="btn-inverse border border-secondary">
+				<option value="6" selected>Fruver</option>
+				<option value="14">Cárnico</option>
+			</select>
 			<span id="codart" class="d-none"></span>
 			<div class="input-group input-daterange date fechafiltro d-flex align-items-center">
 				<div class="input-group-addon font-weight-normal ml-1 mr-1">Del</div>
@@ -23,7 +28,7 @@
 			<button class="btn btn-success btn-sm" disabled id="btnExporPedDes">
 				<i class="fas fa-file-excel"></i> Exportar
 			</button>
- 		</div>
+		</div>
 	</div>
 	<div class="col-md-12 col-sm-12 mt-1" id="div_tblPedDesPer">
 		<div class="card card-warning m-0 p-0 elevation-2 border border-dark">
@@ -53,13 +58,11 @@
 							<th width="10%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Kilogramos</th>
 							<th width="10%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Unidades</th>
 							<th width="10%" class="bg-success-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Total</th>
-
 							<!-- Hoy -2 -->
 							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Kilogramos</th>
 							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Unidades</th>
 							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Total</th>
 							<th width="10%" class="bg-primary-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Costo</th>
-
 							<!-- diferencia entre totales -->
 							<th width="10%" class="bg-danger-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">Totales</th>
 							<th width="5%"  class="bg-danger-gradient text-center border border-top-0 border-bottom-0 ml-0 mr-0 pl-0 pr-0">%</th>
@@ -88,7 +91,6 @@
 	<!-- /.col -->
 </div>
 <!-- /.row (main row 2) -->
-
 <!-- Modal para datos 1-->
 <div class="modal fade" id="moddetPedDesArt" style="z-index: 9888" tabindex="-1" role="dialog" aria-labelledby="moddetPedDesArtLabel" aria-hidden="true">
 	<div class="modal-dialog modal-xl modal-dialog-centered" role="document">
@@ -143,9 +145,9 @@
 		</div>
 	</div>
 </div>
-
 <script>
 	var altotabla = $('#wp_ppal').height()-$('#tblPedDesPer').offset().top-$('#btnConsPedDes').offset().top;
+	$('#select_cedim').selectpicker();
 	$('.fechafiltro').datepicker({
 		format: "dd-mm-yyyy",
 		todayBtn: "linked",
@@ -154,34 +156,27 @@
 		todayHighlight: true,
 		endDate: "0d",
 	});
-
 	$('.input-daterange input').each(function() {
 		if($(this).data('id') == 'fechafiltro1')
 			$(this).datepicker("setDate", moment().startOf('month').format('DD-MM-YYYY'));
 		if($(this).data('id') == 'fechafiltro2')
 			$(this).datepicker("setDate", moment().format('DD-MM-YYYY'));
 	});
-
 	$('[data-mask]').inputmask();
-
 	$('#btnExporPedDes').on('click', function (){
 		// se dispara el evento export del boton oculto del datatable
 		$('#tblPedDesPer').DataTable().button( '0' ).trigger();
 	})
-
 	$('#btnExporDetPedDes').on('click', function (){
 		// se dispara el evento export del boton oculto del datatable
 		$('#tbldetPedDesArt').DataTable().button( '0' ).trigger();
 	})
-
 	$('#tblPedDesPer').dataTable({scrollY: altotabla+'px'})
-
 	function seleccion(tipo, idart, nomarticulo) {
 		$('#idart').val(nomarticulo);
 		$('#codart').html(idart);
 		$('#ModalDatos3').modal('hide');
 	}
-
 	function listaArticulosBDES() {
 		cargando('show')
 		tomar_datos = $.ajax({
@@ -232,7 +227,6 @@
 			}
 		}).done(function() { cargando('hide'); })
 	}
-
 	/**
 	 * Se prepara la lista de ventas por una promocion, departamento, fecha o articulo
 	 * @param {array} pfecha array de fechas a consultar
@@ -252,11 +246,12 @@
 				opcion : 'consPedDesPer',
 				fecha  : fechas,
 				idpara : $('#codart').html(),
+				cedim  : $('#select_cedim').val(),
 				sqlcnx : 1,
 			},
 			type: "POST",
 			dataType: "json",
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			success: function (data) {
 				cargando('hide')
 				if($('#idart').val()!='') {
@@ -270,7 +265,7 @@
 						{
 							extend: 'excelHtml5',
 							autoFilter: true,
-							title: 'Resumen Perecederos Vs. Despachos',
+							title: 'Resumen Perecederos Vs. Despachos [' + $('#select_cedim :selected').text() + ']',
 							messageTop: filtros,
 							filename: 'PerpediVSdespa',
 							sheetName: 'PerpediVSdespa',
@@ -331,12 +326,10 @@
 							.reduce(function (a, b) {
 								return parseFloat(a) + parseFloat(b);
 							}, 0);
-
 						total = (total06-total03);
 						porce = total03>0?(total * 100) / total03:0;
 						total08 = total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 						total09 = porce.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'%';
-
 						$(this.api().column(1).footer() ).html((isNaN(total01) ? 0 : total01).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 						$(this.api().column(2).footer() ).html((isNaN(total02) ? 0 : total02).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 						$(this.api().column(3).footer() ).html((isNaN(total03) ? 0 : total03).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
@@ -355,7 +348,6 @@
 			}
 		});
 	});
-
 	function detPedDes(ptienda, pidart, pnomtienda, pfecpedi, pfecpedf, pfecdesi, pfecdesf) {
 		cargando('show')
 		tomar_datos = $.ajax({
@@ -367,11 +359,12 @@
 				fecpef: pfecpedf,
 				fecdei: pfecdesi,
 				fecdef: pfecdesf,
+				cedim : $('#select_cedim').val(),
 				sqlcnx: 1,
 			},
 			type: "POST",
 			dataType: "json",
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			success: function (data) {
 				$('#nomloc').html(
 					pnomtienda+
@@ -386,7 +379,7 @@
 						{
 							extend: 'excelHtml5',
 							autoFilter: true,
-							title: 'Detalle Perecederos Vs. Despachos',
+							title: 'Detalle Perecederos Vs. Despachos [' + $('#select_cedim :selected').text() + ']',
 							messageTop: $('#nomloc').html(),
 							filename: 'PerDetpediVSdespa',
 							sheetName: 'PerDetpediVSdespa',
@@ -448,12 +441,10 @@
 							.reduce(function (a, b) {
 								return parseFloat(a) + parseFloat(b);
 							}, 0);
-
 						total = (total07-total04);
 						porce = total04>0?(total * 100) / total04:0;
 						total09 = total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 						total10 = porce.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'%';
-
 						$(this.api().column(2).footer() ).html((isNaN(total02) ? 0 : total02).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 						$(this.api().column(3).footer() ).html((isNaN(total03) ? 0 : total03).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 						$(this.api().column(4).footer() ).html((isNaN(total04) ? 0 : total04).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));

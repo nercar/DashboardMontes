@@ -20,21 +20,26 @@
 		<div class="card card-primary m-0 p-0 elevation-2 border border-dark">
 			<div class="card-header d-flex p-1 pl-2 mb-1 align-items-baseline">
 				<i class="fas fa-file-alt"></i>&nbsp;
-				<span id="ttitulo" class="mr-auto col">Solicitud de Artículos al CD. Perecederos</span>
-				<div class="d-flex col justify-content-end" style="color: #000 !important;">
-					<select id="select_tiendas" class="selectpicker form-control form-control-sm"
-						data-style="btn-inverse" data-size="8">
+				<span class="mt-0 mb-0">Solicitud de Artículos Perecederos a:</span>
+				<select id="select_cedim" class="selectpicker form-control form-control-sm col-1 ml-1 mr-auto"
+					data-style="btn-inverse p-0 pl-1 pr-1">
+					<option value="8" selected>Fruver</option>
+					<option value="4">Cárnico</option>
+				</select>
+				<!-- <div class="d-flex col align-items-baseline" style="color: #000 !important;"> -->
+					<select id="select_tiendas" class="selectpicker form-control form-control-sm col-2"
+						data-style="btn-inverse p-0 pl-1 pr-1" data-size="8">
 					</select>
-					<button class="btn btn-success btn-sm ml-3" id="consultarinv" onclick="consultaInvpedidos()">
+					<button class="btn btn-success btn-sm ml-3 p-0 pl-1 pr-1" id="consultarinv" onclick="consultaInvpedidos()">
 						<i class="fas fa-search"></i> Consultar
 					</button>
-					<button class="btn btn-danger btn-sm ml-3" onclick="limpiarFiltros()">
+					<button class="btn btn-danger btn-sm ml-3 p-0 pl-1 pr-1" onclick="limpiarFiltros()">
 						<i class="fas fa-broom"></i> Limpiar
 					</button>
-					<button id="proPedido" disabled class="btn btn-warning btn-sm ml-3">
+					<button id="proPedido" disabled class="btn btn-warning btn-sm ml-3 p-0 pl-1 pr-1">
 						<i class="fas fa-check"></i> Procesar
 					</button>
-				</div>
+				<!-- </div> -->
 			</div>
 			<div class="row p-0 pl-1 pr-1 pb-1">
 				<div class="col-12" id="divDatos">
@@ -127,15 +132,15 @@
 				<h4 class="modal-title">Detalle del Pedido</h4>
 			</div>
 			<div class="modal-body p-0" id="contVerPedido">
-				<form action="" onsubmit="return false;" class="form-inline col-12 p-0 m-0 mt-2">
-					<div class="d-flex w-100 align-content-center justify-content-center ml-2 mr-2">
+				<!-- <form action="" onsubmit="return false;" class="form-inline col-12 p-0 m-0 mt-2"> -->
+					<div class="d-flex align-content-center justify-content-center ml-2 mr-2">
 						<span class="col-1 font-weight-bold">Buscar: </span>
 						<input type="text" class="form-control form-control-sm m-0 ml-1 mr-l p-1 col-11" id="buscarVerPedido" value=""
 							placeholder="Buscar Artículo en la Lista...">
 					</div>
-				</form>
-				<form action="" onsubmit="return false;" class="p-1 m-0" id="frmlstartp">
-					<table id="tbl_ListaArticulos" class="w-100 table table-striped table-hover table-bordered">
+				<!-- </form> -->
+				<!-- <form action="" onsubmit="return false;" class="p-1 m-0" id="frmlstartp"> -->
+					<table width="95%" id="tbl_ListaArticulos" class="table table-striped table-hover table-bordered">
 						<thead>
 							<tr>
 								<th width="20%" class="txtcomp text-center bg-warning-gradient">Barra/PLU</th>
@@ -154,7 +159,7 @@
 							</tr>
 						</tfoot>
 					</table>
-					<div class="form-group d-flex w-100">
+					<div class="form-group d-flex ml-1 mr-1">
 						<button id="savPedido" disabled="true" class="btn btn-success mr-auto">
 							<i class="fas fa-check"></i> Generar Pedido
 						</button>
@@ -162,7 +167,7 @@
 							<i class="fas fa-plus-circle"></i> Continuar Agregando Artículos
 						</button>
 					</div>
-				</form>
+				<!-- </form> -->
 			</div>
 		</div>
 	</div>
@@ -258,6 +263,7 @@
 
 	$('#frmpedidos').height($('#wp_ppal').height()-$('#frmpedidos').offset().top-40+'px');
 	$('#divDatos').height($('#frmpedidos').height()+$('#frmpedidos').offset().top-35+'px');
+	$('#select_cedim').selectpicker();
 	
 	// Se consultan las tiendas activas en el dashboard para seleccionar
 	$.ajax({
@@ -504,15 +510,21 @@
 					opcion: "consDispPerecederos",
 					idpara: $('#select_tiendas').val(),
 					direpo: $('#diasrepo').val(),
+					cpe   : $('#select_cedim').val(),
+					cedim : $('#select_cedim').val()==8?6:14,
+					alm_cd: $('#select_cedim').val()==8?[601,602]:[1401],
 					sqlcnx: 1,
 				},	
 				type: "POST",
 				dataType: "json",
-				url: "app/DBProcs.php",
+				url: "app/controller/perecederos.php",
 				success: function (data) {
 					if(data.length>0) {
 						$('#proPedido').attr('disabled', false);
 						$('#select_tiendas').attr('disabled', true);
+						$('#select_cedim').attr('disabled', true);
+						$('#select_tiendas').selectpicker('refresh');
+						$('#select_cedim').selectpicker('refresh');
 					}
 					$('#tbl_consultaInvPedidos').dataTable({
 						scrollY: ($('#frmpedidos').height())+'px',
@@ -571,7 +583,9 @@
 			}).done(function() {
 				$('#consultarinv').attr('disabled', 'disabled');
 				$('#select_tiendas').attr('disabled', true);
+				$('#select_cedim').attr('disabled', true);
 				$('#select_tiendas').selectpicker('refresh');
+				$('#select_cedim').selectpicker('refresh');
 				cargando('hide');
 				$('#tbl_consultaInvPedidos').find('.selectSize').first().focus();
 			}); //Fin de Ajax	
@@ -624,13 +638,14 @@
 			datos.append('sqlcnx'  , 1);
 			datos.append('opcion'  , 'savePediPerecederos');
 			datos.append('tienda'  , $('#select_tiendas').val());
+			datos.append('cedim'   , $('#select_cedim').val()==8?6:14);
 			datos.append('usidnom' , $('#uinombre').val() + ' (' + $('#uilogin').val() + ')');
 			datos.append('material', material);
 			datos.append('exicedim', exicedim);
 			datos.append('exilocal', exilocal);
 			datos.append('pedido'  , pedido);
 			$.ajax({
-				url: "app/DBProcs.php",
+				url: "app/controller/perecederos.php",
 				contentType:false,
 				processData:false,
 				cache:false,

@@ -203,7 +203,9 @@
 	// $('#modalTiendas, #modalSincro').on('hide.bs.modal', ()=> temporsincro = setInterval(()=>$('#listacostos').DataTable().ajax.reload(null, false), 5000));
 	
 	$(window).on('resize', function() {
-		redim();
+		if($('#listacostos').is(':visible')) {
+			redim();
+		}
 	});
 
 	$('#listarPorSincronizar tbody').on('click', 'tr.group-start', function () {

@@ -30,24 +30,28 @@
 		<div class="card card-primary elevation-2 border border-dark" style="height: 86vh;">
 			<div class="card-header p-1 m-0 d-flex align-items-baseline">
 				<i class="fas fa-compress-arrows-alt"></i>&nbsp;
-				<span class="col">Hojas de Trabajo Perecederos</span>
+				<span class="mt-0 mb-0">Hojas de Trabajo Perecederos:</span>
+				<select id="select_cedim" class="selectpicker form-control form-control-sm col-1 ml-1" data-style="btn-inverse p-0 pl-1 pr-1">
+					<option value="6" selected>Fruver</option>
+					<option value="14">Cárnico</option>
+				</select>
 				<div class="col-1 m-0"></div>
 				<div class="input-group input-daterange ml-auto date gfechas align-items-center col" id="fechas">
 					<div class="input-group-addon font-weight-normal ml-1 mr-1">Del</div>
-					<input type="text" data-id="fechai" class="form-control form-control-sm rounded"
+					<input type="text" data-id="fechai" class="form-control form-control-sm rounded p-0 pl-1 pr-1"
 						autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
 						onblur="if(this.value=='') $(this).datepicker('setDate', moment().subtract(1, 'day').format('DD-MM-YYYY'));">
 					<div class="input-group-addon font-weight-normal ml-1 mr-1">Al</div>
-					<input type="text" data-id="fechaf" class="form-control form-control-sm rounded"
+					<input type="text" data-id="fechaf" class="form-control form-control-sm rounded p-0 pl-1 pr-1"
 						autocomplete="off" data-inputmask="'alias': 'dd-mm-yyyy'" data-mask placeholder="dd-mm-yyyy"
 						onblur="if(this.value=='') $(this).datepicker('setDate', moment().format('DD-MM-YYYY'));">
 				</div>
 				<div class="col d-flex align-items-baseline">
 					<select id="lstHDTant" class="selectpicker form-control form-control-sm"
-						data-style="btn-inverse" data-size="8">
+						data-style="btn-inverse p-0 pl-1 pr-1" data-size="8">
 					</select>
 					<div class="col-1 m-0"></div>
-					<button class="btn-warning btn btn-sm col m-0" id="btnconsultar">
+					<button class="btn-warning btn btn-sm col m-0 p-0 pl-1 pr-1" id="btnconsultar">
 						<i class="fas fa-search"></i> Consultar
 					</button>
 				</div>
@@ -108,6 +112,7 @@
 <script>
 	var htmldivthtbl = $('#divthtbl').html();
 	var htmllistaArticulos = $('#listaArticulos').html();
+	$('#select_cedim').selectpicker();
 
 	$('#fechas').datepicker({
 		format: "dd-mm-yyyy",
@@ -127,13 +132,18 @@
 		}
 	});
 
+	$('#select_cedim').on('change', function() {
+		$('#fechas').change();
+	})
+
 	$('#fechas').on('change', function() {
 		$.ajax({
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			data: {
 				opcion: "lstHDTant",
 				fdesde: moment($('#fechas').data('datepicker').inputs[0].value, 'DD-MM-YYYY').format('YYYY-MM-DD'),
 				fhasta: moment($('#fechas').data('datepicker').inputs[1].value, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+				cedim : function() { return $('#select_cedim').val() },
 				sqlcnx: 1,
 			},
 			type: "POST",
@@ -158,10 +168,11 @@
 		$('#listaArticulos').html(htmllistaArticulos);
 		cargando('show');
 		tomar_datos = $.ajax({
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			data: {
 				opcion: "detHDTant",
 				idpara: $('#lstHDTant').val(),
+				cedim : $('#select_cedim').val(),
 				sqlcnx: 1,
 			},
 			type: "POST",
@@ -222,10 +233,11 @@
 
 	$('#btnGenerar').on('click', function() {
 		$.ajax({
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			data: {
 				opcion: "genHDTPerecederos",
-				idpara: $('#lstHDTant').val()+'¬'+'null',
+				nrodes: $('#lstHDTant').val(),
+				cedim : $('#select_cedim').val(),
 				sqlcnx: 1,
 			},
 			type: "POST",

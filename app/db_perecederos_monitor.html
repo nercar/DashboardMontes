@@ -26,6 +26,10 @@
 								moment().format('DD-MM-YYYY'));">
 				</div>
 				<button class="btn btn-sm btn-warning p-0 pl-1 pr-1 rounded-0 m-0" onclick="adelanteCal()" style="height: 25px;">&#x25b6;</button>
+				<select id="select_cedim" class="selectpicker form-control form-control-sm col-2 ml-1" data-style="btn-inverse p-0 pl-1 pr-1">
+					<option value="6" selected>Fruver</option>
+					<option value="14">Cárnico</option>
+				</select>
 				<div class="ml-auto bg-warning pl-2 rounded">
 					<label class="m-0">Listar:&emsp;</label>
 					<div class="custom-control custom-radio custom-control-inline">
@@ -50,10 +54,10 @@
 						</thead>
 					</table>
 				</div>
-				<div class="col-7 border border-dark border-right-0 border-top-0 border-bottom-0">
+				<div class="col-7 border border-right-0 border-top-0 border-bottom-0">
 					<div class="p-0 pl-1 pr-1 mt-1 d-flex align-items-baseline bg-primary rounded">
 						<i class="fas fa-boxes"></i>
-						<div class="col">
+						<div class="col p-1">
 							<span id="titulodoc">Detalle del Pedido&nbsp;</span>
 							<span class="alert-primary rounded border border-white p-0 pl-1 pr-1 txtcomp"
 								id="nropedido">&nbsp;</span>
@@ -61,10 +65,10 @@
 							<input type="hidden" id="fechasoli">
 							<input type="hidden" id="nro_doc">
 						</div>
-						<button id="anularPedido" class="btn btn-danger btn-sm ml-auto mr-1" disabled id="anularPedido">
+						<button id="anularPedido" class="btn btn-danger btn-sm ml-auto mr-1 p-0 pl-1 pr-1" disabled id="anularPedido">
 							<i class="fas fa-trash-alt fa-lg"></i> 
 						</button>
-						<button class="btn btn-warning btn-sm ml-auto" disabled id="btnExport">
+						<button class="btn btn-warning btn-sm ml-auto p-0 pl-1 pr-1" disabled id="btnExport">
 							<i class="fas fa-file-pdf fa-lg"></i> Exportar a PDF
 						</button>
 					</div>
@@ -119,6 +123,11 @@
 	});
 
 	$('#fechafmonp').datepicker().datepicker("setDate", moment().format('DD-MM-YYYY'));
+	$('#select_cedim').selectpicker();
+
+	$('#select_cedim').on('change', function() {
+		$('#fechafmonp').change();
+	})
 
 	$('#divDatos').height($('#wp_ppal').height()-$('#pedidos').offset().top+$('#pedidos').height()+'px');
 	var altoTabla = $('#divDatos').height()-$('#pedidos').offset().top+$('#pedidos').height()+15;
@@ -128,10 +137,11 @@
 		scrollCollapse: false,
 		order: [ [0, 'asc'], [1, 'desc'] ],
 		ajax: {
-			url: "app/DBProcs.php",
+			url: "app/controller/perecederos.php",
 			data: {
 				opcion: "monitorPerecederos",
 				idpara: ((ptodas) ? 'localidad' : ptienda),
+				cedim : function() { return $('#select_cedim').val() },
 				fdesde: function() { 
 							return moment($('#fechafmonp').val(), 'DD-MM-YYYY').format('YYYY-MM-DD')
 						},
@@ -153,6 +163,7 @@
 	$('#tbl_ListaArticulos').dataTable({ scrollY: (altoTabla-$('#btnExport').offset().top)+5+'px' });
 
 	$('#fechafmonp').on('change', function() {
+		$('#listaPedidos').DataTable().clear().draw();
 		$('#listaPedidos').DataTable().ajax.reload( null, false );
 		$('#tbl_ListaArticulos').dataTable({ scrollY: (altoTabla-$('#btnExport').offset().top)+5+'px', data: [] });
 		$('#nropedido').html('');
@@ -167,6 +178,7 @@
 		$('#origen').html(
 			($('input:radio[name=tipodocs]:checked').val()==1 ? 
 				'Tienda':'Proveedor')+'&emsp;')
+		$('#listaPedidos').DataTable().clear().draw();
 		$('#listaPedidos').DataTable().ajax.reload( null, false );
 		$('#tbl_ListaArticulos').dataTable({ scrollY: (altoTabla-$('#btnExport').offset().top)+5+'px', data: [] });
 		$('#nropedido').html('');
@@ -225,7 +237,7 @@
 		}).then((result) => {
 			if(result.value.trim()!='') {
 				$.ajax({
-					url: "app/DBProcs.php",
+					url: "app/controller/perecederos.php",
 					data: {
 						opcion: "anularPedidoPerecederos",
 						idpara: $('#nro_doc').val(),
@@ -327,7 +339,7 @@
 			$('#nro_doc').val(id);
 			cargando('show')
 			tomar_datos = $.ajax({
-				url: "app/DBProcs.php",
+				url: "app/controller/perecederos.php",
 				data: {
 					opcion: "mostrarODC",
 					idpara: id,

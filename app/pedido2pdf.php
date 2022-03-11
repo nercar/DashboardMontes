@@ -11,9 +11,15 @@ if ($params === false) {
 }
 
 // connect to the sql server database
-$conStr = sprintf("sqlsrv:Server=%s,%d",
-			$params['host_sql'],
-			$params['port_sql']);
+if($params['instance']!='') {
+	$conStr = sprintf("sqlsrv:Server=%s\%s;",
+		$params['host_sql'],
+		$params['instance']);
+} else {
+	$conStr = sprintf("sqlsrv:Server=%s,%d;",
+		$params['host_sql'],
+		$params['port_sql']);
+}
 $connec = new \PDO($conStr, $params['user_sql'], $params['password_sql']);
 
 $tcantidad = 0;

@@ -918,11 +918,11 @@
 
 					$registro = '';
 					foreach($row as $key => $val) {
-						if(is_numeric($val)) {
-							$registro.= $val.',';
-						} else {
-							$registro.= "'".$val."',";
-						}
+					    if(is_numeric($val)) {
+					    	$registro.= $val.',';
+					    } else {
+					    	$registro.= "'".$val."',";
+					    }
 					}
 
 					$registro.="'$justif', '$userid', CURRENT_TIMESTAMP";
@@ -4247,7 +4247,6 @@
 				// Se crea el query para obtener la informacion de conexion de las sucursales
 				$sql = "SELECT codigo, Descripcion, placa
 						FROM BDES.dbo.ESTransporte
-						WHERE responsable = 0
 						ORDER BY responsable, rtrim(ltrim(Descripcion))";
 
 				// Se ejecuta la consulta en la BBDD
@@ -4267,7 +4266,6 @@
 				// Se crea el query para obtener la informacion de conexion de las sucursales
 				$sql = "SELECT codigo, descripcion, cedula
 						FROM BDES.dbo.ESTransporteConductor
-						WHERE placa = 0
 						ORDER BY placa, rtrim(ltrim(descripcion))";
 
 				// Se ejecuta la consulta en la BBDD
@@ -4289,48 +4287,40 @@
 
 			case 'listaTransPen':
 				// Se crea el query para obtener la informacion de conexion de las sucursales
-				// $sql = "SELECT 'T' AS tipo, k.DOCUMENTO AS documento, CAST(k.FECHA AS DATE) AS fecha, us.descripcion AS usuario
-				// 		FROM BDES.dbo.BIKARDEX k
-				// 		INNER JOIN BDES.dbo.ESUsuarios AS us ON us.codusuario = k.USUARIO
-				// 		INNER JOIN BDES.dbo.BISoliPedTran AS pt ON pt.nro_transferencia = k.DOCUMENTO
-				// 		WHERE k.TIPO = 17
-				// 			AND k.LOCALIDAD = 99
-				// 			AND k.TIPOPROC = 1
-				// 			AND k.ELIMINADO = 0
-				// 			AND k.OBSERVACION != '1'
-				// 			AND k.localidad_dest = '$idpara'";
+				$sql = "SELECT 'T' AS tipo, k.DOCUMENTO AS documento, CAST(k.FECHA AS DATE) AS fecha, us.descripcion AS usuario
+						FROM BDES.dbo.BIKARDEX k
+						INNER JOIN BDES.dbo.ESUsuarios AS us ON us.codusuario = k.USUARIO
+						INNER JOIN BDES.dbo.BISoliPedTran AS pt ON pt.nro_transferencia = k.DOCUMENTO
+						WHERE k.TIPO = 17
+							AND k.LOCALIDAD = 99
+							AND k.TIPOPROC = 1
+							AND k.ELIMINADO = 0
+							AND k.OBSERVACION != '1'
+							AND k.localidad_dest = '$idpara'";
 
-				// if($idpara==3) {
-				// 	$sql .= "UNION
-				// 		SELECT 'F' AS tipo, DOCUMENTO_SERIE, CAST(v.FECHA AS DATE) AS fecha, us.descripcion AS usuario
-				// 		FROM BDES.dbo.BIVentas v
-				// 		INNER JOIN BDES.dbo.ESUsuarios AS us ON us.codusuario = v.USUARIO
-				// 		INNER JOIN BDES.dbo.BISoliPedTran AS pt ON pt.nro_transferencia = v.DOCUMENTO_SERIE
-				// 		WHERE v.TIPO = 7
-				// 			AND v.LOCALIDAD = 99
-				// 			AND v.ELIMINADO = 0
-				// 			AND v.DOCUMENTO_NCONTROL != ''
-				// 			AND v.DOCUMENTO_NCONTROL NOT LIKE '¬%'
-				// 			AND v.CODIGO = 358";
-				// }
-
-				$sql = "SELECT 'T' AS tipo, k.nro_transferencia, CAST(pe.solipedi_fechadesp AS DATE) AS fecha, pe.solipedi_responsable AS usuario
-						FROM BDES.dbo.BISoliPedTran k
-						INNER JOIN BDES.dbo.BISolicPedido AS pe ON pe.solipedi_id = k.nro_pedido						
-							AND pe.localidad = '$idpara'
-						WHERE k.fecha_transporte IS NULL AND pe.solipedi_status = 3";
+				if($idpara==3) {
+					$sql .= "UNION
+						SELECT 'F' AS tipo, DOCUMENTO_SERIE, CAST(v.FECHA AS DATE) AS fecha, us.descripcion AS usuario
+						FROM BDES.dbo.BIVentas v
+						INNER JOIN BDES.dbo.ESUsuarios AS us ON us.codusuario = v.USUARIO
+						INNER JOIN BDES.dbo.BISoliPedTran AS pt ON pt.nro_transferencia = v.DOCUMENTO_SERIE
+						WHERE v.TIPO = 7
+							AND v.LOCALIDAD = 99
+							AND v.ELIMINADO = 0
+							AND v.DOCUMENTO_NCONTROL != ''
+							AND v.DOCUMENTO_NCONTROL NOT LIKE '¬%'
+							AND v.CODIGO = 358";
+				}
 
 				// Se ejecuta la consulta en la BBDD
 				$sql = $connec->query($sql);
-				if(!$sql) {
-					print_r($connec->errorInfo());
-				}
+
 				// Se prepara el array para almacenar los datos obtenidos
 				$datos = [];
 				while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
 					$datos[] = [
 						'tipo'      => $row['tipo'],
-						'documento' => $row['nro_transferencia'],
+						'documento' => $row['documento'],
 						'fecha'     => "<span style='display: none'>" . $row['fecha'] . "</span>" . date('d-m-Y', strtotime($row['fecha'])),
 						'usuario'   => $row['usuario'],
 					];
@@ -4345,22 +4335,22 @@
 				$idpara = json_decode($idpara);
 				$res = '1¬Proceso realizado con éxito.';
 				$sql  = "
-					DECLARE @idAct TABLE (id INT)
+					DECLARE @idAct AS NUMERIC
+
 					INSERT INTO BDES.dbo.DBCabtransptransf(fecha, codtransp, codcond, prescinto, chof_particular, tran_particular)
-					OUTPUT Inserted.id INTO @idAct
 					VALUES (CURRENT_TIMESTAMP, $codtra, $codcon, '$presci', '$chopar', '$trapar')
-					
-					--SELECT @idAct = SELECT id FROM @idAct
+
+					SELECT @idAct = IDENT_CURRENT('BDES.dbo.DBCabtransptransf')
 
 					INSERT INTO BDES.dbo.DBDettransptransf(id, documento, tipo, locori, tipoproc, eliminado, locdes)
 					VALUES ";
 				for ($i=0; $i < count($idpara); $i++) {
-					$sql .= "((SELECT id FROM @idAct), " . $idpara[$i] . ", 17, 99, 1, 0, '$locdes'),";
+					$sql .= "(@idAct, " . $idpara[$i] . ", 17, 99, 1, 0, '$locdes'),";
 				}
 				$sql = substr($sql, 0, -1);
 				$idpara = implode(',', $idpara);
 				$sql.= "
-					/*UPDATE BDES.dbo.BIKARDEX WITH (READPAST) SET
+					UPDATE BDES.dbo.BIKARDEX WITH (READPAST) SET
 						OBSERVACION = '1'
 					WHERE TIPO = 17 AND LOCALIDAD = 99
 						AND TIPOPROC = 1 AND ELIMINADO = 0
@@ -4370,9 +4360,9 @@
 						DOCUMENTO_NCONTROL = '¬' + DOCUMENTO_NCONTROL
 					WHERE DOCUMENTO_SERIE IN($idpara)
 						AND LOCALIDAD = 99 AND ELIMINADO = 0
-						AND CODIGO = 358*/
+						AND CODIGO = 358
 					UPDATE BDES.dbo.BISolicPedido WITH (READPAST) SET
-						id_transportado = (SELECT id FROM @idAct)
+						id_transportado = @idAct
 					WHERE solipedi_nrodespacho IN
 						(SELECT nro_despacho
 						FROM BDES.dbo.BISoliPedTran
@@ -5327,6 +5317,7 @@
 
 			case 'procSoliPedi':
 				extract($_POST);
+
 				$despachos = '';
 				foreach ($idpara as $key => $value) {
 					$despachos .= $value['nrodesp'] . ',';
@@ -5334,15 +5325,9 @@
 
 				$despachos = substr($despachos, 0, -1);
 
-				// $sql = "SELECT solipedi_id, solipedi_nrodespacho
-				// 		FROM BDES.dbo.BISolicPedido
-				// 		WHERE solipedi_nrodespacho IN($despachos)";
-
-				$sql = "UPDATE BDES.dbo.BISolicPedido SET
-							solipedi_fechadesp = CURRENT_TIMESTAMP,
-							solipedi_usuariodesp = '$usidnom',
-							solipedi_status = 3
-						WHERE solipedi_nrodespacho IN($despachos);";
+				$sql = "SELECT solipedi_id, solipedi_nrodespacho
+						FROM BDES.dbo.BISolicPedido
+						WHERE solipedi_nrodespacho IN($despachos)";
 
 				$sql2 = $sql;
 				$sql = $connec->query($sql);
@@ -5350,76 +5335,76 @@
 					print_r($connec->errorInfo());
 					$result = '0¬Hubo un error, no se procesaron las ordenes<br>'.
 							   $sql2.'<br>'.$connec->errorInfo()[2];
-					// echo $result;
-					// break;
+					echo $result;
+					break;
 				} else {
 					// Se prepara el array para almacenar los datos obtenidos
-					// $pedidos = [];
-					// while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
-					// 	$pedidos[]=[
-					// 		'nro_pedido' => $row['solipedi_id'],
-					// 		'nro_despacho' => $row['solipedi_nrodespacho']
-					// 	];
-					// }
+					$pedidos = [];
+					while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
+						$pedidos[]=[
+							'nro_pedido' => $row['solipedi_id'],
+							'nro_despacho' => $row['solipedi_nrodespacho']
+						];
+					}
 
-					// $insert = [];
-					// $sql = '';
-					// for($i=0;$i<count($idpara);$i++) {
-					// 	$arr = explode(',', $idpara[$i]['nrostran']);
-					// 	foreach ($arr as $dato) {
-					// 		$nroped = $pedidos[array_search($idpara[$i]['nrodesp'], array_column($pedidos, 'nro_despacho'))]['nro_pedido'];
-					// 		$insert[] = [
-					// 			'nro_pedido'        => $nroped,
-					// 			'nro_despacho'      => $idpara[$i]['nrodesp'],
-					// 			'nro_transferencia' => $dato,
-					// 		];
-					// 		if($idpara[$i]['tipo']==4) {
-					// 			$despacho = $idpara[$i]['nrodesp'];
-					// 			$sql.= "UPDATE BDES.dbo.BIVentas SET
-					// 						DOCUMENTO_NCONTROL =
-					// 							(CASE WHEN LEN(DOCUMENTO_NCONTROL) = 0 THEN '$despacho'
-					// 							ELSE DOCUMENTO_NCONTROL + ',' + '$despacho' END)
-					// 					WHERE TIPO = 7 AND LOCALIDAD = 99 AND CODIGO = 358
-					// 						AND ELIMINADO = 0 AND DOCUMENTO_SERIE = '$dato'
-					// 						AND DOCUMENTO_NCONTROL NOT LIKE '%$despacho%'; ";
-					// 		}
-					// 	}
-					// }
+					$insert = [];
+					$sql = '';
+					for($i=0;$i<count($idpara);$i++) {
+						$arr = explode(',', $idpara[$i]['nrostran']);
+						foreach ($arr as $dato) {
+							$nroped = $pedidos[array_search($idpara[$i]['nrodesp'], array_column($pedidos, 'nro_despacho'))]['nro_pedido'];
+							$insert[] = [
+								'nro_pedido'        => $nroped,
+								'nro_despacho'      => $idpara[$i]['nrodesp'],
+								'nro_transferencia' => $dato,
+							];
+							if($idpara[$i]['tipo']==4) {
+								$despacho = $idpara[$i]['nrodesp'];
+								$sql.= "UPDATE BDES.dbo.BIVentas SET
+											DOCUMENTO_NCONTROL =
+												(CASE WHEN LEN(DOCUMENTO_NCONTROL) = 0 THEN '$despacho'
+												ELSE DOCUMENTO_NCONTROL + ',' + '$despacho' END)
+										WHERE TIPO = 7 AND LOCALIDAD = 99 AND CODIGO = 358
+											AND ELIMINADO = 0 AND DOCUMENTO_SERIE = '$dato'
+											AND DOCUMENTO_NCONTROL NOT LIKE '%$despacho%'; ";
+							}
+						}
+					}
 
-					// if(count($insert)>0) {
-					// 	$sql.= "INSERT INTO BDES.dbo.BISoliPedTran(nro_despacho, nro_transferencia, nro_pedido)
-					// 		VALUES";
-					// 	foreach ($insert as $dato) {
-					// 		$sql.= '('.$dato['nro_despacho'].','.$dato['nro_transferencia'].','.$dato['nro_pedido'].'),';
-					// 	}
+					if(count($insert)>0) {
+						$sql.= "INSERT INTO BDES.dbo.BISoliPedTran(nro_despacho, nro_transferencia, nro_pedido)
+							VALUES";
+						foreach ($insert as $dato) {
+							$sql.= '('.$dato['nro_despacho'].','.$dato['nro_transferencia'].','.$dato['nro_pedido'].'),';
+						}
 
-					// 	$sql = substr($sql, 0, -1) . '; ';
-					// }
+						$sql = substr($sql, 0, -1) . '; ';
+					}
 
 					// Se extraen los datos del parametro tipo array
-					// for($i=0;$i<count($idpara);$i++) {
-					// 	$despacho = $idpara[$i]['nrodesp'];
-					// 	$tipo = $idpara[$i]['tipo'];
-						// $sql.= "UPDATE BDES.dbo.BISolicPedido SET
-						// 			solipedi_fechadesp = CURRENT_TIMESTAMP,
-						// 			solipedi_usuariodesp = '$usidnom',
-						// 			solipedi_status = 3
-						// 		WHERE solipedi_nrodespacho IN($despachos);";
-					// }
+					for($i=0;$i<count($idpara);$i++) {
+						$despacho = $idpara[$i]['nrodesp'];
+						$tipo = $idpara[$i]['tipo'];
+						$sql.= "UPDATE BDES.dbo.BISolicPedido SET
+									solipedi_fechadesp = CURRENT_TIMESTAMP,
+									solipedi_usuariodesp = '$usidnom',
+									solipedi_status = 3
+								WHERE solipedi_nrodespacho = '$despacho';";
+					}
 
-					// $sql2 = $sql;
-					// $sql = $connec->query($sql);
-					// if(!$sql) {
-					// 	print_r($connec->errorInfo());
-					// 	$result = '0¬Hubo un error, no se procesaron las ordenes<br>'.
-					// 			   $sql2.'<br>'.$connec->errorInfo()[2];
-					// } else {
-					$result = '1¬Ordenes procesadas correctamente.';
+					$sql2 = $sql;
+					$sql = $connec->query($sql);
+					if(!$sql) {
+						print_r($connec->errorInfo());
+						$result = '0¬Hubo un error, no se procesaron las ordenes<br>'.
+								   $sql2.'<br>'.$connec->errorInfo()[2];
+					} else {
+						$result = '1¬Ordenes procesadas correctamente.';
+					}
+
+					echo $result;
+					break;
 				}
-
-				echo $result;
-				break;
-				
 
 			case 'consLstPreparacion':
 				$idpara = ($idpara == '*') ? "= ped.localidad" : "= $idpara" ;
@@ -5450,25 +5435,23 @@
 				}
 
 				foreach ($datos as &$dato) {
-					// $sql = "SELECT bk.DOCUMENTO FROM
-					// 		BDES.dbo.BIKardex bk WHERE
-					// 		bk.PRECINTO LIKE '" . $dato['numerodesp'] . "%'
-					// 		AND bk.OBSERVACION != '1' AND bk.TIPO = 17
-					// 		AND bk.LOCALIDAD = 99 AND bk.TIPOPROC = 1 AND bk.ELIMINADO = 0
-					// 		AND bk.DOCUMENTO NOT IN(
-					// 			SELECT nro_transferencia
-					// 			FROM BDES.dbo.BISoliPedTran)";
-					if(!is_null($dato['iddespacho'])) {
-						$sql = "SELECT TOP 1 nro_transferencia FROM BDES.dbo.BISoliPedTran WHERE nro_despacho = " . $dato['iddespacho'];
-						$sql = $connec->query($sql);
-						if(!$sql) print_r($connec->errorInfo());
-						$transfer = '';
-						while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
-							$transfer .= $row['nro_transferencia'] . ',';
-						}
-						if($transfer!='') {
-							$dato['transfer'] = substr($transfer, 0, -1);
-						}
+					$sql = "SELECT bk.DOCUMENTO FROM
+							BDES.dbo.BIKardex bk WHERE
+							bk.PRECINTO LIKE '" . $dato['numerodesp'] . "%'
+							AND bk.OBSERVACION != '1' AND bk.TIPO = 17
+							AND bk.LOCALIDAD = 99 AND bk.TIPOPROC = 1 AND bk.ELIMINADO = 0
+							AND bk.DOCUMENTO NOT IN(
+								SELECT nro_transferencia
+								FROM BDES.dbo.BISoliPedTran)";
+
+					$sql = $connec->query($sql);
+					if(!$sql) print_r($connec->errorInfo());
+					$transfer = '';
+					while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
+						$transfer .= $row['DOCUMENTO'] . ',';
+					}
+					if($transfer!='') {
+						$dato['transfer'] = substr($transfer, 0, -1);
 					}
 				}
 
@@ -5477,6 +5460,7 @@
 
 			case 'consLstProcesados':
 				$idpara = ($idpara == '*') ? "LIKE '%'" : " = $idpara" ;
+
 				$sql = "SELECT DISTINCT suc.Nombre AS localidad,
 							RIGHT( ( CAST('00000' AS VARCHAR) + CAST(ped.solipedi_nrodespacho AS VARCHAR) ), 5) AS solipedi_nrodespacho,
 							ped.solipedi_fechasoli, ped.solipedi_fechadesp,
@@ -5486,6 +5470,7 @@
 						FROM BDES.dbo.BISolicPedido ped
 						INNER JOIN BDES.dbo.ESSucursales suc ON suc.codigo = ped.localidad
 						WHERE ped.solipedi_status >= 3 AND centro_dist = 99 AND id_transportado = 0 AND ped.localidad $idpara";
+
 				$sql = $connec->query($sql);
 				// Se prepara el array para almacenar los datos obtenidos
 				$datos = [];
@@ -5504,8 +5489,12 @@
 						'transfer'    => ''
 					];
 				}
+
 				foreach ($datos as &$dato) {
-					$sql = "SELECT TOP 1 nro_transferencia FROM BDES.dbo.BISoliPedTran WHERE nro_despacho = " . $dato['iddespacho'];
+					$sql = "SELECT nro_transferencia FROM
+							BDES.dbo.BISoliPedTran WHERE
+							nro_despacho = '" . $dato['iddespacho'] . "'";
+
 					$sql = $connec->query($sql);
 					$transfer = '';
 					while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
@@ -5519,32 +5508,34 @@
 						$dato['transfer'] = substr($transfer, 0, -2);
 					}
 				}
-				// foreach ($datos as &$dato) {
-				// 	$sql = "SELECT DOCUMENTO_SERIE FROM
-				// 			BDES.dbo.BIVentas WHERE
-				// 			DOCUMENTO_NCONTROL LIKE '%" . $dato['iddespacho'] . "%'";
-				// 	$sql = $connec->query($sql);
-				// 	$transfer = '';
-				// 	while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
-				// 		if($transfer=='') {
-				// 			$transfer .= $row['DOCUMENTO_SERIE'] . ', ';
-				// 		} else if(strpos($transfer, $row['DOCUMENTO_SERIE'])===false) {
-				// 			$transfer .= $row['DOCUMENTO_SERIE'] . ', ';
-				// 		}
-				// 	}
-				// 	if($transfer!='') {
-				// 		$dato['transfer'] = substr($transfer, 0, -2);
-				// 	}
-				// }
+
+				foreach ($datos as &$dato) {
+					$sql = "SELECT DOCUMENTO_SERIE FROM
+							BDES.dbo.BIVentas WHERE
+							DOCUMENTO_NCONTROL LIKE '%" . $dato['iddespacho'] . "%'";
+
+					$sql = $connec->query($sql);
+					$transfer = '';
+					while ($row = $sql->fetch(\PDO::FETCH_ASSOC)) {
+						if($transfer=='') {
+							$transfer .= $row['DOCUMENTO_SERIE'] . ', ';
+						} else if(strpos($transfer, $row['DOCUMENTO_SERIE'])===false) {
+							$transfer .= $row['DOCUMENTO_SERIE'] . ', ';
+						}
+					}
+					if($transfer!='') {
+						$dato['transfer'] = substr($transfer, 0, -2);
+					}
+				}
+
 				echo json_encode($datos);
 				break;
+
 			case 'validarTrans':
-				extract($_POST);
-				$transfer = implode(',', $trans);
-				$despacho = implode(',', $despa);
 				// Se prepara la consulta para validar las trasnferencias ingresadas
-				$sql = "SELECT COUNT(*) AS totdocs FROM BDES.dbo.BISoliPedTran
-						WHERE nro_transferencia IN($transfer) AND nro_despacho IN($despacho)";
+				$sql = "SELECT COUNT(*) AS totdocs
+						FROM BDES.DBO.BIKARDEX
+						WHERE TIPO = 17 AND LOCALIDAD = 99 AND ELIMINADO = 0 AND DOCUMENTO = '$idpara'";
 				$sql = $connec->query($sql);
 				$row = $sql->fetch();
 				if($row['totdocs']>0) {
@@ -8363,7 +8354,7 @@
 						WHEN MATCHED THEN
 							UPDATE SET eliminado = $checke
 						WHEN NOT MATCHED THEN
-							 INSERT(proveedor, articulo) VALUES($idprov, $idpara);";
+						     INSERT(proveedor, articulo) VALUES($idprov, $idpara);";
 
 				$sql = $connec->query($sql);
 				if(!$sql) {

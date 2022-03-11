@@ -9,9 +9,6 @@
 		}
 		// Se capturan las opciones por Post
 		extract($_POST);
-		// connect to the sql server database
-		$srvvin = '[192.168.50.9].';
-		$srvvinope = '[192.168.56.5].';
 		$strSrvCon = array(
 			"Database" => "BDES",
 			"UID" => $params['user_sql'],
@@ -24,7 +21,12 @@
 			"PWD" => '',
 			"CharacterSet" => "UTF-8",
 			"ConnectRetryCount" => 5);
-		$connecSrv = sqlsrv_connect($params['host_sql'], $strSrvCon);
+		if($params['instance']!='') {
+			$host = $params['host_sql'] . '\\' . $params['instance'];
+			$connecSrv = sqlsrv_connect($host, $strSrvCon);
+		} else {
+			$connecSrv = sqlsrv_connect($params['host_sql'], $strSrvCon);
+		}
 		$datos = [];
 		switch ($opcion) {
 			case 'porSincronizar':
@@ -105,7 +107,7 @@
 									INNER JOIN BDES.dbo.BISoliPediDet det ON det.solipedi_id = cab.solipedi_id
 									WHERE cab.solipedi_status = 7 AND det.solipedidet_codigo = $codigo)
 							GROUP BY localidad) AS sol ON sol.localidad = ti.codigo
-						WHERE ti.codigo != 6";
+						WHERE ti.codigo NOT IN(6, 14)";
 				$sql = sqlsrv_query($connecSrv, $sql);
 				if(!$sql) { echo substr(utf8_encode(sqlsrv_errors()[0]['message']), 54); break; }
 				$i = 0;

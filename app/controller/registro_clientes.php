@@ -7,12 +7,12 @@
 		// id para los filtros en las consultas
 		$idpara = (isset($_POST["idpara"])) ? $_POST["idpara"] : '';
 		// connect to the sql server database
-		$connec = new \PDO("sqlsrv:Server=192.168.50.242,1433", 'sa', '');
-		$srvvin = '[192.168.50.9].';
-		$srvvinope = '[192.168.56.5].';
-		// $connec = new \PDO("sqlsrv:Server=localhost,1433", 'sa', '');
-		// $srvvin = '';
-		// $srvvinope = '';
+		// $connec = new \PDO("sqlsrv:Server=192.168.50.242,1433", 'sa', '');
+		// $srvvin = '[192.168.50.9].';
+		// $srvvinope = '[192.168.56.5].';
+		$connec = new \PDO("sqlsrv:Server=localhost\\MONTES", 'sa', '');
+		$srvvin = '';
+		$srvvinope = '';
 
 		$datos = [];
 		switch ($opcion) {
@@ -356,6 +356,8 @@
 				$result['query'] = substr($sql, 0, 40);
 				$sql = $connec->query($sql);
 				if(!$sql || $sql->rowCount()==0) {
+					print_r($sql);
+					print_r($connec->errorInfo());
 					$result['query'] = '<em>'.$result['query'].'<br>'.
 						substr($connec->errorInfo()[2], strrpos($connec->errorInfo()[2], ']')+1).
 						'</em>';
